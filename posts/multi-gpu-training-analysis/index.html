@@ -145,6 +145,24 @@
             position: relative;
         }
         
+        .code-section pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .code-section code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: 0.9em;
+            line-height: 1.6;
+            font-family: inherit;
+        }
+        
         .code-section::before {
             content: '';
             position: absolute;
@@ -640,13 +658,13 @@
 
         <h3>NCCL Configuration Used</h3>
         <div class="code-section">
-# Production-optimized NCCL settings for PCIe topology
+            <pre><code># Production-optimized NCCL settings for PCIe topology
 NCCL_DEBUG=INFO
 NCCL_ALGO=Tree                  # Optimal for PCIe topology
 NCCL_PROTO=Simple               # Reduces complexity
 NCCL_P2P_DISABLE=1             # Force communication through host
 NCCL_BUFFSIZE=33554432         # 32MB buffer size
-NCCL_NTHREADS=16               # Optimal thread count
+NCCL_NTHREADS=16               # Optimal thread count</code></pre>
         </div>
 
         <h3>Communication Cost Breakdown</h3>
@@ -702,7 +720,7 @@ NCCL_NTHREADS=16               # Optimal thread count
         <h3>The Computation vs Communication Timeline</h3>
         <p><strong>Medium Model (258K params) - Batch Size 64:</strong></p>
         <div class="code-section">
-Single GPU Timeline (7.8ms total):
+            <pre><code>Single GPU Timeline (7.8ms total):
 ├── Forward Pass:        3.2ms ████████
 ├── Backward Pass:       3.1ms ████████  
 ├── Optimizer Update:    1.2ms ███
@@ -713,12 +731,12 @@ Multi-GPU Timeline (9.4ms total):
 ├── Backward Pass:       1.7ms ████ (per GPU)
 ├── Communication:       5.2ms █████████████
 ├── Optimizer Update:    0.6ms ██
-└── Overhead:           0.1ms █
+└── Overhead:           0.1ms █</code></pre>
         </div>
 
         <p><strong>Large Model (6.9M params) - Batch Size 32:</strong></p>
         <div class="code-section">
-Single GPU Timeline (25.7ms total):
+            <pre><code>Single GPU Timeline (25.7ms total):
 ├── Forward Pass:       11.2ms ████████████████████
 ├── Backward Pass:      10.8ms ████████████████████
 ├── Optimizer Update:    3.1ms ██████
@@ -729,7 +747,7 @@ Multi-GPU Timeline (28.5ms total):
 ├── Backward Pass:       5.9ms ████████████ (per GPU)
 ├── Communication:       7.8ms ███████████████
 ├── Optimizer Update:    1.6ms ███
-└── Overhead:           0.3ms █
+└── Overhead:           0.3ms █</code></pre>
         </div>
 
         <h2 id="implementation">Production-Grade Implementation</h2>
@@ -741,7 +759,7 @@ Multi-GPU Timeline (28.5ms total):
         </div>
 
         <div class="code-section">
-class ProductionGPUStrategySelector:
+            <pre><code>class ProductionGPUStrategySelector:
     def __init__(self, hardware_profile):
         self.hardware = hardware_profile
         self.thresholds = {
@@ -765,16 +783,16 @@ class ProductionGPUStrategySelector:
         # Model size evaluation
         params = model_analysis['total_parameters']
         
-        if params < self.thresholds['small_model_max_params']:
+        if params &lt; self.thresholds['small_model_max_params']:
             return self._create_recommendation('single_gpu',
                 'Model too small - communication overhead exceeds benefits', 
                 model_analysis)
         
-        elif params < self.thresholds['medium_model_max_params']:
-            if batch_size >= self.thresholds['optimal_batch_size_multi_gpu']:
+        elif params &lt; self.thresholds['medium_model_max_params']:
+            if batch_size &gt;= self.thresholds['optimal_batch_size_multi_gpu']:
                 efficiency_estimate = self._estimate_multi_gpu_efficiency(
                     model_analysis, batch_size)
-                if efficiency_estimate > 0.6:
+                if efficiency_estimate &gt; 0.6:
                     return self._create_recommendation('evaluate_multi_gpu',
                         f'Large batch may benefit ({efficiency_estimate:.0%} efficiency)', 
                         model_analysis)
@@ -783,15 +801,15 @@ class ProductionGPUStrategySelector:
                 'Medium model insufficient batch size for multi-GPU efficiency', 
                 model_analysis)
         
-        elif params >= self.thresholds['large_model_min_params']:
-            if batch_size >= self.thresholds['min_batch_size_multi_gpu']:
+        elif params &gt;= self.thresholds['large_model_min_params']:
+            if batch_size &gt;= self.thresholds['min_batch_size_multi_gpu']:
                 return self._create_recommendation('multi_gpu',
                     'Large model benefits from parallelization', 
                     model_analysis)
         
         return self._create_recommendation('benchmark_required',
             'Model in evaluation zone - requires empirical testing', 
-            model_analysis)
+            model_analysis)</code></pre>
         </div>
 
         <h2 id="implications">Production Implications & Real-World Applications</h2>
@@ -831,13 +849,13 @@ class ProductionGPUStrategySelector:
 
         <h3>Software Environment</h3>
         <div class="code-section">
-# Exact software versions used
+            <pre><code># Exact software versions used
 TensorFlow: 2.13.0
 CUDA: 12.2
 NCCL: 2.18.5
 Python: 3.9.18
 NumPy: 1.24.3
-Driver: 535.104.05
+Driver: 535.104.05</code></pre>
         </div>
 
         <h3>Hardware Validation</h3>
