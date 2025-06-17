@@ -2,10 +2,10 @@
   "research_metadata": {
     "title": "Multi-GPU Training Performance Analysis",
     "publication_date": "2025-06-17",
-    "author": "Technical Research Blog",
+    "author": "Amir Hossein Javid",
     "categories": ["Performance Analysis", "Machine Learning", "GPU Computing"],
     "tags": ["multi-gpu", "tensorflow", "performance", "distributed-training", "rtx-4070-ti"],
-    "reading_time_minutes": 15,
+    "reading_time_minutes": 25,
     "research_duration_hours": 120,
     "hardware_tested": "2x NVIDIA RTX 4070 Ti SUPER"
   },
