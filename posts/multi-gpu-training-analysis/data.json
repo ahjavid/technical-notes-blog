@@ -1,0 +1,48 @@
+{
+  "research_metadata": {
+    "title": "Multi-GPU Training Performance Analysis",
+    "publication_date": "2025-06-17",
+    "author": "Technical Research Blog",
+    "categories": ["Performance Analysis", "Machine Learning", "GPU Computing"],
+    "tags": ["multi-gpu", "tensorflow", "performance", "distributed-training", "rtx-4070-ti"],
+    "reading_time_minutes": 15,
+    "research_duration_hours": 120,
+    "hardware_tested": "2x NVIDIA RTX 4070 Ti SUPER"
+  },
+  "performance_summary": {
+    "medium_model_258k": {
+      "single_gpu_range": "2,422-16,883 samples/sec",
+      "multi_gpu_range": "2,039-12,345 samples/sec",
+      "average_speedup": 0.78,
+      "efficiency_percent": 39,
+      "recommendation": "single_gpu_preferred"
+    },
+    "large_model_6_9m": {
+      "single_gpu_range": "431-2,101 samples/sec", 
+      "multi_gpu_range": "336-1,841 samples/sec",
+      "average_speedup": 0.83,
+      "efficiency_percent": 42,
+      "recommendation": "single_gpu_still_better"
+    }
+  },
+  "key_insights": [
+    "PCIe Host Bridge topology creates 20-30% communication overhead",
+    "Models under 5M parameters show consistent negative scaling with multi-GPU",
+    "Communication time often exceeds computation time for smaller models",
+    "Hardware topology is more important than raw GPU count",
+    "Intelligent strategy selection prevents performance degradation"
+  ],
+  "production_recommendations": {
+    "single_gpu_threshold": "< 5M parameters",
+    "evaluation_zone": "5M - 10M parameters with batch size >= 128", 
+    "multi_gpu_beneficial": "> 10M parameters with batch size >= 64",
+    "hardware_requirement": "NVLink preferred for optimal multi-GPU performance"
+  },
+  "technical_details": {
+    "framework": "TensorFlow 2.13+",
+    "strategy": "MirroredStrategy with HierarchicalCopyAllReduce",
+    "communication_backend": "NCCL",
+    "batch_sizes_tested": [8, 16, 32, 64, 128],
+    "measurement_methodology": "Multiple runs with statistical analysis"
+  }
+}
