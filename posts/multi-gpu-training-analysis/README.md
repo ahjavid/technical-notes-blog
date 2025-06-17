@@ -594,11 +594,12 @@ This section details the comprehensive methodology used to ensure reproducible, 
 **Software Environment:**
 ```bash
 # Exact software versions used
-TensorFlow: 2.13.0
-CUDA: 12.2
+Python: 3.12.4
+TensorFlow: 2.19.0
+NumPy: 2.1.3
+CUDA: 12.5.1
+cuDNN: 9
 NCCL: 2.18.5
-Python: 3.9.18
-NumPy: 1.24.3
 Driver: 535.104.05
 ```
 

@@ -592,14 +592,15 @@ The benchmark generates several output files:
 ## Software Requirements
 
 ```
-Python 3.9+
-TensorFlow 2.13.0
-CUDA 12.2
-NCCL 2.18.5
+Python: 3.12.4
+TensorFlow: 2.19.0
+NumPy: 2.1.3
+CUDA: 12.5.1
+cuDNN: 9
+NCCL: 2.18.5
 nvidia-ml-py3
 psutil
 scikit-learn
-numpy
 pandas
 ```
 

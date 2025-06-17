@@ -196,13 +196,14 @@ Only consider multi-GPU when:
 ### Software Reproducibility
 ```python
 # Exact environment setup
-Python 3.9.18
-TensorFlow 2.13.0
-CUDA 12.2
-cuDNN 8.8.0
-NCCL 2.18.5
-NumPy 1.24.3
-pandas 2.0.3
+Python: 3.12.4
+TensorFlow: 2.19.0
+NumPy: 2.1.3
+CUDA: 12.5.1
+cuDNN: 9
+NCCL: 2.18.5
+Driver: 565.77
+pandas: 2.0.3
 
 # Random seed control
 tf.random.set_seed(42)
