@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TensorFlow Performance Optimization: Eliminating Retracing Issues | Technical Notes Blog</title>
-    <meta name="description" content="Comprehensive analysis of TensorFlow retracing issues and optimization strategies. Achieve 6x performance improvements by eliminating silent bottlenecks.">
+    <meta name="description" content="Comprehensive analysis of TensorFlow retracing issues and optimization strategies. Achieve 3.85x performance improvements by eliminating silent bottlenecks with TF 2.19.0.">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../../assets/css/post.css">
     <style>
@@ -432,12 +432,12 @@
                 <pre><code>WARNING - 5 out of the last 13 calls to &lt;function&gt; triggered tf.function retracing. 
 Tracing is expensive and the excessive number of tracings could be due to...</code></pre>
             </div>
-            <p>This seemingly innocent warning can indicate a <strong>3-6x performance degradation</strong> hiding in plain sight.</p>
+            <p>This seemingly innocent warning can indicate a <strong>2-4x performance degradation</strong> hiding in plain sight.</p>
         </div>
 
         <div class="insight-box">
             <h3><i class="fas fa-lightbulb"></i> Key Research Finding</h3>
-            <p>Through systematic testing with TensorFlow 2.19.0 and dual RTX 4070 Ti SUPER GPUs, I discovered that <strong>common ML patterns trigger excessive retracing</strong>, even in well-architected code. The performance impact ranges from <strong>2-6x slowdowns</strong>, with memory overhead reaching <strong>18MB+ per retrace</strong>.</p>
+            <p>Through systematic testing with TensorFlow 2.19.0 and dual RTX 4070 Ti SUPER GPUs, I discovered that <strong>common ML patterns trigger excessive retracing</strong>, even in well-architected code. The performance impact ranges from <strong>1.9-3.9x slowdowns</strong>, with significant memory allocation overhead in retracing scenarios.</p>
         </div>
 
         <h2 id="understanding">Understanding TensorFlow Retracing</h2>
@@ -691,7 +691,7 @@ result = optimized_predict(X_tensor)</code></pre>
 
         <div class="chart-container">
             <h3>Performance Comparison Analysis</h3>
-            <img src="../blog_visualizations/performance_comparison.png" alt="Performance comparison showing before and after optimization results">
+            <img src="images/performance_comparison.png" alt="Performance comparison showing before and after optimization results">
         </div>
 
         <div class="performance-section">
@@ -709,53 +709,70 @@ result = optimized_predict(X_tensor)</code></pre>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><strong>Basic Prediction</strong></td>
-                        <td>4</td>
-                        <td>2</td>
-                        <td>231.5ms</td>
-                        <td>37.5ms</td>
-                        <td class="improvement-positive">6.18x</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Input Signatures</strong></td>
-                        <td>5</td>
-                        <td>1</td>
-                        <td>73.7ms</td>
-                        <td>24.8ms</td>
-                        <td class="improvement-positive">2.97x</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Python vs Tensors</strong></td>
+                        <td><strong>Basic Retracing Issue</strong></td>
                         <td>3</td>
-                        <td>1</td>
-                        <td>45.2ms</td>
-                        <td>11.7ms</td>
+                        <td>2</td>
+                        <td>166.6ms</td>
+                        <td>43.3ms</td>
                         <td class="improvement-positive">3.85x</td>
                     </tr>
                     <tr>
-                        <td><strong>Monte Carlo</strong></td>
+                        <td><strong>Input Signature Optimization</strong></td>
+                        <td>4</td>
+                        <td>1</td>
+                        <td>73.5ms</td>
+                        <td>28.9ms</td>
+                        <td class="improvement-positive">2.54x</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Python vs Tensor Arguments</strong></td>
+                        <td>3</td>
+                        <td>1</td>
+                        <td>88.0ms</td>
+                        <td>46.7ms</td>
+                        <td class="improvement-positive">1.88x</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Monte Carlo Optimization</strong></td>
                         <td>1</td>
                         <td>1</td>
-                        <td>36.4ms</td>
-                        <td>217.0ms</td>
-                        <td class="improvement-negative">0.17x*</td>
+                        <td>120.6ms</td>
+                        <td>523.8ms</td>
+                        <td class="improvement-negative">0.23x*</td>
                     </tr>
                 </tbody>
             </table>
-            <p><em>*Note: Monte Carlo test showed regression due to test methodology; see detailed analysis in research materials.</em></p>
+            <p><em>*Note: Monte Carlo test showed regression due to increased complexity in optimization strategy; demonstrates importance of case-by-case analysis.</em></p>
         </div>
 
         <div class="chart-container">
             <h3>Memory Impact Analysis</h3>
-            <img src="../blog_visualizations/memory_timeline.png" alt="Memory usage timeline showing optimization impact">
+            <img src="images/memory_timeline.png" alt="Enhanced memory usage timeline showing 4-panel optimization impact analysis">
+        </div>
+
+        <div class="chart-container">
+            <h3>Function Retracing Count Analysis</h3>
+            <img src="images/trace_count_comparison.png" alt="Comparison of function retracing counts before and after optimization">
+        </div>
+
+        <div class="chart-container">
+            <h3>Performance Improvement Factors</h3>
+            <img src="images/improvement_factors.png" alt="Performance improvement factors achieved by different optimization strategies">
+        </div>
+
+        <div class="chart-container">
+            <h3>Detailed Metrics Overview</h3>
+            <img src="images/detailed_metrics.png" alt="Comprehensive performance metrics analysis across all test scenarios">
         </div>
 
         <div class="results-summary">
-            <h3>Key Findings</h3>
+            <h3>Key Findings from Comprehensive Analysis</h3>
             <ul>
-                <li><strong>Average memory reduction</strong>: 18.4MB per optimization</li>
-                <li><strong>Peak memory usage</strong>: 47% lower with optimizations</li>
-                <li><strong>Memory stability</strong>: Consistent usage vs. growing memory in unoptimized versions</li>
+                <li><strong>Average performance improvement</strong>: 2.13x across valid test cases</li>
+                <li><strong>Maximum improvement achieved</strong>: 3.85x with basic retracing fixes</li>
+                <li><strong>Trace reduction</strong>: 6 total traces eliminated across all scenarios</li>
+                <li><strong>Memory stability</strong>: Enhanced allocation patterns with optimized functions</li>
+                <li><strong>TensorFlow 2.19.0 validation</strong>: All optimizations tested on latest version</li>
             </ul>
         </div>
 
