@@ -109,6 +109,10 @@ document.addEventListener('DOMContentLoaded', addCodeCopyButtons);
 
 // Table of contents generator for long posts
 function generateTableOfContents() {
+    // Skip if manual TOC already exists
+    const existingToc = document.querySelector('.toc, nav.toc, .table-of-contents');
+    if (existingToc) return;
+    
     const headings = document.querySelectorAll('article h2, article h3');
     if (headings.length < 3) return; // Only generate TOC for longer posts
     
