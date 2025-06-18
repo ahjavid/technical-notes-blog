@@ -1,0 +1,163 @@
+{
+  "individual_tests": [
+    {
+      "test_name": "Basic Retracing Issue",
+      "before_optimization": {
+        "execution_time_ms": 166.59883699981037,
+        "memory_usage_mb": 102.61328125,
+        "trace_count": 3,
+        "samples_per_second": 24.0096273323758,
+        "peak_memory_mb": 1548.5859375
+      },
+      "after_optimization": {
+        "execution_time_ms": 43.26697600004081,
+        "memory_usage_mb": 0.5,
+        "trace_count": 2,
+        "samples_per_second": 92.44712532881655,
+        "peak_memory_mb": 1549.0859375
+      },
+      "improvement_factor": 3.850484793510146,
+      "memory_reduction_mb": 102.11328125
+    },
+    {
+      "test_name": "Input Signature Optimization",
+      "before_optimization": {
+        "execution_time_ms": 73.5011370002212,
+        "memory_usage_mb": 0.0,
+        "trace_count": 4,
+        "samples_per_second": 68.02523306206665,
+        "peak_memory_mb": 1549.0859375
+      },
+      "after_optimization": {
+        "execution_time_ms": 28.911327000059828,
+        "memory_usage_mb": 0.25,
+        "trace_count": 1,
+        "samples_per_second": 172.9366162740776,
+        "peak_memory_mb": 1549.3359375
+      },
+      "improvement_factor": 2.542295428285726,
+      "memory_reduction_mb": -0.25
+    },
+    {
+      "test_name": "Python vs Tensor Arguments",
+      "before_optimization": {
+        "execution_time_ms": 88.00488600013523,
+        "memory_usage_mb": 1.08984375,
+        "trace_count": 3,
+        "samples_per_second": 45.45150536855971,
+        "peak_memory_mb": 1550.42578125
+      },
+      "after_optimization": {
+        "execution_time_ms": 46.74502700004268,
+        "memory_usage_mb": 1.0,
+        "trace_count": 1,
+        "samples_per_second": 85.56876929875448,
+        "peak_memory_mb": 1551.42578125
+      },
+      "improvement_factor": 1.8826576807282023,
+      "memory_reduction_mb": 0.08984375
+    },
+    {
+      "test_name": "Monte Carlo Optimization",
+      "before_optimization": {
+        "execution_time_ms": 120.565225999826,
+        "memory_usage_mb": 0.0,
+        "trace_count": 1,
+        "samples_per_second": 8.29419675126468,
+        "peak_memory_mb": 1551.42578125
+      },
+      "after_optimization": {
+        "execution_time_ms": 523.7866370000575,
+        "memory_usage_mb": 28.49609375,
+        "trace_count": 1,
+        "samples_per_second": 1.909170681704903,
+        "peak_memory_mb": 1579.921875
+      },
+      "improvement_factor": 0.23018003372551243,
+      "memory_reduction_mb": -28.49609375
+    }
+  ],
+  "memory_profiling": {
+    "memory_timeline": {
+      "unoptimized": [
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875
+      ],
+      "optimized": [
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875,
+        1579.921875
+      ]
+    },
+    "time_points": [
+      6.961200006116997e-05,
+      0.018326571999978114,
+      0.025481257999899753,
+      0.033275693999939904,
+      0.04029989400009981,
+      0.047428249999939,
+      0.04784584999993058,
+      0.048257629000090674,
+      0.04866266499993799,
+      0.049063853999996354,
+      0.049458631000106834,
+      0.049839801999951305,
+      0.050219620000007126,
+      0.050584581000066464,
+      0.050931346999959715,
+      0.051243387000113216,
+      0.05155845300009787,
+      0.05186843999990742,
+      0.052174118000039016,
+      0.05248746100005519
+    ]
+  },
+  "summary_statistics": {
+    "average_performance_improvement": 2.126404484062397,
+    "max_performance_improvement": 3.850484793510146,
+    "average_memory_reduction_mb": 18.3642578125,
+    "total_trace_reduction": 6,
+    "average_trace_reduction_per_test": 1.5
+  },
+  "model_info": {
+    "small_model_params": 54403,
+    "large_model_params": 2021379,
+    "tensorflow_version": "2.19.0",
+    "test_timestamp": "2025-06-17 21:15:55"
+  }
+}
