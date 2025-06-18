@@ -497,7 +497,7 @@ Beyond the obvious hardware costs, multi-GPU training introduces:
 
 ## Hardware Matters: The NVLink Difference
 
-The PCIe Host Bridge limitation in my setup is significant. With NVLink-enabled GPUs (like the RTX 4090 or professional cards), you could expect:
+The PCIe Host Bridge limitation in my setup is significant. With NVLink-enabled GPUs (like the RTX 3090 or professional cards), you could expect:
 - **50-90% reduction** in communication overhead
 - **Near-linear scaling** for larger models
 - **Better efficiency** even for medium-sized models
