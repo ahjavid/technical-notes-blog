@@ -1,0 +1,5 @@
+Test Case,Before (ms),After (ms),Improvement,Traces Before,Traces After,Memory Reduction (MB)
+Basic Retracing Issue,166.6,43.3,3.85x,3,2,102.1
+Input Signature Optimization,73.5,28.9,2.54x,4,1,-0.2
+Python vs Tensor Arguments,88.0,46.7,1.88x,3,1,0.1
+Monte Carlo Optimization,120.6,523.8,0.23x,1,1,-28.5

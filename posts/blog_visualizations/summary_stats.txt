@@ -1,0 +1,14 @@
+TensorFlow Retracing Optimization - Summary Statistics
+=======================================================
+
+Average Performance Improvement: 2.13x
+Maximum Performance Improvement: 3.85x
+Average Memory Reduction: 18.4 MB
+Total Trace Reduction: 6 traces
+Average Trace Reduction per Test: 1.5 traces
+
+Model Information:
+Small Model Parameters: 54,403
+Large Model Parameters: 2,021,379
+TensorFlow Version: 2.19.0
+Test Timestamp: 2025-06-17 21:15:55
