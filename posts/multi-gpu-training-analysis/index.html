@@ -308,7 +308,8 @@
             text-decoration: none;
         }
         
-        .toc {
+        .toc,
+        nav.toc {
             background: #f8f9fa;
             border-left: 4px solid #667eea;
             border-radius: 0 10px 10px 0;
@@ -316,27 +317,32 @@
             margin: 30px 0;
         }
         
-        .toc h3 {
+        .toc h3,
+        nav.toc h3 {
             color: #2c3e50;
             margin-bottom: 15px;
         }
         
-        .toc ul {
+        .toc ul,
+        nav.toc ul {
             list-style: none;
             margin: 0;
         }
         
-        .toc li {
+        .toc li,
+        nav.toc li {
             margin: 8px 0;
         }
         
-        .toc a {
+        .toc a,
+        nav.toc a {
             color: #667eea;
             text-decoration: none;
             font-weight: 500;
         }
         
-        .toc a:hover {
+        .toc a:hover,
+        nav.toc a:hover {
             text-decoration: underline;
         }
         
@@ -389,7 +395,7 @@
     </header>
 
     <article class="article-content">
-        <div class="toc">
+        <nav class="toc">
             <h3><i class="fas fa-list"></i> Table of Contents</h3>
             <ul>
                 <li><a href="#introduction">Introduction: The Promise vs Reality</a></li>
@@ -401,7 +407,7 @@
                 <li><a href="#implications">Production Implications</a></li>
                 <li><a href="#methodology">Technical Methodology</a></li>
             </ul>
-        </div>
+        </nav>
 
         <h2 id="introduction">Introduction: The Multi-GPU Promise vs Reality</h2>
         <p>Picture this: You've got a machine learning training job that's taking forever on a single GPU. The obvious solution? Add another GPU and cut your training time in half, right? Well, as I discovered through comprehensive testing with dual RTX 4070 Ti SUPER GPUs, the reality is far more nuanced than the marketing promises.</p>
