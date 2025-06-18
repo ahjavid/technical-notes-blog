@@ -115,13 +115,37 @@
             z-index: 2;
         }
         
+        .featured-research-section {
+            margin-bottom: 60px;
+        }
+        
+        .section-title {
+            font-size: 2.5em;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 50px;
+            font-weight: 700;
+        }
+        
+        .featured-posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+        
         .featured-post {
             background: white;
             border-radius: 20px;
             padding: 40px;
-            margin-bottom: 60px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.1);
             border: 1px solid #e1e8ed;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .featured-post:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 80px rgba(0,0,0,0.15);
         }
         
         .post-badge {
@@ -136,11 +160,15 @@
         }
         
         .post-title {
-            font-size: 2.4em;
+            font-size: 2em;
             color: #2c3e50;
             margin-bottom: 15px;
             font-weight: 700;
             line-height: 1.2;
+        }
+        
+        .featured-post h3.post-title {
+            font-size: 2em;
         }
         
         .post-meta {
@@ -171,7 +199,8 @@
             border-radius: 0 10px 10px 0;
         }
         
-        .key-findings h3 {
+        .key-findings h3,
+        .key-findings h4 {
             color: #2c3e50;
             margin-bottom: 15px;
             display: flex;
@@ -274,6 +303,68 @@
             line-height: 1.6;
         }
         
+        
+        .additional-posts {
+            margin: 60px 0;
+        }
+        
+        .additional-posts h2 {
+            color: #2c3e50;
+            font-size: 2.2em;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .post-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            border: 1px solid #e1e8ed;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        
+        .post-badge-small {
+            display: inline-block;
+            background: linear-gradient(45deg, #4682B4, #2E8B57);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .post-card h3 {
+            color: #2c3e50;
+            font-size: 1.4em;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        .post-card .post-meta {
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+        
+        .post-card p {
+            color: #5a6c7d;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
         .upcoming-content {
             background: linear-gradient(135deg, #fff5f5, #fff0f0);
             border: 2px solid #ffb3ba;
@@ -374,10 +465,23 @@
             }
             
             .post-title {
-                font-size: 2em;
+                font-size: 1.8em;
+            }
+            
+            .featured-posts-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .featured-post {
+                padding: 30px;
             }
             
             .blog-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .posts-grid {
                 grid-template-columns: 1fr;
             }
             
@@ -415,45 +519,90 @@
     </header>
 
     <main class="main-content">
-        <article id="latest-post" class="featured-post">
-            <span class="post-badge">🔥 Featured Research</span>
-            <h2 class="post-title">Multi-GPU Training Performance: When Hardware Topology Matters</h2>
-            <div class="post-meta">
-                <span><i class="fas fa-calendar"></i> June 17, 2025</span>
-                <span><i class="fas fa-clock"></i> 25 min read</span>
-                <span><i class="fas fa-tag"></i> Performance Analysis</span>
+        <section class="featured-research-section">
+            <h2 class="section-title">Featured Research Posts - June 2025</h2>
+            <div class="featured-posts-grid">
+                <article class="featured-post">
+                    <span class="post-badge">🔥 Latest Research</span>
+                    <h3 class="post-title">TensorFlow Performance Optimization: Eliminating Retracing Issues</h3>
+                    <div class="post-meta">
+                        <span><i class="fas fa-calendar"></i> June 17, 2025</span>
+                        <span><i class="fas fa-clock"></i> 20 min read</span>
+                        <span><i class="fas fa-tag"></i> Performance Analysis</span>
+                    </div>
+                    
+                    <p class="post-excerpt">
+                        Silent performance killers lurk in your TensorFlow code. After discovering persistent retracing warnings 
+                        destroying performance in production trading models, I conducted a comprehensive analysis revealing 
+                        surprising insights about TensorFlow's @tf.function behavior and optimization strategies.
+                    </p>
+                    
+                    <div class="key-findings">
+                        <h4><i class="fas fa-lightbulb"></i> Key Research Findings</h4>
+                        <ul class="findings-list">
+                            <li><strong>72.6% performance improvement:</strong> Optimized function patterns eliminate excessive retracing</li>
+                            <li><strong>Memory stability:</strong> Enhanced profiling reveals optimization impact on system resources</li>
+                            <li><strong>Production framework:</strong> Weight-swapping cache system enables zero-retrace operation</li>
+                            <li><strong>Latest stack validation:</strong> TensorFlow 2.19.0 and Python 3.12.4 compatibility</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="topics-tags">
+                        <span class="topic-tag">TensorFlow 2.19</span>
+                        <span class="topic-tag">Performance Optimization</span>
+                        <span class="topic-tag">Memory Management</span>
+                        <span class="topic-tag">Production ML</span>
+                        <span class="topic-tag">Function Caching</span>
+                        <span class="topic-tag">Graph Optimization</span>
+                    </div>
+                    
+                    <a href="posts/tensorflow-retracing-optimization/" class="read-more-btn">
+                        <span>Read Full Analysis</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </article>
+
+                <article class="featured-post">
+                    <span class="post-badge">🔥 Featured Research</span>
+                    <h3 class="post-title">Multi-GPU Training Performance: When Hardware Topology Matters</h3>
+                    <div class="post-meta">
+                        <span><i class="fas fa-calendar"></i> June 17, 2025</span>
+                        <span><i class="fas fa-clock"></i> 25 min read</span>
+                        <span class="topic-tag">GPU Architecture</span>
+                    </div>
+                    
+                    <p class="post-excerpt">
+                        Comprehensive analysis revealing why more GPUs doesn't always mean better performance. 
+                        120+ hours of rigorous testing with dual RTX 4070 Ti SUPER GPUs uncover the critical 
+                        importance of hardware topology in distributed training decisions.
+                    </p>
+                    
+                    <div class="key-findings">
+                        <h4><i class="fas fa-chart-line"></i> Key Research Findings</h4>
+                        <ul class="findings-list">
+                            <li><strong>Parameter threshold discovery:</strong> Models under 10M params perform worse on multi-GPU</li>
+                            <li><strong>Hardware topology impact:</strong> PCIe Host Bridge prevents P2P GPU communication</li>
+                            <li><strong>Production insights:</strong> Cost-benefit analysis reveals negative ROI scenarios</li>
+                            <li><strong>Intelligent strategy:</strong> Automated decision framework for GPU resource allocation</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="topics-tags">
+                        <span class="topic-tag">Multi-GPU</span>
+                        <span class="topic-tag">Hardware Analysis</span>
+                        <span class="topic-tag">Distributed Training</span>
+                        <span class="topic-tag">Performance Benchmarking</span>
+                        <span class="topic-tag">Cost Analysis</span>
+                        <span class="topic-tag">Production ML</span>
+                    </div>
+                    
+                    <a href="posts/multi-gpu-training-analysis/" class="read-more-btn">
+                        <span>Read Full Analysis</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </article>
             </div>
-            
-            <p class="post-excerpt">
-                What happens when you throw dual RTX 4070 Ti SUPER GPUs at a machine learning training problem? 
-                The answer might surprise you. This comprehensive analysis reveals why more GPUs doesn't always mean 
-                better performance, and how hardware topology can make or break your training efficiency.
-            </p>
-            
-            <div class="key-findings">
-                <h3><i class="fas fa-lightbulb"></i> Key Research Findings</h3>
-                <ul class="findings-list">
-                    <li><strong>Hardware topology is critical:</strong> PCIe Host Bridge connections create 20-30% communication overhead that can negate multi-GPU benefits</li>
-                    <li><strong>Model size threshold discovered:</strong> Models under 5M parameters consistently show negative scaling with multi-GPU training</li>
-                    <li><strong>Intelligent strategy prevents waste:</strong> Model-aware GPU selection automatically chooses optimal configuration</li>
-                    <li><strong>Production implications:</strong> Current AI workloads may be better served by single GPU optimization</li>
-                </ul>
-            </div>
-            
-            <div class="topics-tags">
-                <span class="topic-tag">GPU Architecture</span>
-                <span class="topic-tag">Distributed Training</span>
-                <span class="topic-tag">Performance Optimization</span>
-                <span class="topic-tag">Production ML</span>
-                <span class="topic-tag">TensorFlow</span>
-                <span class="topic-tag">NVIDIA RTX</span>
-            </div>
-            
-            <a href="posts/multi-gpu-training-analysis/" class="read-more-btn">
-                <span>Read Full Analysis</span>
-                <i class="fas fa-arrow-right"></i>
-            </a>
-        </article>
+        </section>
 
         <section id="blog-sections" class="blog-sections">
             <div class="section-card">
@@ -492,10 +641,10 @@
         <div class="upcoming-content">
             <h3><i class="fas fa-calendar-plus"></i> Upcoming Research</h3>
             <ul class="upcoming-list">
-                <li><strong>TensorFlow Performance Deep Dive:</strong> Memory management, retracing optimization, and execution profiling</li>
-                <li><strong>Cloud vs On-Premise ML Training:</strong> Comprehensive total cost of ownership analysis</li>
-                <li><strong>Database Performance for ML Workloads:</strong> Optimizing data pipelines and storage strategies</li>
-                <li><strong>Edge Deployment Optimization:</strong> Balancing model performance with resource constraints</li>
+                <li><strong>Cloud vs On-Premise ML Training:</strong> Comprehensive total cost of ownership analysis with real deployment scenarios</li>
+                <li><strong>Database Performance for ML Workloads:</strong> Optimizing data pipelines and storage strategies for high-throughput training</li>
+                <li><strong>Edge Deployment Optimization:</strong> Balancing model performance with resource constraints in production environments</li>
+                <li><strong>Distributed Training Algorithms:</strong> Comparing federated learning, parameter servers, and AllReduce strategies</li>
             </ul>
         </div>
     </main>
