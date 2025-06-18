@@ -300,7 +300,8 @@
             margin-top: 5px;
         }
         
-        .toc {
+        .toc,
+        nav.toc {
             background: #f8f9fa;
             border-left: 4px solid #2E8B57;
             border-radius: 0 10px 10px 0;
@@ -308,27 +309,32 @@
             margin: 30px 0;
         }
         
-        .toc h3 {
+        .toc h3,
+        nav.toc h3 {
             color: #2c3e50;
             margin-bottom: 15px;
         }
         
-        .toc ul {
+        .toc ul,
+        nav.toc ul {
             list-style: none;
             margin: 0;
         }
         
-        .toc li {
+        .toc li,
+        nav.toc li {
             margin: 8px 0;
         }
         
-        .toc a {
+        .toc a,
+        nav.toc a {
             color: #2E8B57;
             text-decoration: none;
             font-weight: 500;
         }
         
-        .toc a:hover {
+        .toc a:hover,
+        nav.toc a:hover {
             text-decoration: underline;
         }
         
@@ -408,7 +414,7 @@
     </header>
 
     <article class="article-content">
-        <div class="toc">
+        <nav class="toc">
             <h3><i class="fas fa-list"></i> Table of Contents</h3>
             <ul>
                 <li><a href="#introduction">The Silent Performance Killer</a></li>
@@ -419,7 +425,7 @@
                 <li><a href="#recommendations">Technical Recommendations</a></li>
                 <li><a href="#conclusion">Conclusion & Key Takeaways</a></li>
             </ul>
-        </div>
+        </nav>
 
         <p>TensorFlow's <code>@tf.function</code> is a powerful tool for optimizing machine learning workflows, but excessive retracing can silently destroy performance. After encountering persistent retracing warnings in production trading models, I conducted a comprehensive analysis that revealed surprising insights about TensorFlow's behavior in real-world applications.</p>
 
