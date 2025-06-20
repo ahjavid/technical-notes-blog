@@ -93,6 +93,17 @@ While modern AI is dominated by massive LLMs and Mixture of Experts models, unde
 | ViT-Base-Patch32 | Efficient | 86M | 3.69 | 3.78 | 0.98x | 264.8 | 177 | 49% |
 | MobileViT-XXS | Edge | 1.3M | 5.15 | 5.59 | 0.92x | 178.8 | 10 | 15% |
 
+### 📊 Visual Performance Analysis
+
+![Comprehensive Performance Analysis](images/comprehensive_performance_analysis.png)
+*Performance analysis across all 16 models showing speedup vs parameter count relationships*
+
+![Memory Efficiency Analysis](images/memory_efficiency_analysis.png)
+*Memory efficiency gains across different quantization methods and model sizes*
+
+![Model Speedup Heatmap](images/model_speedup_heatmap.png)
+*Heatmap visualization of speedup performance across models and quantization levels*
+
 ### 📈 Model Category Performance Analysis
 
 #### **Foundation Transformers (632M-307M parameters)**
