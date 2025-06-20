@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision Model Quantization Study | NeuralPulse Research</title>
+    <meta name="description" content="Comprehensive analysis of quantization performance across 16 vision models (2020-2023) - From research to production deployment">
+    <link rel="stylesheet" href="../../assets/css/post.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="nav-container">
+                <a href="../../index.html" class="logo">NeuralPulse Research</a>
+                <ul class="nav-links">
+                    <li><a href="../../index.html">Home</a></li>
+                    <li><a href="../../posts/">Posts</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="post-container">
+        <article class="post-header">
+            <h1>Vision Model Quantization Study</h1>
+            <p class="post-subtitle">Comprehensive analysis of quantization performance across 16 vision models (2020-2023)</p>
+            <div class="post-meta">
+                <span class="date">June 2024</span>
+                <span class="category">Research</span>
+                <span class="reading-time">15 min read</span>
+            </div>
+        </article>
+
+        <div class="study-overview">
+            <div class="highlight-box">
+                <h2>📊 Study Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <span class="stat-number">16</span>
+                        <span class="stat-label">Models Tested</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">64</span>
+                        <span class="stat-label">Total Experiments</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">2.50x</span>
+                        <span class="stat-label">Best Speedup</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">75%</span>
+                        <span class="stat-label">Memory Reduction</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="study-components">
+            <h2>📚 Complete Study Package</h2>
+            
+            <div class="component-grid">
+                <div class="component-card">
+                    <h3>🔬 Research Findings</h3>
+                    <p>Comprehensive analysis of quantization performance across vision transformer architectures from 2020-2023.</p>
+                    <div class="component-highlights">
+                        <ul>
+                            <li>16 models benchmarked across 4 precision levels</li>
+                            <li>Architecture-specific quantization insights</li>
+                            <li>Performance scaling patterns for modern AI</li>
+                        </ul>
+                    </div>
+                    <a href="vision_model_quantization_legacy_study.md" class="btn-primary">Read Research Findings</a>
+                </div>
+
+                <div class="component-card">
+                    <h3>🏭 Production Deployment</h3>
+                    <p>Real-world implementation strategies for deploying quantized vision models at scale.</p>
+                    <div class="component-highlights">
+                        <ul>
+                            <li>Production deployment scenarios</li>
+                            <li>Cost-benefit analysis with ROI calculations</li>
+                            <li>Safety measures and monitoring strategies</li>
+                        </ul>
+                    </div>
+                    <a href="quantization_production_deployment.md" class="btn-primary">View Deployment Guide</a>
+                </div>
+
+                <div class="component-card">
+                    <h3>⚙️ Technical Deep Dive</h3>
+                    <p>Complete methodology, implementation details, and statistical analysis.</p>
+                    <div class="component-highlights">
+                        <ul>
+                            <li>Detailed experimental methodology</li>
+                            <li>Complete performance results</li>
+                            <li>Statistical analysis and validation</li>
+                        </ul>
+                    </div>
+                    <a href="technical_supplement_quantization.md" class="btn-primary">Technical Supplement</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="key-results">
+            <h2>🏆 Key Results Highlights</h2>
+            
+            <div class="results-container">
+                <div class="results-table">
+                    <h3>Top Performing Models</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Category</th>
+                                <th>Speedup</th>
+                                <th>Memory Reduction</th>
+                                <th>Use Case</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="highlight-row">
+                                <td><strong>ViT-Huge + FP16</strong></td>
+                                <td>Foundation</td>
+                                <td><strong>2.50x</strong></td>
+                                <td><strong>50%</strong></td>
+                                <td>Research/Premium</td>
+                            </tr>
+                            <tr class="highlight-row">
+                                <td><strong>ViT-Base-384 + FP16</strong></td>
+                                <td>Production</td>
+                                <td><strong>2.12x</strong></td>
+                                <td><strong>48%</strong></td>
+                                <td>Production Standard</td>
+                            </tr>
+                            <tr>
+                                <td>DeiT-Base-Distilled + FP16</td>
+                                <td>Edge</td>
+                                <td>2.12x</td>
+                                <td>48%</td>
+                                <td>Edge Deployment</td>
+                            </tr>
+                            <tr>
+                                <td>DINOv2-Large + FP16</td>
+                                <td>Self-Supervised</td>
+                                <td>1.96x</td>
+                                <td>50%</td>
+                                <td>Advanced CV Tasks</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="insights-panel">
+                    <h3>💡 Key Insights</h3>
+                    <ul class="insights-list">
+                        <li><strong>FP16 quantization</strong> delivers consistent 2x+ speedups on larger models (300M+ params)</li>
+                        <li><strong>86M parameter models</strong> hit the production sweet spot (2.12x speedup, manageable memory)</li>
+                        <li><strong>Self-supervised models</strong> (DINOv2) show excellent quantization compatibility</li>
+                        <li><strong>INT8 quantization</strong> achieves 70-75% memory reduction across all model sizes</li>
+                        <li><strong>Production ROI</strong>: 4.6-month payback period with 678% 3-year ROI</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="implementation-guide">
+            <h2>🛠️ Quick Implementation Guide</h2>
+            
+            <div class="implementation-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Model Selection</h4>
+                        <p>Choose ViT-Base-384 for production or ViT-Huge for research applications</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Apply FP16 Quantization</h4>
+                        <p>Start with <code>model.half().cuda()</code> for immediate 2x+ speedups</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Production Deployment</h4>
+                        <p>Implement monitoring, fallback systems, and gradual rollout strategies</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="data-sources">
+            <h2>📊 Data & Resources</h2>
+            <div class="resource-links">
+                <a href="data/quantization_results.csv" class="resource-link">
+                    <span class="resource-icon">📈</span>
+                    <span class="resource-text">Complete Results CSV</span>
+                </a>
+                <a href="data/comprehensive_analysis_report.md" class="resource-link">
+                    <span class="resource-icon">📋</span>
+                    <span class="resource-text">Analysis Report</span>
+                </a>
+                <a href="images/comprehensive_performance_analysis.png" class="resource-link">
+                    <span class="resource-icon">📊</span>
+                    <span class="resource-text">Performance Analysis Chart</span>
+                </a>
+                <a href="images/memory_efficiency_analysis.png" class="resource-link">
+                    <span class="resource-icon">�</span>
+                    <span class="resource-text">Memory Efficiency Chart</span>
+                </a>
+                <a href="images/model_speedup_heatmap.png" class="resource-link">
+                    <span class="resource-icon">🔥</span>
+                    <span class="resource-text">Speedup Heatmap</span>
+                </a>
+                <a href="README.md" class="resource-link">
+                    <span class="resource-icon">📖</span>
+                    <span class="resource-text">Study Documentation</span>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 NeuralPulse Research. Production quantization strategies verified through real-world deployment.</p>
+            <div class="footer-tags">
+                <span class="tag">#Quantization</span>
+                <span class="tag">#VisionTransformers</span>
+                <span class="tag">#ProductionAI</span>
+                <span class="tag">#MLOps</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../assets/js/main.js"></script>
+</body>
+</html>
