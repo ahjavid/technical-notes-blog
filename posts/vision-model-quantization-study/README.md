@@ -202,20 +202,4 @@ INT4 Memory Reduction:   Similar to INT8 (66-75%)
 
 ---
 
-## 📝 Citation
-
-```bibtex
-@article{neuralpulse2024quantization,
-  title={Vision Model Quantization Study: Benchmarking Legacy Architectures for Modern Deployment},
-  author={NeuralPulse Research Team},
-  year={2024},
-  journal={Technical Notes Blog},
-  note={Comprehensive analysis of 16 vision models across 4 precision levels}
-}
-```
-
----
-
 **Tags:** #Quantization #VisionTransformers #ProductionAI #MLOps #EdgeAI #PerformanceOptimization
-
-**© NeuralPulse Research** - Production quantization strategies verified through real-world deployment.
