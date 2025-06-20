@@ -1,53 +1,74 @@
-# Vision Model Quantization Study: Complete Research Package
+# Vision Model Quantization Study
 
-*Comprehensive analysis of quantization performance across 16 vision models (2020-2023)*
+*Complete research package for quantization performance across 16 vision models*
+
+---
+
+## 📖 Study Overview
+
+Comprehensive analysis demonstrating quantization performance from research insights to production deployment. Our 64-experiment study covers models from 1.3M to 632M parameters across multiple quantization methods.
+
+### 🎯 Key Findings
+- **2.50x speedup** achieved with ViT-Huge + FP16
+- **75% memory reduction** with INT8 quantization
+- **100% success rate** across all tested architectures
+- **Production-ready strategies** for real-world deployment
 
 ---
 
 ## 📁 Study Contents
 
-### Blog Posts
-- **`vision_model_quantization_legacy_study.md`** - Research findings and architectural insights
-- **`quantization_production_deployment.md`** - Production deployment strategies and real-world results
-- **`technical_supplement_quantization.md`** - Technical deep dive with complete methodology
+### Primary Study
+- **[`comprehensive_quantization_study.md`](comprehensive_quantization_study.md)** - Complete consolidated study with all research findings, technical implementation, and production deployment strategies
 
-### Key Results Summary
-
-**📊 Study Overview:**
-- **16 models tested** across 4 precision levels (FP32, FP16, INT8, INT4)
-- **64 total experiments** with 100% success rate
-- **Model range**: 1.3M to 632M parameters (2020-2023 architectures)
-- **Hardware**: NVIDIA RTX 4070 Ti SUPER (16GB VRAM)
-
-**🏆 Top Performing Models:**
-
-| Rank | Model | Category | Speedup | Memory Reduction | Use Case |
-|------|-------|----------|---------|------------------|----------|
-| 1 | **ViT-Huge + FP16** | Foundation | **2.50x** | **50%** | Research/Premium |
-| 2 | **ViT-Base-384 + FP16** | Production | **2.12x** | **48%** | **Production Standard** |
-| 3 | **DeiT-Base-Distilled + FP16** | Edge | **2.12x** | **48%** | Edge Deployment |
-| 4 | **DINOv2-Large + FP16** | Self-Supervised | **1.96x** | **50%** | Advanced CV Tasks |
-
-**💡 Key Insights:**
-- **FP16 quantization** delivers consistent 2x+ speedups on larger models (300M+ params)
-- **86M parameter models** hit the production sweet spot (2.12x speedup, manageable memory)
-- **Self-supervised models** (DINOv2) show excellent quantization compatibility
-- **INT8 quantization** achieves 70-75% memory reduction across all model sizes
+### Supporting Data
+- **[`data/quantization_results.csv`](data/quantization_results.csv)** - Raw experimental data (64 experiments)
+- **[`data/comprehensive_analysis_report.md`](data/comprehensive_analysis_report.md)** - Statistical analysis
+- **[`data/comprehensive_quantization_study_1750457193.json`](data/comprehensive_quantization_study_1750457193.json)** - Complete metadata
+- **[`images/`](images/)** - Performance visualizations and charts
 
 ---
 
-## 🔬 Methodology
+## � Quick Start
 
-### Model Categories Tested
+### For Researchers
+Read the complete study: [`comprehensive_quantization_study.md`](comprehensive_quantization_study.md)
 
-**Foundation Models (300M+ params):**
-- ViT-Huge (632M) - Google's largest vision transformer
-- ViT-Large (307M) - Standard large-scale ViT
-- DINOv2-Large (300M) - Meta's self-supervised model
-- BEiT-Large (307M) - Microsoft's masked autoencoder
+### For Production Teams
+Jump to the [Production Deployment Strategies](comprehensive_quantization_study.md#production-deployment-strategies) section
 
-**Production Models (86M params):**
-- ViT-Base-384 - High-resolution production variant
+### For Technical Implementation
+See the [Technical Implementation](comprehensive_quantization_study.md#technical-implementation) section
+
+---
+
+## 🏆 Top Results
+
+| Model | Quantization | Speedup | Memory Reduction | Use Case |
+|-------|--------------|---------|------------------|----------|
+| **ViT-Huge** | FP16 | **2.50x** | **50%** | Research/Premium |
+| **ViT-Base-384** | FP16 | **2.12x** | **48%** | **Production Standard** |
+| **DeiT-Base-Distilled** | FP16 | **2.12x** | **48%** | Edge Deployment |
+| **DINOv2-Large** | FP16 | **1.96x** | **50%** | Advanced CV Tasks |
+
+---
+
+## � Quick Implementation
+
+```python
+# Production-ready FP16 quantization
+model = model.half().cuda()
+# Result: 1.33x average speedup, 44.5% memory reduction
+```
+
+---
+
+## � Study Scope
+
+- **16 models tested** (1.3M to 632M parameters)
+- **4 precision levels** (FP32, FP16, INT8, INT4)  
+- **64 total experiments** with complete success rate
+- **Hardware**: NVIDIA RTX 4070 Ti SUPER (16GB VRAM)
 - ViT-Base-224 - Standard resolution production model
 - DINO-ViT-Base - Production-ready DINO variant
 - DINOv2-Base - Latest self-supervised base model
