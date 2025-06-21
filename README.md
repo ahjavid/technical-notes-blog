@@ -10,7 +10,22 @@ Welcome to my technical research blog! This is where I share in-depth analysis, 
 
 ## 📚 Featured Research Posts
 
-### 🔥 Latest: TensorFlow Performance Optimization
+### 🔥 Latest: Vision Model Quantization Study
+**June 20, 2025** | [Read Full Post →](posts/vision-model-quantization-study/README.md)
+
+Comprehensive research package analyzing quantization performance across 16 vision models with 64 systematic experiments. This study provides empirical foundations for deploying quantized models at production scale, from research insights to enterprise deployment strategies.
+
+**Key Findings:**
+- ⚡ 2.50x speedup achieved with ViT-Huge (632M params) using FP16 quantization
+- 💾 75% memory reduction with INT8 quantization across all model architectures
+- 🎯 100% success rate across Vision Transformer architectures from 2020-2023
+- 💰 4.6-month payback period with 678% three-year ROI for enterprise deployments
+
+**Topics Covered:** Model Quantization, Vision Transformers, Production AI, MLOps, Performance Optimization
+
+---
+
+### 🔥 TensorFlow Performance Optimization
 **June 17, 2025** | [Read Full Post →](posts/tensorflow-retracing-optimization/README.md)
 
 Deep analysis of TensorFlow retracing issues and memory management optimization. This comprehensive study reveals how to eliminate performance-killing retracing warnings and achieve significant speed improvements in production ML systems.
@@ -43,6 +58,7 @@ An in-depth investigation into multi-GPU training performance using dual NVIDIA 
 ## 🔬 Research Areas
 
 ### 🤖 Machine Learning Performance
+- Vision model quantization optimization
 - Multi-GPU training optimization
 - Model architecture performance analysis
 - Training pipeline bottleneck identification
@@ -93,6 +109,10 @@ Real-world problem-solving scenarios with detailed analysis and solutions.
 ## 📖 Recent Posts
 
 ### 2025
+- **[Vision Model Quantization Study](posts/vision-model-quantization-study/)** - June 2025
+  - Comprehensive quantization analysis across 16 vision models
+  - Production deployment strategies and economic impact assessment
+  - FP16, INT8, and INT4 performance evaluation with enterprise ROI analysis
 - **[Multi-GPU Training Performance Analysis](posts/multi-gpu-training-analysis/)** - June 2025
   - Comprehensive study of dual GPU training efficiency
   - Hardware topology impact on deep learning performance
@@ -138,11 +158,11 @@ This blog is built with:
 
 ## 📊 Blog Statistics
 
-- **Total Posts**: 2 comprehensive research analyses
-- **Research Hours**: 200+ hours of rigorous testing and analysis
+- **Total Posts**: 3 comprehensive research analyses
+- **Research Hours**: 300+ hours of rigorous testing and analysis
 - **Code Samples**: Production-ready examples with before/after comparisons
 - **Interactive Content**: Professional charts, performance graphs, and visualizations
-- **Technology Coverage**: Latest stacks (TensorFlow 2.19.0, Python 3.12.4, RTX 4070 Ti SUPER)
+- **Technology Coverage**: Latest stacks (TensorFlow 2.19.0, Python 3.12.4, RTX 4070 Ti SUPER, Vision Transformers)
 
 ## 🔖 Stay Updated
 
@@ -158,5 +178,5 @@ This blog content is licensed under the MIT License - see the [LICENSE](LICENSE)
 
 **About the Author**: I'm passionate about the intersection of machine learning and system performance. My research focuses on making ML training more efficient and cost-effective through careful analysis and optimization.
 
-**Last Updated**: June 17, 2025  
-**Latest Posts**: TensorFlow Performance Optimization & Multi-GPU Training Analysis
+**Last Updated**: June 20, 2025  
+**Latest Posts**: Vision Model Quantization Study, TensorFlow Performance Optimization & Multi-GPU Training Analysis
