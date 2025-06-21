@@ -10,7 +10,7 @@
     <style>
         /* Enhanced post-specific styles */
         .hero-section {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            background: linear-gradient(135deg, #2E8B57 0%, #4682B4 100%);
             color: white;
             padding: 80px 0;
             text-align: center;
@@ -25,7 +25,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><pattern id="quantization" width="100" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="5" r="1.5" fill="rgba(255,255,255,0.1)"/><rect x="35" y="12" width="8" height="6" fill="rgba(255,255,255,0.05)"/><circle cx="70" cy="8" r="1.2" fill="rgba(255,255,255,0.08)"/></pattern></defs><rect width="100%" height="100%" fill="url(%23quantization)"/></svg>') repeat;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><pattern id="circuit" width="100" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="5" r="1.5" fill="rgba(255,255,255,0.1)"/><line x1="10" y1="5" x2="40" y2="15" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/><circle cx="70" cy="8" r="1.2" fill="rgba(255,255,255,0.08)"/></pattern></defs><rect width="100%" height="100%" fill="url(%23circuit)"/></svg>') repeat;
             opacity: 0.3;
         }
         
@@ -48,18 +48,41 @@
             font-size: 1.4em;
             opacity: 0.9;
             margin-bottom: 30px;
+            font-weight: 300;
+        }
+        
+        .post-meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .article-content {
+            max-width: 900px;
+            margin: -50px auto 60px;
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+            line-height: 1.7;
         }
         
         .insight-box {
-            background: linear-gradient(135deg, #fff7e6, #ffeccc);
-            border: 2px solid #ff9500;
+            background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
             border-radius: 15px;
             padding: 30px;
             margin: 40px 0;
+            border-left: 5px solid #4caf50;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.1);
         }
         
         .insight-box h3 {
-            color: #d66d00;
+            color: #2e7d32;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
@@ -71,7 +94,7 @@
             border-radius: 15px;
             padding: 35px;
             margin: 40px 0;
-            border-left: 5px solid #ff6b6b;
+            border-left: 5px solid #2E8B57;
         }
         
         .performance-table {
@@ -92,7 +115,7 @@
         }
         
         .performance-table th {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            background: linear-gradient(135deg, #2E8B57, #4682B4);
             color: white;
             font-weight: 600;
             font-size: 0.95em;
@@ -111,16 +134,16 @@
         }
         
         .warning-box {
-            background: linear-gradient(135deg, #ffe5e5, #ffcccc);
-            border: 2px solid #ff5252;
+            background: linear-gradient(135deg, #ffebee, #fce4ec);
+            border-left: 5px solid #e91e63;
             border-radius: 15px;
             padding: 30px;
             margin: 40px 0;
-            position: relative;
+            box-shadow: 0 4px 15px rgba(233, 30, 99, 0.1);
         }
         
         .warning-box h3 {
-            color: #c62828;
+            color: #c2185b;
             margin-bottom: 15px;
             display: flex;
             align-items: center;
@@ -130,25 +153,50 @@
         .code-section {
             background: #2c3e50;
             color: #ecf0f1;
-            padding: 25px;
-            border-radius: 10px;
-            margin: 20px 0;
+            padding: 30px;
+            border-radius: 12px;
             overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            margin: 30px 0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            position: relative;
         }
         
         .code-section pre {
             margin: 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.95em;
-            line-height: 1.4;
+            padding: 0;
+            background: transparent;
+            border: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .code-section code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: 0.9em;
+            line-height: 1.6;
+            font-family: inherit;
+        }
+        
+        .code-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #2E8B57, #4682B4);
         }
         
         .research-highlight {
-            background: linear-gradient(135deg, #e8f5e8, #c8e6c8);
-            border: 2px solid #4caf50;
+            background: linear-gradient(135deg, #e8f5e8, #f1f8e9);
             border-radius: 15px;
             padding: 30px;
             margin: 40px 0;
+            border-left: 5px solid #4caf50;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.1);
         }
         
         .research-highlight h3 {
