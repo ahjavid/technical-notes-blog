@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-12-08T17:07:22.577048",
+  "individual_metrics": {
+    "analyzer": {
+      "role": "analyzer",
+      "tasks_completed": 4,
+      "tasks_failed": 0,
+      "avg_latency_ms": 1818.668782711029,
+      "avg_quality": 0.8925751879699247,
+      "avg_tokens": 331.25,
+      "completion_rate": 1.0
+    },
+    "coder": {
+      "role": "coder",
+      "tasks_completed": 4,
+      "tasks_failed": 0,
+      "avg_latency_ms": 2175.5696535110474,
+      "avg_quality": 0.8226918398938523,
+      "avg_tokens": 406.75,
+      "completion_rate": 1.0
+    },
+    "reviewer": {
+      "role": "reviewer",
+      "tasks_completed": 4,
+      "tasks_failed": 0,
+      "avg_latency_ms": 1853.6677956581116,
+      "avg_quality": 0.7913837903582486,
+      "avg_tokens": 385.25,
+      "completion_rate": 1.0
+    },
+    "synthesizer": {
+      "role": "synthesizer",
+      "tasks_completed": 4,
+      "tasks_failed": 0,
+      "avg_latency_ms": 1844.1121578216553,
+      "avg_quality": 0.838079113224237,
+      "avg_tokens": 403.0,
+      "completion_rate": 1.0
+    }
+  },
+  "collaborative_metrics": {
+    "total_tasks": 16,
+    "total_messages": 0,
+    "avg_latency_ms": 1923.0045974254608,
+    "total_tokens": 6105,
+    "overall_success_rate": 1.0
+  },
+  "quality_metrics": {
+    "avg_quality": 0.8361824828615656,
+    "quality_variance": 0.007545770984472608
+  }
+}

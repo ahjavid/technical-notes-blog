@@ -1,0 +1,57 @@
+{
+  "timestamp": "2025-12-08T17:03:52.225574",
+  "individual": [
+    {
+      "agent_id": "agent_analyzer",
+      "role": "analyzer",
+      "completion_rate": 1.0,
+      "avg_latency_ms": 187.25367387135825,
+      "avg_quality": 0.7734451111803078,
+      "tasks_completed": 6,
+      "messages_sent": 3,
+      "messages_received": 2
+    },
+    {
+      "agent_id": "agent_executor",
+      "role": "executor",
+      "completion_rate": 1.0,
+      "avg_latency_ms": 401.0319709777832,
+      "avg_quality": 0.7808663022905528,
+      "tasks_completed": 6,
+      "messages_sent": 3,
+      "messages_received": 2
+    },
+    {
+      "agent_id": "agent_reviewer",
+      "role": "reviewer",
+      "completion_rate": 1.0,
+      "avg_latency_ms": 225.6852388381958,
+      "avg_quality": 0.8193286294126012,
+      "tasks_completed": 6,
+      "messages_sent": 3,
+      "messages_received": 2
+    },
+    {
+      "agent_id": "agent_synthesizer",
+      "role": "synthesizer",
+      "completion_rate": 1.0,
+      "avg_latency_ms": 270.2896197636922,
+      "avg_quality": 0.8005243745913777,
+      "tasks_completed": 6,
+      "messages_sent": 0,
+      "messages_received": 3
+    }
+  ],
+  "collaborative": {
+    "total_messages": 9,
+    "avg_messages_per_task": 1.5,
+    "communication_efficiency": 0.7194395617192451,
+    "synergy_score": 1.0000000000000002
+  },
+  "ecosystem": {
+    "total_tasks": 6,
+    "overall_success_rate": 1.0,
+    "avg_system_latency_ms": 271.0651258627574,
+    "agent_utilization": 0.7409201131465442
+  }
+}
