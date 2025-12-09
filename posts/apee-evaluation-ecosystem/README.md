@@ -236,29 +236,29 @@ Following LLM evaluation best practices from lm-evaluation-harness and DeepEval.
 
 **Configuration**: 5 models × 19 scenarios × 2 runs = 190 total evaluations
 
-| Model | Quality | ±Std | Success | Latency |
-|-------|---------|------|---------|---------|
-| **qwen3:4b** | **0.898** | 0.047 | 100% | 3777ms |
-| llama3.2:3b | 0.879 | 0.133 | 100% | 2446ms |
-| gemma3:4b | 0.869 | 0.108 | 100% | 3023ms |
-| granite4:3b | 0.860 | 0.132 | 100% | **1879ms** |
-| qwen2.5-coder:3b | 0.848 | 0.128 | 100% | 2011ms |
+| Model             | Quality    | ±Std  | Success | Latency |
+|-------------------|------------|-------|---------|---------|
+| **qwen3:4b**      | **0.898**  | 0.047 | 100%    | 3777ms  |
+| llama3.2:3b       | 0.879      | 0.133 | 100%    | 2446ms  |
+| gemma3:4b         | 0.869      | 0.108 | 100%    | 3023ms  |
+| granite4:3b       | 0.860      | 0.132 | 100%    | **1879ms** |
+| qwen2.5-coder:3b  | 0.848      | 0.128 | 100%    | 2011ms  |
 
 ### Performance by Task Category
 
-| Category | qwen3:4b | llama3.2:3b | gemma3:4b |
-|----------|----------|-------------|-----------|
-| code_generation | 0.895 | **0.947** | 0.883 |
-| code_review | 0.921 | **0.970** | 0.942 |
-| code_explanation | 0.912 | **0.926** | 0.895 |
-| code_debug | 0.888 | 0.879 | **0.893** |
-| reasoning | **0.901** | 0.880 | 0.902 |
-| analysis | 0.909 | **0.935** | 0.884 |
-| qa_factual | 0.911 | **0.948** | 0.908 |
-| qa_reasoning | 0.938 | 0.921 | **0.967** |
-| math | 0.886 | 0.811 | **0.895** |
+| Category            | qwen3:4b | llama3.2:3b | gemma3:4b |
+|---------------------|----------|--------------|-----------|
+| code_generation     | 0.895    | **0.947**    | 0.883     |
+| code_review         | 0.921    | **0.970**    | 0.942     |
+| code_explanation    | 0.912    | **0.926**    | 0.895     |
+| code_debug          | 0.888    | 0.879        | **0.893** |
+| reasoning           | **0.901** | 0.880 | 0.902 |
+| analysis            | 0.909 | **0.935** | 0.884 |
+| qa_factual          | 0.911 | **0.948** | 0.908 |
+| qa_reasoning        | 0.938 | 0.921 | **0.967** |
+| math                | 0.886 | 0.811 | **0.895** |
 | instruction_following | **0.860** | 0.538 | 0.640 |
-| summarization | **0.871** | 0.817 | 0.769 |
+| summarization       | **0.871** | 0.817 | 0.769 |
 
 ### 🏆 Winners
 
