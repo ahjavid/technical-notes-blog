@@ -246,19 +246,19 @@ Following LLM evaluation best practices from lm-evaluation-harness and DeepEval.
 
 ### Performance by Task Category
 
-| Category            | qwen3:4b | llama3.2:3b | gemma3:4b |
-|---------------------|----------|--------------|-----------|
-| code_generation     | 0.895    | **0.947**    | 0.883     |
-| code_review         | 0.921    | **0.970**    | 0.942     |
-| code_explanation    | 0.912    | **0.926**    | 0.895     |
-| code_debug          | 0.888    | 0.879        | **0.893** |
-| reasoning           | **0.901** | 0.880 | 0.902 |
-| analysis            | 0.909 | **0.935** | 0.884 |
-| qa_factual          | 0.911 | **0.948** | 0.908 |
-| qa_reasoning        | 0.938 | 0.921 | **0.967** |
-| math                | 0.886 | 0.811 | **0.895** |
-| instruction_following | **0.860** | 0.538 | 0.640 |
-| summarization       | **0.871** | 0.817 | 0.769 |
+| Category              | qwen3:4b  | llama3.2:3b | gemma3:4b | granite4:3b | qwen2.5-coder:3b |
+|-----------------------|-----------|-------------|-----------|-------------|------------------|
+| analysis              | 0.899     | 0.963       | 0.856     | 0.921       | **0.964**        |
+| code_debug            | 0.787     | 0.874       | 0.867     | 0.913       | **0.914**        |
+| code_explanation      | 0.929     | 0.904       | **0.933** | 0.853       | 0.844            |
+| code_generation       | 0.909     | **0.950**   | 0.898     | 0.849       | 0.869            |
+| code_review           | 0.942     | 0.953       | **0.956** | 0.935       | 0.936            |
+| instruction_following | **0.871** | 0.550       | 0.552     | 0.540       | 0.564            |
+| math                  | 0.759     | 0.819       | 0.884     | **0.918**   | 0.661            |
+| qa_factual            | 0.927     | 0.939       | 0.938     | **0.943**   | 0.909            |
+| qa_reasoning          | 0.943     | 0.910       | 0.931     | 0.933       | **0.966**        |
+| reasoning             | 0.934     | 0.883       | 0.889     | 0.892       | **0.950**        |
+| summarization         | **0.912** | 0.837       | 0.777     | 0.674       | 0.749            |
 
 ### 🏆 Winners
 
@@ -271,12 +271,13 @@ Following LLM evaluation best practices from lm-evaluation-harness and DeepEval.
 
 ### Key Insights
 
-1. **qwen3:4b achieved highest quality (0.898)** with lowest variance - most consistent
-2. **llama3.2:3b excels at code tasks** - top performer in code_generation, code_review
-3. **qwen3:4b dominates instruction_following** - significantly better than others (0.86 vs 0.54-0.64)
-4. **granite4:3b offers best speed** - nearly 2x faster than qwen3:4b
-5. **All models achieved 100% success rate** - all capable of completing tasks
-6. **gemma3:4b strong at qa_reasoning and math** - best for analytical tasks
+1. **qwen3:4b dominates instruction_following** (0.87 vs 0.54-0.56) - significantly better than all others
+2. **qwen2.5-coder:3b excels at reasoning tasks** - top in analysis, code_debug, qa_reasoning, reasoning
+3. **llama3.2:3b best at code_generation** - highest score (0.95) for generating code
+4. **granite4:3b leads math and qa_factual** - best for factual/mathematical tasks
+5. **gemma3:4b top at code_explanation and code_review** - best for understanding existing code
+6. **All models achieved 100% success rate** - all capable of completing tasks
+7. **Each model has unique strengths** - no single model dominates all categories
 
 ### Running Your Own Benchmark
 
