@@ -525,18 +525,20 @@ class Coordinator:
         
         Returns a score from 0 (strong disagreement) to 1 (strong agreement).
         """
-        # Positive indicators (agreement)
+        import re
+        
+        # Positive indicators (agreement) - use word boundaries
         positive_patterns = [
-            "agree", "consensus", "concur", "same conclusion", "aligned",
-            "correct", "right", "exactly", "precisely", "indeed",
-            "support this", "endorse", "confirm"
+            r"\bagree\b", r"\bconsensus\b", r"\bconcur\b", r"\bsame conclusion\b", r"\baligned\b",
+            r"\bcorrect\b", r"\bright\b", r"\bexactly\b", r"\bprecisely\b", r"\bindeed\b",
+            r"\bsupport this\b", r"\bendorse\b", r"\bconfirm\b"
         ]
         
-        # Negative indicators (disagreement)
+        # Negative indicators (disagreement) - use word boundaries
         negative_patterns = [
-            "disagree", "different view", "alternative", "however",
-            "but i think", "on the contrary", "instead", "rather",
-            "not quite", "partially", "reservations", "concerns"
+            r"\bdisagree\b", r"\bdifferent view\b", r"\balternative\b", r"\bhowever\b",
+            r"\bbut i think\b", r"\bon the contrary\b", r"\binstead\b", r"\brather\b",
+            r"\bnot quite\b", r"\bpartially\b", r"\breservations\b", r"\bconcerns\b"
         ]
         
         # Negation words that flip meaning
@@ -546,9 +548,10 @@ class Coordinator:
         negative_count = 0
         
         for pattern in positive_patterns:
-            if pattern in text:
+            match = re.search(pattern, text)
+            if match:
                 # Check if negated
-                pattern_idx = text.find(pattern)
+                pattern_idx = match.start()
                 context_start = max(0, pattern_idx - 20)
                 context = text[context_start:pattern_idx]
                 
@@ -558,9 +561,10 @@ class Coordinator:
                     positive_count += 1
         
         for pattern in negative_patterns:
-            if pattern in text:
+            match = re.search(pattern, text)
+            if match:
                 # Check if negated
-                pattern_idx = text.find(pattern)
+                pattern_idx = match.start()
                 context_start = max(0, pattern_idx - 20)
                 context = text[context_start:pattern_idx]
                 
