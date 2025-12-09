@@ -37,8 +37,8 @@ async def run_multi_model_evaluation():
     for model, info in MODEL_POOL.items():
         print(f"  • {model}: {info['type']} ({info['size']}) - {', '.join(info['strengths'])}")
     
-    # Test models
-    test_models = ["qwen2.5-coder:3b", "qwen3:4b", "gemma3:4b"]
+    # Test models - all small models for fair comparison
+    test_models = ["qwen2.5-coder:3b", "qwen3:4b", "gemma3:4b", "granite4:3b", "llama3.2:3b"]
     
     # Check availability
     print("\n🔍 Checking model availability...")

@@ -44,6 +44,11 @@ MODEL_POOL = {
         "size": "small",
         "strengths": ["analysis", "clarity", "fast"],
     },
+    "granite4:3b": {
+        "type": "general",
+        "size": "small",
+        "strengths": ["enterprise", "structured", "fast"],
+    },
     "llama3.2:3b": {
         "type": "general",
         "size": "small",
