@@ -45,18 +45,18 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 | Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
 |----------|---------|---------------|------------------|--------------|---------|
-| collab_code_review | peer_review | 7.5/10 | 5.2/10 | 7.0/10 | **6.4/10** |
-| research_synthesis | sequential | 7.2/10 | 6.6/10 | 8.6/10 | **7.3/10** |
-| constrained_problem | debate | 6.4/10 | 5.0/10 | 7.3/10 | **6.0/10** |
-| emergent_behavior | parallel | 6.2/10 | 3.8/10 | 8.4/10 | **5.6/10** |
-| scalability_test | hierarchical | 7.1/10 | 6.2/10 | 8.8/10 | **7.1/10** |
-| conflict_resolution | consensus | 7.7/10 | 6.5/10 | 8.5/10 | **7.4/10** |
-| knowledge_transfer | sequential | 6.6/10 | 6.2/10 | 8.5/10 | **6.9/10** |
-| error_recovery | hierarchical | 5.9/10 | 5.0/10 | 8.5/10 | **6.2/10** |
-| creative_collab | debate | 6.0/10 | 5.9/10 | 7.6/10 | **6.3/10** |
-| realtime_collab | parallel | 6.8/10 | 6.5/10 | 9.1/10 | **7.3/10** |
-| adversarial_review | debate | 7.2/10 | 5.8/10 | 7.6/10 | **6.6/10** |
-| doc_sprint | peer_review | 6.3/10 | 5.2/10 | 7.0/10 | **6.0/10** |
+| Collab Code Review | Peer Review | 7.5/10 | 5.2/10 | 7.0/10 | **6.4/10** |
+| Research Synthesis | Sequential | 7.2/10 | 6.6/10 | 8.6/10 | **7.3/10** |
+| Constrained Problem | Debate | 6.4/10 | 5.0/10 | 7.3/10 | **6.0/10** |
+| Emergent Behavior | Parallel | 6.2/10 | 3.8/10 | 8.4/10 | **5.6/10** |
+| Scalability Test | Hierarchical | 7.1/10 | 6.2/10 | 8.8/10 | **7.1/10** |
+| Conflict Resolution | Consensus | 7.7/10 | 6.5/10 | 8.5/10 | **7.4/10** |
+| Knowledge Transfer | Sequential | 6.6/10 | 6.2/10 | 8.5/10 | **6.9/10** |
+| Error Recovery | Hierarchical | 5.9/10 | 5.0/10 | 8.5/10 | **6.2/10** |
+| Creative Collab | Debate | 6.0/10 | 5.9/10 | 7.6/10 | **6.3/10** |
+| Realtime Collab | Parallel | 6.8/10 | 6.5/10 | 9.1/10 | **7.3/10** |
+| Adversarial Review | Debate | 7.2/10 | 5.8/10 | 7.6/10 | **6.6/10** |
+| Doc Sprint | Peer Review | 6.3/10 | 5.2/10 | 7.0/10 | **6.0/10** |
 
 ### Ensemble Judge Agreement
 
@@ -251,11 +251,11 @@ examples/
 │         │  • run_peer_review()     │                                │
 │         └────────────┬─────────────┘                                │
 │                      │                                              │
-│  JUDGES (Large 12-14B models - different families)                  │
+│  JUDGES (Large 20-24B models - different families)                  │
 │  ┌───────────────────────────────────────────────┐                  │
 │  │  ┌──────────┐          ┌──────────┐           │                  │
-│  │  │  Qwen    │    +     │  Gemma   │           │                  │
-│  │  │  14B     │          │   12B    │           │                  │
+│  │  │ GPT-OSS  │    +     │ Mistral  │           │                  │
+│  │  │   20B    │          │   24B    │           │                  │
 │  │  └──────────┘          └──────────┘           │                  │
 │  │         │ Ensemble Evaluation │               │                  │
 │  │         └──────────┬──────────┘               │                  │
@@ -325,7 +325,7 @@ from apee.evaluation.llm_evaluator import EnsembleEvaluator
 
 # Ensemble of large judges from different families
 evaluator = EnsembleEvaluator(
-    judge_models=["qwen3:14b", "gemma3:12b"],
+    judge_models=["gpt-oss:20b", "mistral-small3.2:24b"],
     aggregation="median",
 )
 
@@ -392,12 +392,12 @@ Following LLM-as-a-Judge best practices, models are designated as either **agent
 | qwen2.5-coder:3b | Qwen    | 3B     | ANALYZER          | analysis=0.964  |
 | granite4:3b      | Granite | 3B     | REVIEWER          | code_review=0.935 |
 
-#### Judge Models (Large, 12-14B+)
+#### Judge Models (Large, 20-24B+)
 
-| Model      | Family | Params | Purpose                        |
-|------------|--------|--------|--------------------------------|
-| qwen3:14b  | Qwen   | 14B    | Primary judge, deep reasoning  |
-| gemma3:12b | Gemma  | 12B    | Secondary judge, clear analysis |
+| Model              | Family     | Params | Purpose                        |
+|--------------------|------------|--------|--------------------------------|
+| gpt-oss:20b        | GPT-OSS    | 20B    | Primary judge, deep reasoning  |
+| mistral-small3.2:24b | Mistral  | 24B    | Secondary judge, clear analysis |
 
 #### Legacy Models (Available for Benchmarking)
 
@@ -686,6 +686,6 @@ MIT License. See [LICENSE](../../LICENSE) for details.
 **Status**: ✅ APEE Framework Complete (Phases 1-5)  
 **Tests**: 34 passing  
 **Agents**: llama3.2:3b, qwen2.5-coder:3b, granite4:3b (3B diverse families)  
-**Judges**: qwen3:14b, gemma3:12b (12-14B evaluation models)  
+**Judges**: gpt-oss:20b, mistral-small3.2:24b (20-24B evaluation models)  
 **Patterns**: 6 (parallel, sequential, debate, hierarchical, consensus, peer_review)  
 **Author**: [ahjavid](https://github.com/ahjavid)

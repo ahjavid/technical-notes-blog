@@ -723,10 +723,7 @@ function showEvalDetails(idx) {
             <div><div style="font-size:11px;font-weight:600;">L3 Ecosystem</div>
                 <div class="metric-bar"><div class="metric-fill l3" style="width:${l3*10}%"></div></div>
                 <div style="font-size:12px;">${l3.toFixed(1)}</div></div>
-        </div>
-        <details><summary style="cursor:pointer;padding:6px 10px;background:var(--light);border-radius:4px;font-size:11px;">📄 Raw JSON</summary>
-            <pre style="background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:0 0 4px 4px;font-size:10px;max-height:250px;overflow:auto;">${JSON.stringify(ev, null, 2)}</pre>
-        </details>`;
+        </div>`;
 }
 
 // Initial load
