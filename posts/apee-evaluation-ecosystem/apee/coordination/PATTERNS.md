@@ -23,6 +23,7 @@ This document explains the coordination patterns available in APEE's `Coordinato
 
 The Coordinator supports six distinct multi-agent coordination patterns, each designed for different collaboration scenarios:
 
+```
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                     APEE Coordination Patterns                               │
 ├──────────────────────────────────────────────────────────────────────────────┤
