@@ -700,7 +700,7 @@ MIT License. See [LICENSE](../../LICENSE) for details.
 ---
 
 **Status**: ✅ APEE Framework Complete (Phases 1-5)  
-**Tests**: 34 passing  
+**Tests**: 69 passing  
 **Agents**: llama3.2:3b, qwen2.5-coder:3b, granite4:3b (3B diverse families)  
 **Judges**: gpt-oss:20b, mistral-small3.2:24b (20-24B evaluation models)  
 **Patterns**: 6 (parallel, sequential, debate, hierarchical, consensus, peer_review)  
