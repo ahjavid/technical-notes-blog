@@ -48,6 +48,13 @@ async def run_and_evaluate_scenario(
 ) -> dict:
     """Run a scenario and evaluate it using LLM-as-a-judge."""
     
+    # Validate minimum agent count for all patterns
+    if len(coordinator.agents) < 3:
+        raise ValueError(
+            f"Evaluation requires at least 3 agents for all patterns, "
+            f"got {len(coordinator.agents)}: {list(coordinator.agents.keys())}"
+        )
+    
     # Create the task
     task = Task(
         task_id=f"apee_{scenario.id}",
