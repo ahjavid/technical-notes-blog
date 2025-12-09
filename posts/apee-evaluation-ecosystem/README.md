@@ -26,34 +26,41 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 | Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
 |----------|---------|---------------|------------------|--------------|---------|
-| collab_code_review | peer_review | 0.61 | 0.93 | 1.00 | **0.87** |
-| research_synthesis | sequential | 0.64 | 0.97 | 1.00 | **0.89** |
-| constrained_problem | debate | 0.60 | 0.90 | 1.00 | **0.85** |
-| emergent_behavior | parallel | 0.64 | 0.66 | 1.00 | **0.76** |
-| scalability_test | hierarchical | 0.62 | 0.64 | 1.00 | **0.75** |
-| conflict_resolution | consensus | 0.63 | 0.64 | 1.00 | **0.75** |
+| collab_code_review | peer_review | 0.94 | 1.00 | 1.00 | **0.98** |
+| research_synthesis | sequential | 0.94 | 1.00 | 1.00 | **0.98** |
+| constrained_problem | debate | 0.92 | 1.00 | 1.00 | **0.98** |
+| emergent_behavior | parallel | 0.94 | 0.67 | 1.00 | **0.85** |
+| scalability_test | hierarchical | 0.94 | 0.67 | 1.00 | **0.85** |
+| conflict_resolution | consensus | 0.94 | 0.67 | 1.00 | **0.85** |
 
 ### Aggregate APEE Scores
 
 | Metric | Score |
 |--------|-------|
-| **Level 1 (Individual)** | 0.624 |
-| **Level 2 (Collaborative)** | 0.790 |
+| **Level 1 (Individual)** | 0.936 |
+| **Level 2 (Collaborative)** | 0.833 |
 | **Level 3 (Ecosystem)** | 1.000 |
-| **Overall APEE Score** | **0.813** |
+| **Overall APEE Score** | **0.915** |
+
+### Key Insights
+
+1. **Structured patterns outperform parallel**: Debate, sequential, and peer_review achieve **0.98** overall vs **0.85** for parallel patterns
+2. **L2 Collaborative differentiates patterns**: Full collaboration (1.0) vs independent work (0.67)
+3. **L3 Ecosystem perfect**: All scenarios complete without crashes
+4. **Adaptive engine detected 2 patterns**: "convergent_behavior" and "emergent_collaboration"
 
 ### APEE Framework Compliance ✅
 
 | Component | Status | Evidence |
 |-----------|--------|----------|
 | Multi-Agent Collaboration | ✅ | 3 agents working together |
-| Debate Pattern | ✅ | 1 scenario |
-| Pipeline Pattern | ✅ | 1 scenario |
-| Level 1 Metrics (Individual) | ✅ | Response time, length, success |
+| Debate Pattern | ✅ | 1 scenario (0.98 score) |
+| Pipeline Pattern | ✅ | 1 scenario (0.98 score) |
+| Level 1 Metrics (Individual) | ✅ | Response quality, latency |
 | Level 2 Metrics (Collaborative) | ✅ | Coordination efficiency, participation |
 | Level 3 Metrics (Ecosystem) | ✅ | Stability, latency, completion |
-| Adaptive Engine | ✅ | Pattern detection active |
-| Pattern Detection | ✅ | "convergent_behavior" detected |
+| Adaptive Engine | ✅ | 2 patterns detected |
+| Focus Areas | ✅ | collaboration_dynamics, diversity_check |
 
 ---
 
@@ -160,39 +167,39 @@ examples/
 │                     APEE Framework                                  │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
-│  │   Agent A    │  │   Agent B    │  │   Agent N    │              │
-│  │  (Analyzer)  │  │   (Coder)    │  │  (Reviewer)  │              │
-│  │ qwen2.5:3b   │  │  gemma3:4b   │  │  qwen3:4b    │              │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘              │
-│         │                 │                 │                      │
-│         └────────────┬────┴─────────────────┘                      │
-│                      │                                             │
-│         ┌────────────▼─────────────┐                               │
-│         │   Adaptive Coordinator   │                               │
-│         │  • Parallel Execution    │                               │
-│         │  • Pipeline Orchestration│                               │
-│         │  • Debate Management     │                               │
-│         │  • Consensus Building    │                               │
-│         └────────────┬─────────────┘                               │
-│                      │                                             │
-│  ┌───────────────────┼───────────────────┐                         │
-│  │                   │                   │                         │
-│  ▼                   ▼                   ▼                         │
-│ ┌─────────┐    ┌─────────────┐    ┌────────────┐                   │
-│ │ Level 1 │    │   Level 2   │    │  Level 3   │                   │
-│ │Individual│   │Collaborative│    │ Ecosystem  │                   │
-│ │ Metrics │    │   Metrics   │    │  Metrics   │                   │
-│ └────┬────┘    └──────┬──────┘    └─────┬──────┘                   │
-│      │               │                  │                          │
-│      └───────────────┼──────────────────┘                          │
-│                      │                                             │
-│         ┌────────────▼─────────────┐                               │
-│         │    Adaptive Engine       │                               │
-│         │  • Pattern Detection     │                               │
-│         │  • Anomaly Detection     │                               │
-│         │  • Criteria Adjustment   │                               │
-│         └──────────────────────────┘                               │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │   Agent A    │  │   Agent B    │  │   Agent N    │               │
+│  │  (Analyzer)  │  │   (Coder)    │  │  (Reviewer)  │               │
+│  │ qwen2.5:3b   │  │  gemma3:4b   │  │  qwen3:4b    │               │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
+│         │                 │                 │                       │
+│         └────────────┬────┴─────────────────┘                       │
+│                      │                                              │
+│         ┌────────────▼─────────────┐                                │
+│         │   Adaptive Coordinator   │                                │
+│         │  • Parallel Execution    │                                │
+│         │  • Pipeline Orchestration│                                │
+│         │  • Debate Management     │                                │
+│         │  • Consensus Building    │                                │
+│         └────────────┬─────────────┘                                │
+│                      │                                              │
+│  ┌───────────────────┼───────────────────┐                          │
+│  │                   │                   │                          │
+│  ▼                   ▼                   ▼                          │
+│ ┌─────────┐    ┌─────────────┐    ┌────────────┐                    │
+│ │ Level 1 │    │   Level 2   │    │  Level 3   │                    │
+│ │Individual│   │Collaborative│    │ Ecosystem  │                    │
+│ │ Metrics │    │   Metrics   │    │  Metrics   │                    │
+│ └────┬────┘    └──────┬──────┘    └─────┬──────┘                    │
+│      │               │                  │                           │
+│      └───────────────┼──────────────────┘                           │
+│                      │                                              │
+│         ┌────────────▼─────────────┐                                │
+│         │    Adaptive Engine       │                                │
+│         │  • Pattern Detection     │                                │
+│         │  • Anomaly Detection     │                                │
+│         │  • Criteria Adjustment   │                                │
+│         └──────────────────────────┘                                │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 

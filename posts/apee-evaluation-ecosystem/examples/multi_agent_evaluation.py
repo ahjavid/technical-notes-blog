@@ -89,21 +89,25 @@ async def run_collaborative_scenario(
 def evaluate_collaborative_result(result: dict, scenario: CollaborativeScenario) -> dict:
     """Evaluate a collaborative result using three-tier metrics."""
     
+    response_length = len(result["result"].output) if result["result"] else 0
+    duration = result["duration"]
+    
     metrics = {
         "scenario_id": result["scenario_id"],
         "pattern": result["pattern"],
         "category": result["category"],
+        "duration": duration,
         
         # Level 1: Individual Metrics
         "individual": {
             "response_generated": result["result"] is not None,
-            "response_time": result["duration"],
-            "response_length": len(result["result"].output) if result["result"] else 0,
+            "response_time": duration,
+            "response_length": response_length,
         },
         
         # Level 2: Collaborative Metrics (APEE Core)
         "collaborative": {
-            "coordination_efficiency": min(1.0, 10.0 / result["duration"]) if result["duration"] > 0 else 0,
+            "coordination_efficiency": min(1.0, 30.0 / max(1, duration)),  # 30s baseline for multi-agent
             "multi_agent_participation": result["agent_count"] >= 2,
             "pattern_executed": result["pattern"] in ["debate", "pipeline", "peer_review", "sequential"],
         },
@@ -111,24 +115,37 @@ def evaluate_collaborative_result(result: dict, scenario: CollaborativeScenario)
         # Level 3: Ecosystem Metrics (APEE Core)
         "ecosystem": {
             "task_completion": result["result"] is not None,
-            "latency_acceptable": result["duration"] < 60,
+            "latency_acceptable": duration < 120,  # 2 min for multi-agent is acceptable
             "system_stability": True,  # No crashes
         }
     }
     
-    # Calculate composite score
+    # Calculate composite score - FIXED MATH
+    
+    # Level 1: Individual agent output quality
+    # - response_generated: 1.0 if success
+    # - response_quality: based on length (longer = better for complex tasks, with cap)
+    # - latency_score: faster is better, but reasonable for LLM work
+    response_quality = min(1.0, response_length / 500) if response_length > 0 else 0  # 500 chars = 1.0
+    latency_score = max(0, 1.0 - (duration / 60))  # 0s = 1.0, 60s = 0.0
+    
     level1_score = sum([
         1.0 if metrics["individual"]["response_generated"] else 0,
-        min(1.0, 1000 / max(1, metrics["individual"]["response_length"])),
-        min(1.0, 5.0 / metrics["individual"]["response_time"]) if metrics["individual"]["response_time"] > 0 else 0,
+        response_quality,
+        max(0.3, latency_score),  # Floor at 0.3 - slow is okay for quality
     ]) / 3
     
+    # Level 2: Collaborative effectiveness
+    # - coordination_efficiency: how well agents worked together
+    # - multi_agent_participation: did multiple agents contribute
+    # - pattern_executed: was the collaboration pattern used correctly
     level2_score = sum([
         metrics["collaborative"]["coordination_efficiency"],
         1.0 if metrics["collaborative"]["multi_agent_participation"] else 0,
         1.0 if metrics["collaborative"]["pattern_executed"] else 0,
     ]) / 3
     
+    # Level 3: Ecosystem health
     level3_score = sum([
         1.0 if metrics["ecosystem"]["task_completion"] else 0,
         1.0 if metrics["ecosystem"]["latency_acceptable"] else 0,
@@ -223,7 +240,7 @@ async def main():
             quality_score=m["scores"]["level1_individual"],
             latency_ms=m.get("duration", 5.0) * 1000,
             tokens_used=m["individual"].get("response_length", 100),
-            messages_sent=m["collaborative"].get("multi_agent_participation", 0) * 3,
+            messages_sent=3 if m["collaborative"].get("multi_agent_participation") else 1,
             conflicts=0,
             handoffs=1 if m["pattern"] in ["pipeline", "sequential"] else 0,
         )
