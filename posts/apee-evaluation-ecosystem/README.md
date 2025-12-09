@@ -200,13 +200,13 @@ examples/
 │         └────────────┬─────────────┘                                │
 │                      │                                              │
 │  JUDGES (Large 12-14B models - different families)                  │
-│  ┌─────────────────────────────────────────────┐                    │
-│  │  ┌──────────┐          ┌──────────┐         │                    │
-│  │  │  Qwen    │    +     │  Gemma   │         │                    │
-│  │  │  14B     │          │   12B    │         │                    │
-│  │  └──────────┘          └──────────┘         │                    │
-│  │         │ Ensemble Evaluation │             │                    │
-│  │         └──────────┬──────────┘             │                    │
+│  ┌───────────────────────────────────────────────┐                  │
+│  │  ┌──────────┐          ┌──────────┐           │                  │
+│  │  │  Qwen    │    +     │  Gemma   │           │                  │
+│  │  │  14B     │          │   12B    │           │                  │
+│  │  └──────────┘          └──────────┘           │                  │
+│  │         │ Ensemble Evaluation │               │                  │
+│  │         └──────────┬──────────┘               │                  │
 │  └───────────────────────────────────────────────┘                  │
 │                      │                                              │
 │  ┌───────────────────┼───────────────────┐                          │
@@ -216,7 +216,7 @@ examples/
 │ │ Level 1 │    │   Level 2   │    │  Level 3   │                    │
 │ │Individual│   │Collaborative│    │ Ecosystem  │                    │
 │ │ Metrics │    │   Metrics   │    │  Metrics   │                    │
-│ │Goal,Sem.│    │Collab,Synth│    │Eff,Stab,Thr│                    │
+│ │Goal,Sem.│    │Collab,Synth │    │Eff,Stab,Thr│                    │
 │ └────┬────┘    └──────┬──────┘    └─────┬──────┘                    │
 │      │               │                  │                           │
 │      └───────────────┼──────────────────┘                           │
@@ -228,18 +228,14 @@ examples/
 │         └──────────────────────────┘                                │
 └─────────────────────────────────────────────────────────────────────┘
 ```
-│         │  • Criteria Adjustment   │                                │
-│         └──────────────────────────┘                                │
-└─────────────────────────────────────────────────────────────────────┘
-```
 
 ### Three-Tier Evaluation Metrics
 
 | Level | Focus | Metrics |
 |-------|-------|---------|
-| **L1: Individual** | Single agent performance | Success rate, latency, quality score |
-| **L2: Collaborative** | Multi-agent interaction | Coordination efficiency, synergy, conflict rate |
-| **L3: Ecosystem** | System-level health | Stability, scalability, throughput |
+| **L1: Individual** | Single agent performance | Goal alignment, semantic quality |
+| **L2: Collaborative** | Multi-agent interaction | Collaboration effectiveness, synthesis quality |
+| **L3: Ecosystem** | System-level health | Efficiency, stability, throughput, adaptability |
 
 ---
 
