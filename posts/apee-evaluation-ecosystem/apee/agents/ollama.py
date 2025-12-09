@@ -193,7 +193,16 @@ class OllamaAgent(Agent):
             )
             
             latency_ms = (time.time() - start_time) * 1000
+            
+            # Handle both regular response and thinking mode (qwen3 models)
             output = response.get("response", "")
+            thinking = response.get("thinking", "")
+            
+            # If response is empty but thinking has content, use thinking
+            # This handles qwen3's thinking mode
+            if not output.strip() and thinking.strip():
+                output = thinking
+            
             tokens = response.get("eval_count", 0) + response.get("prompt_eval_count", 0)
             
             # Evaluate response quality
