@@ -288,6 +288,9 @@ class Coordinator:
         
         workers = [self.agents[wid] for wid in worker_ids if wid in self.agents]
         
+        if len(workers) < 1:
+            raise ValueError("Hierarchical pattern requires at least 1 worker agent")
+        
         # Phase 1: Leader analyzes and plans
         planning_task = Task(
             task_id=f"{task.task_id}_plan",
