@@ -35,6 +35,44 @@ from apee.benchmarks.analyzer import (
     StatisticalAnalysis,
     ModelComparison,
 )
+from apee.benchmarks.collaborative import (
+    CollaborationPattern,
+    CollaborativeScenario,
+    MultiAgentDataset,
+)
+
+# Phase 6: New modules
+from apee.anomaly.detector import (
+    AnomalyDetector,
+    AnomalyType,
+    AnomalyReport,
+    AnomalySeverity,
+)
+from apee.anomaly.alerts import (
+    AnomalyAlert,
+    AlertManager,
+    ConsoleAlertHandler,
+)
+from apee.visualization.charts import (
+    MetricsVisualizer,
+    ChartConfig,
+    create_evaluation_chart,
+    create_comparison_chart,
+    create_anomaly_heatmap,
+)
+from apee.visualization.export import (
+    export_to_html,
+    generate_report_html,
+)
+from apee.dashboard.server import (
+    DashboardServer,
+    create_dashboard,
+)
+from apee.dashboard.api import (
+    DashboardAPI,
+    DashboardIntegration,
+    connect_to_dashboard,
+)
 
 __all__ = [
     # Core models
@@ -65,5 +103,31 @@ __all__ = [
     "BenchmarkAnalyzer",
     "StatisticalAnalysis",
     "ModelComparison",
+    # Collaborative
+    "CollaborationPattern",
+    "CollaborativeScenario",
+    "MultiAgentDataset",
+    # Phase 6: Anomaly Detection
+    "AnomalyDetector",
+    "AnomalyType",
+    "AnomalyReport",
+    "AnomalySeverity",
+    "AnomalyAlert",
+    "AlertManager",
+    "ConsoleAlertHandler",
+    # Phase 6: Visualization
+    "MetricsVisualizer",
+    "ChartConfig",
+    "create_evaluation_chart",
+    "create_comparison_chart",
+    "create_anomaly_heatmap",
+    "export_to_html",
+    "generate_report_html",
+    # Phase 6: Dashboard
+    "DashboardServer",
+    "create_dashboard",
+    "DashboardAPI",
+    "DashboardIntegration",
+    "connect_to_dashboard",
 ]
 

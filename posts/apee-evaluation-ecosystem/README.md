@@ -177,6 +177,7 @@ asyncio.run(main())
 apee/
 ├── __init__.py              # Package exports
 ├── models.py                # Pydantic data models
+├── cli.py                   # Command-line interface
 ├── agents/
 │   ├── base.py              # Abstract Agent class
 │   └── ollama.py            # Ollama LLM implementation
@@ -184,7 +185,7 @@ apee/
 │   └── coordinator.py       # Task distribution & execution modes
 ├── evaluation/
 │   ├── evaluator.py         # Heuristic evaluation engine
-│   ├── llm_evaluator.py     # 🆕 LLM-as-a-Judge evaluators
+│   ├── llm_evaluator.py     # LLM-as-a-Judge evaluators
 │   ├── quality.py           # Quality scoring strategies
 │   ├── adaptive.py          # Adaptive pattern detection
 │   └── report.py            # Report data models
@@ -192,7 +193,17 @@ apee/
 │   ├── datasets.py          # 19 scenarios, 11 categories
 │   ├── runner.py            # Statistical benchmark runner
 │   ├── analyzer.py          # Analysis with confidence intervals
-│   └── collaborative.py     # Multi-agent evaluation scenarios
+│   └── collaborative.py     # 12 multi-agent scenarios
+├── visualization/           # 🆕 Phase 6
+│   ├── charts.py            # Plotly/text chart generation
+│   └── export.py            # HTML/PNG export utilities
+├── anomaly/                 # 🆕 Phase 6
+│   ├── detector.py          # Statistical anomaly detection
+│   ├── patterns.py          # Pattern analyzers
+│   └── alerts.py            # Alert handling system
+├── dashboard/               # 🆕 Phase 6
+│   ├── server.py            # Web dashboard server
+│   └── api.py               # Dashboard API client
 └── utils/
     ├── logging.py           # Logging utilities
     └── helpers.py           # Helper functions
@@ -201,7 +212,8 @@ examples/
 ├── full_evaluation.py           # Basic evaluation demo
 ├── comprehensive_benchmark.py   # Single-model benchmarks
 ├── multi_agent_evaluation.py    # Multi-agent with heuristics
-└── proper_apee_evaluation.py    # 🆕 LLM-as-a-Judge evaluation
+├── proper_apee_evaluation.py    # LLM-as-a-Judge evaluation
+└── phase6_demo.py               # 🆕 Visualization & anomaly demo
 ```
 
 ---
@@ -512,12 +524,115 @@ print(result.quality_ranking)
 - [x] Proper judge/agent family separation (no bias)
 - [x] Judge size hierarchy (12-14B judges for 3B agents)
 
-### Phase 6: Future Enhancements
-- [ ] Create visualization utilities
-- [ ] Add more collaboration scenarios
-- [ ] Implement advanced anomaly detection
-- [ ] Web dashboard for results
+### Phase 6: Future Enhancements ✅
+- [x] Create visualization utilities (charts, reports, exports)
+- [x] Add more collaboration scenarios (12 scenarios total)
+- [x] Implement advanced anomaly detection
+- [x] Web dashboard for results
 - [ ] Publish to PyPI (optional)
+
+---
+
+## 🖥️ Phase 6 Features
+
+### Visualization Utilities
+
+Create interactive charts and comprehensive reports:
+
+```python
+from apee.visualization import (
+    MetricsVisualizer,
+    create_evaluation_chart,
+    create_comparison_chart,
+    create_anomaly_heatmap,
+    generate_report_html,
+)
+
+# Create visualizer
+visualizer = MetricsVisualizer()
+
+# Three-tier comparison chart
+chart = visualizer.create_level_comparison(
+    l1_scores={"goal": 8.5, "semantic": 7.0},
+    l2_scores={"collaboration": 6.5, "synthesis": 7.5},
+    l3_scores={"efficiency": 8.0, "stability": 9.0},
+)
+
+# Generate HTML report
+generate_report_html(
+    evaluation_result,
+    title="My Evaluation Report",
+    output_path="report.html"
+)
+```
+
+### Advanced Anomaly Detection
+
+Detect unusual patterns in evaluations:
+
+```python
+from apee.anomaly import (
+    AnomalyDetector,
+    AlertManager,
+    ConsoleAlertHandler,
+)
+
+# Create detector and alert manager
+detector = AnomalyDetector(window_size=50, z_threshold=3.0)
+alerts = AlertManager()
+alerts.add_handler(ConsoleAlertHandler())
+
+# Check evaluation for anomalies
+anomalies = detector.check_evaluation({
+    "overall_apee_score": 3.0,  # Very low
+    "l2_average": 1.0,  # Poor collaboration
+})
+
+# Process and display alerts
+for anomaly in anomalies:
+    alerts.process_anomaly(anomaly)
+```
+
+### Web Dashboard
+
+Real-time monitoring of evaluations:
+
+```python
+from apee import create_dashboard, DashboardAPI
+
+# Start dashboard server
+dashboard = create_dashboard(port=8765)
+# Opens browser to http://localhost:8765
+
+# Push results programmatically
+dashboard.add_evaluation({
+    "overall_apee_score": 7.5,
+    "scenario_id": "code_review",
+    # ...
+})
+
+# Or use CLI
+# $ apee-dashboard --port 8765
+```
+
+### New Collaboration Scenarios
+
+12 scenarios covering diverse collaboration patterns:
+
+| ID | Name | Pattern | Focus |
+|----|------|---------|-------|
+| 1 | Code Review | peer_review | Quality, coordination |
+| 2 | Research Synthesis | sequential | Information flow |
+| 3 | Constrained Problem | debate | Conflict resolution |
+| 4 | Emergent Behavior | parallel | Diversity, consensus |
+| 5 | Scalability Test | hierarchical | Coordination overhead |
+| 6 | Conflict Resolution | consensus | Agreement time |
+| 7 | Knowledge Transfer | sequential | Domain translation |
+| 8 | Error Recovery | hierarchical | Fault tolerance |
+| 9 | Creative Collaboration | debate | Idea synthesis |
+| 10 | Real-Time Incident | parallel | Response time |
+| 11 | Adversarial Review | debate | Security analysis |
+| 12 | Documentation Sprint | peer_review | Consistency |
 
 ---
 

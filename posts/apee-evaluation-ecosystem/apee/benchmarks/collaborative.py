@@ -330,6 +330,303 @@ Goal: Reach consensus despite initial disagreement.
                 ],
                 primary_metrics=["conflict_resolution_rate", "time_to_consensus", "argument_quality"],
             ),
+            
+            # ============ SCENARIO 7: Knowledge Transfer ============
+            CollaborativeScenario(
+                id="knowledge_transfer",
+                name="Cross-Domain Knowledge Transfer",
+                description="Test agents transferring domain expertise",
+                pattern=CollaborationPattern.SEQUENTIAL,
+                agent_roles=[AgentRole.ANALYZER, AgentRole.EXECUTOR, AgentRole.REVIEWER, AgentRole.SYNTHESIZER],
+                min_agents=4,
+                max_agents=4,
+                task_description="""
+Transfer machine learning concepts to a web development context:
+
+Pipeline:
+1. ML EXPERT (ANALYZER): Explain gradient descent optimization
+2. TRANSLATOR (EXECUTOR): Reframe for web developers using analogies
+3. VALIDATOR (REVIEWER): Check accuracy of translation
+4. DOCUMENTER (SYNTHESIZER): Create beginner-friendly tutorial
+
+Final output should:
+- Use web dev analogies (HTTP requests, caching, etc.)
+- Be accurate to ML concepts
+- Be accessible to non-ML developers
+""",
+                subtasks=[
+                    "Explain ML concept",
+                    "Translate to web analogies",
+                    "Validate accuracy",
+                    "Create tutorial",
+                ],
+                expected_interactions=6,
+                expected_handoffs=3,
+                success_criteria=[
+                    "Gradient descent explained",
+                    "Web analogies used",
+                    "Technical accuracy maintained",
+                    "Beginner accessible",
+                ],
+                primary_metrics=["knowledge_preservation", "clarity_score", "domain_translation_quality"],
+            ),
+            
+            # ============ SCENARIO 8: Error Recovery ============
+            CollaborativeScenario(
+                id="error_recovery",
+                name="Collaborative Error Recovery",
+                description="Test agent recovery from intentional failures",
+                pattern=CollaborationPattern.HIERARCHICAL,
+                agent_roles=[AgentRole.PLANNER, AgentRole.EXECUTOR, AgentRole.EXECUTOR, AgentRole.REVIEWER],
+                min_agents=4,
+                max_agents=4,
+                task_description="""
+Build a fault-tolerant task execution system. Simulate failures:
+
+PLANNER (Leader):
+1. Assign tasks to EXECUTOR agents
+2. Monitor for failures
+3. Reassign failed tasks
+
+EXECUTOR agents:
+1. Execute assigned tasks
+2. One agent will "fail" (simulate with incomplete output)
+3. Report status back
+
+REVIEWER:
+1. Detect failed executions
+2. Recommend recovery action
+3. Verify recovery success
+
+Task: Implement a simple 3-endpoint REST API
+- /users (GET list)
+- /users/:id (GET single)
+- /users (POST create)
+
+One executor will fail on their endpoint - test recovery.
+""",
+                subtasks=[
+                    "Task assignment",
+                    "Parallel execution",
+                    "Failure detection",
+                    "Recovery and reassignment",
+                ],
+                expected_interactions=10,
+                expected_handoffs=4,
+                success_criteria=[
+                    "Failure detected",
+                    "Recovery initiated",
+                    "All endpoints implemented",
+                    "System resilience demonstrated",
+                ],
+                primary_metrics=["fault_tolerance", "recovery_time", "task_completion_rate"],
+            ),
+            
+            # ============ SCENARIO 9: Creative Collaboration ============
+            CollaborativeScenario(
+                id="creative_collab",
+                name="Creative Collaborative Design",
+                description="Test creative problem-solving with diverse perspectives",
+                pattern=CollaborationPattern.DEBATE,
+                agent_roles=[AgentRole.ANALYZER, AgentRole.EXECUTOR, AgentRole.REVIEWER],
+                min_agents=3,
+                max_agents=3,
+                task_description="""
+Design a novel user interface for blind users to navigate a map:
+
+Round 1 - Initial Proposals:
+- ANALYZER: Propose audio-based approach
+- EXECUTOR: Propose haptic/tactile approach
+- REVIEWER: Propose hybrid approach
+
+Round 2 - Critique:
+- Each agent critiques the others' proposals
+- Identify strengths and weaknesses
+
+Round 3 - Synthesis:
+- Combine best elements from all proposals
+- Create unified design specification
+
+Output: Complete UI design document with:
+- Interaction patterns
+- Technology requirements
+- Accessibility considerations
+""",
+                subtasks=[
+                    "Generate initial proposals",
+                    "Cross-critique proposals",
+                    "Synthesize best elements",
+                    "Document final design",
+                ],
+                expected_interactions=12,
+                expected_handoffs=0,
+                success_criteria=[
+                    "Three distinct proposals",
+                    "Constructive criticism given",
+                    "Elements combined",
+                    "Accessibility addressed",
+                ],
+                primary_metrics=["creativity_score", "idea_diversity", "synthesis_quality"],
+            ),
+            
+            # ============ SCENARIO 10: Real-Time Collaboration ============
+            CollaborativeScenario(
+                id="realtime_collab",
+                name="Simulated Real-Time Incident Response",
+                description="Test coordinated response under time pressure",
+                pattern=CollaborationPattern.PARALLEL,
+                agent_roles=[AgentRole.ANALYZER, AgentRole.EXECUTOR, AgentRole.EXECUTOR, AgentRole.SYNTHESIZER],
+                min_agents=4,
+                max_agents=4,
+                task_description="""
+Incident: Production database showing 50% increase in latency.
+
+PARALLEL response - all agents work simultaneously:
+
+ANALYZER (Diagnostician):
+1. Analyze possible causes
+2. Prioritize by likelihood
+3. Recommend diagnostic steps
+
+EXECUTOR 1 (Query Analyzer):
+1. Identify slow queries
+2. Suggest query optimizations
+3. Estimate impact
+
+EXECUTOR 2 (Infrastructure):
+1. Check resource utilization
+2. Identify bottlenecks
+3. Recommend scaling options
+
+SYNTHESIZER (Coordinator):
+1. Combine all findings
+2. Create action plan
+3. Prioritize fixes
+
+Output: Incident response document with immediate + long-term actions.
+""",
+                subtasks=[
+                    "Diagnose issue",
+                    "Analyze queries",
+                    "Check infrastructure",
+                    "Create action plan",
+                ],
+                expected_interactions=8,
+                expected_handoffs=0,
+                success_criteria=[
+                    "Root causes identified",
+                    "Immediate fixes proposed",
+                    "Long-term improvements listed",
+                    "Action plan prioritized",
+                ],
+                primary_metrics=["response_time", "coverage_completeness", "action_quality"],
+            ),
+            
+            # ============ SCENARIO 11: Adversarial Review ============
+            CollaborativeScenario(
+                id="adversarial_review",
+                name="Adversarial Code Review",
+                description="One agent tries to find vulnerabilities, another defends",
+                pattern=CollaborationPattern.DEBATE,
+                agent_roles=[AgentRole.EXECUTOR, AgentRole.REVIEWER, AgentRole.SYNTHESIZER],
+                min_agents=3,
+                max_agents=3,
+                task_description="""
+Adversarial security review of authentication code:
+
+```python
+def authenticate(username, password):
+    user = db.query(f"SELECT * FROM users WHERE username='{username}'")
+    if user and user.password == hashlib.md5(password.encode()).hexdigest():
+        session['user'] = user.id
+        return True
+    return False
+```
+
+EXECUTOR (Red Team):
+1. Find all vulnerabilities
+2. Demonstrate exploit scenarios
+3. Rate severity of each
+
+REVIEWER (Blue Team):
+1. Acknowledge valid vulnerabilities
+2. Propose fixes for each
+3. Defend design where appropriate
+
+SYNTHESIZER (Arbiter):
+1. Evaluate both sides
+2. Create final security report
+3. Prioritize remediation
+
+Goal: Thorough security analysis through constructive conflict.
+""",
+                subtasks=[
+                    "Identify vulnerabilities",
+                    "Propose defenses",
+                    "Evaluate arguments",
+                    "Create security report",
+                ],
+                expected_interactions=10,
+                expected_handoffs=0,
+                success_criteria=[
+                    "SQL injection found",
+                    "MD5 weakness identified",
+                    "Fixes proposed",
+                    "Severity rated",
+                ],
+                primary_metrics=["vulnerability_coverage", "fix_quality", "debate_constructiveness"],
+            ),
+            
+            # ============ SCENARIO 12: Documentation Sprint ============
+            CollaborativeScenario(
+                id="doc_sprint",
+                name="Collaborative Documentation Sprint",
+                description="Multiple agents create comprehensive documentation",
+                pattern=CollaborationPattern.PEER_REVIEW,
+                agent_roles=[AgentRole.EXECUTOR, AgentRole.EXECUTOR, AgentRole.REVIEWER, AgentRole.SYNTHESIZER],
+                min_agents=4,
+                max_agents=4,
+                task_description="""
+Create documentation for a new Python async HTTP client library:
+
+EXECUTOR 1 (API Writer):
+1. Write function signatures
+2. Add parameter descriptions
+3. Include return types
+
+EXECUTOR 2 (Example Writer):
+1. Create usage examples
+2. Show common patterns
+3. Include error handling
+
+REVIEWER (Quality Check):
+1. Review both outputs
+2. Check consistency
+3. Suggest improvements
+
+SYNTHESIZER (Compiler):
+1. Combine into cohesive docs
+2. Add navigation/structure
+3. Ensure completeness
+
+Output: Complete README with API reference and examples.
+""",
+                subtasks=[
+                    "Write API documentation",
+                    "Create examples",
+                    "Review and suggest",
+                    "Compile final docs",
+                ],
+                expected_interactions=8,
+                expected_handoffs=3,
+                success_criteria=[
+                    "All functions documented",
+                    "Working examples provided",
+                    "Consistent style",
+                    "Complete coverage",
+                ],
+                primary_metrics=["documentation_coverage", "example_quality", "consistency_score"],
+            ),
         ]
     
     @property

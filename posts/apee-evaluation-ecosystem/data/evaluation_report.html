@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APEE Code Review Evaluation</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --purple: #9b59b6;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: var(--dark);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .timestamp {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .score-hero {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            margin: 30px 0;
+        }
+        
+        .overall-score {
+            text-align: center;
+        }
+        
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(
+                var(--primary) 72.0%,
+                var(--light) 72.0%
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .score-inner {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .score-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .score-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .level-scores {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .level-score {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .level-badge {
+            width: 60px;
+            padding: 5px;
+            text-align: center;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            color: white;
+        }
+        
+        .level-badge.l1 { background: var(--primary); }
+        .level-badge.l2 { background: var(--success); }
+        .level-badge.l3 { background: var(--purple); }
+        
+        .level-bar {
+            flex: 1;
+            height: 12px;
+            background: var(--light);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .level-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .level-fill.l1 { background: var(--primary); }
+        .level-fill.l2 { background: var(--success); }
+        .level-fill.l3 { background: var(--purple); }
+        
+        .section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .section h2 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .metric-card {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .metric-card h4 {
+            color: var(--dark);
+            margin-bottom: 15px;
+            text-transform: capitalize;
+        }
+        
+        .metric-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .metric-row span:first-child {
+            width: 140px;
+            font-size: 0.85rem;
+            color: #555;
+        }
+        
+        .metric-bar {
+            flex: 1;
+            height: 10px;
+            background: white;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .metric-bar .fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+        
+        .metric-bar.collaborative .fill {
+            background: var(--success);
+        }
+        
+        .metric-bar.ecosystem .fill {
+            background: var(--purple);
+        }
+        
+        .score {
+            width: 40px;
+            text-align: right;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        .chart-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+        
+        .text-chart pre {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: white;
+            opacity: 0.8;
+        }
+        
+        footer a {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 APEE Code Review Evaluation</h1>
+            <p class="timestamp">Generated: 2025-12-09 10:15:13</p>
+            
+            <div class="score-hero">
+                <div class="overall-score">
+                    <div class="score-circle">
+                        <div class="score-inner">
+                            <span class="score-value">7.2</span>
+                            <span class="score-label">Overall Score</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="level-scores">
+                    <div class="level-score">
+                        <span class="level-badge l1">L1</span>
+                        <div class="level-bar"><div class="level-fill l1" style="width: 75.0%"></div></div>
+                        <span class="score">7.5</span>
+                    </div>
+                    <div class="level-score">
+                        <span class="level-badge l2">L2</span>
+                        <div class="level-bar"><div class="level-fill l2" style="width: 70.0%"></div></div>
+                        <span class="score">7.0</span>
+                    </div>
+                    <div class="level-score">
+                        <span class="level-badge l3">L3</span>
+                        <div class="level-bar"><div class="level-fill l3" style="width: 76.0%"></div></div>
+                        <span class="score">7.6</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <section class="section">
+            <h2>📊 Level 1: Individual Agent Metrics</h2>
+            <div class="metrics-grid">
+                
+        <div class="metric-card">
+            <h4>executor</h4>
+            <div class="metric-row">
+                <span>Goal Alignment</span>
+                <div class="metric-bar"><div class="fill" style="width: 90.0%"></div></div>
+                <span class="score">9.0</span>
+            </div>
+            <div class="metric-row">
+                <span>Semantic Quality</span>
+                <div class="metric-bar"><div class="fill" style="width: 80.0%"></div></div>
+                <span class="score">8.0</span>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <h4>analyzer</h4>
+            <div class="metric-row">
+                <span>Goal Alignment</span>
+                <div class="metric-bar"><div class="fill" style="width: 80.0%"></div></div>
+                <span class="score">8.0</span>
+            </div>
+            <div class="metric-row">
+                <span>Semantic Quality</span>
+                <div class="metric-bar"><div class="fill" style="width: 70.0%"></div></div>
+                <span class="score">7.0</span>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <h4>reviewer</h4>
+            <div class="metric-row">
+                <span>Goal Alignment</span>
+                <div class="metric-bar"><div class="fill" style="width: 70.0%"></div></div>
+                <span class="score">7.0</span>
+            </div>
+            <div class="metric-row">
+                <span>Semantic Quality</span>
+                <div class="metric-bar"><div class="fill" style="width: 40.0%"></div></div>
+                <span class="score">4.0</span>
+            </div>
+        </div>
+        
+            </div>
+        </section>
+        
+        <section class="section">
+            <h2>🤝 Level 2: Collaborative Metrics</h2>
+            
+        <div class="metric-row">
+            <span>Collaboration</span>
+            <div class="metric-bar collaborative"><div class="fill" style="width: 65.0%"></div></div>
+            <span class="score">6.5</span>
+        </div>
+        
+        <div class="metric-row">
+            <span>Synthesis</span>
+            <div class="metric-bar collaborative"><div class="fill" style="width: 75.0%"></div></div>
+            <span class="score">7.5</span>
+        </div>
+        
+        </section>
+        
+        <section class="section">
+            <h2>🌐 Level 3: Ecosystem Metrics</h2>
+            
+        <div class="metric-row">
+            <span>Efficiency</span>
+            <div class="metric-bar ecosystem"><div class="fill" style="width: 60.0%"></div></div>
+            <span class="score">6.0</span>
+        </div>
+        
+        <div class="metric-row">
+            <span>Stability</span>
+            <div class="metric-bar ecosystem"><div class="fill" style="width: 90.0%"></div></div>
+            <span class="score">9.0</span>
+        </div>
+        
+        <div class="metric-row">
+            <span>Throughput</span>
+            <div class="metric-bar ecosystem"><div class="fill" style="width: 85.0%"></div></div>
+            <span class="score">8.5</span>
+        </div>
+        
+        </section>
+        
+        
+        
+        <section class="section">
+            <h2>📋 Raw Data</h2>
+            <details>
+                <summary style="cursor: pointer; padding: 10px;">Click to expand JSON data</summary>
+                <pre style="background: #1a1a2e; color: #16f6b0; padding: 15px; border-radius: 8px; margin-top: 10px; overflow-x: auto;">{
+  "overall_apee_score": 7.2,
+  "l1_average": 7.5,
+  "l2_average": 7.0,
+  "l3_average": 7.6,
+  "individual_scores": {
+    "executor": {
+      "goal_alignment": 9.0,
+      "semantic_quality": 8.0
+    },
+    "analyzer": {
+      "goal_alignment": 8.0,
+      "semantic_quality": 7.0
+    },
+    "reviewer": {
+      "goal_alignment": 7.0,
+      "semantic_quality": 4.0
+    }
+  },
+  "collaborative_scores": {
+    "collaboration": 6.5,
+    "synthesis": 7.5
+  },
+  "ecosystem_scores": {
+    "efficiency": 6.0,
+    "stability": 9.0,
+    "throughput": 8.5
+  },
+  "scenario_id": "code_review_demo",
+  "pattern": "peer_review"
+}</pre>
+            </details>
+        </section>
+        
+        <footer>
+            <p>APEE - Adaptive Poly-Agentic Evaluation Ecosystem</p>
+            <p><a href="https://ahjavid.github.io/technical-notes-blog/">Technical Notes Blog</a></p>
+        </footer>
+    </div>
+</body>
+</html>
