@@ -382,6 +382,254 @@ REASONING: [one sentence explanation]"""
             self._client = None
 
 
+class CodeQualityScorer(QualityScorer):
+    """
+    Specialized scorer for code-related outputs.
+    
+    Phase 2: Analyzes code structure, syntax, and best practices.
+    """
+    
+    CODE_PATTERNS = {
+        "has_function": r"\bdef\s+\w+\s*\(",
+        "has_class": r"\bclass\s+\w+",
+        "has_type_hints": r":\s*(int|str|float|bool|list|dict|Optional|Any)\b|-> \w+",
+        "has_docstring": r'"""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\'',
+        "has_error_handling": r"\btry\s*:|except\s+\w*:|raise\s+\w+",
+        "has_imports": r"^(import|from)\s+\w+",
+        "has_async": r"\basync\s+(def|for|with)",
+    }
+    
+    def __init__(self):
+        self.base_scorer = HeuristicScorer()
+    
+    async def score(self, result: AgentResult, task: Task) -> QualityScore:
+        """Score code quality."""
+        return self.score_sync(result, task)
+    
+    def score_sync(self, result: AgentResult, task: Task) -> QualityScore:
+        """Analyze code-specific quality metrics."""
+        output = result.output
+        
+        if not output.strip():
+            return QualityScore(overall=0.0, reasoning="Empty output")
+        
+        # Check if output contains code
+        has_code_block = "```" in output
+        
+        # Extract code from markdown blocks if present
+        code_blocks = re.findall(r"```(?:\w+)?\n([\s\S]*?)```", output)
+        code_content = "\n".join(code_blocks) if code_blocks else output
+        
+        # Calculate code-specific scores
+        code_score = self._analyze_code_patterns(code_content)
+        style_score = self._analyze_code_style(code_content)
+        
+        # Base heuristic scores for text quality
+        base_score = self.base_scorer.score_sync(result, task)
+        
+        # Weighted combination favoring code metrics
+        if has_code_block or self._looks_like_code(output):
+            overall = (
+                code_score * 0.4 +
+                style_score * 0.2 +
+                base_score.relevance * 0.2 +
+                base_score.completeness * 0.2
+            )
+        else:
+            overall = base_score.overall
+        
+        return QualityScore(
+            overall=overall,
+            relevance=base_score.relevance,
+            completeness=base_score.completeness,
+            structure=code_score,
+            accuracy=style_score,
+            clarity=base_score.clarity,
+            reasoning=self._generate_code_reasoning(code_score, style_score, has_code_block)
+        )
+    
+    def _looks_like_code(self, text: str) -> bool:
+        """Check if text looks like code even without markdown."""
+        code_indicators = [
+            r"\bdef\s+\w+",
+            r"\bclass\s+\w+",
+            r"\bimport\s+\w+",
+            r"\breturn\s+",
+            r"if\s+.+:",
+            r"for\s+\w+\s+in\s+",
+        ]
+        return any(re.search(p, text) for p in code_indicators)
+    
+    def _analyze_code_patterns(self, code: str) -> float:
+        """Score based on code structure patterns."""
+        if not code.strip():
+            return 0.0
+        
+        score = 0.3  # Base score for having code
+        
+        for pattern_name, pattern in self.CODE_PATTERNS.items():
+            if re.search(pattern, code, re.MULTILINE):
+                score += 0.1
+        
+        return min(1.0, score)
+    
+    def _analyze_code_style(self, code: str) -> float:
+        """Analyze code style and best practices."""
+        score = 0.5  # Base score
+        
+        # Good practices
+        if re.search(r":\s*\w+\s*(=|,|\))", code):  # Type hints
+            score += 0.15
+        if re.search(r'""".*"""', code, re.DOTALL):  # Docstrings
+            score += 0.15
+        if re.search(r"#\s*\w+", code):  # Comments
+            score += 0.1
+        
+        # Bad practices
+        lines = code.split("\n")
+        long_lines = sum(1 for line in lines if len(line) > 100)
+        if long_lines > 3:
+            score -= 0.1
+        
+        # Magic numbers/strings
+        magic_count = len(re.findall(r"\b\d{3,}\b", code))
+        if magic_count > 2:
+            score -= 0.1
+        
+        return max(0.0, min(1.0, score))
+    
+    def _generate_code_reasoning(
+        self, code_score: float, style_score: float, has_block: bool
+    ) -> str:
+        """Generate reasoning for code quality."""
+        parts = []
+        
+        if has_block:
+            parts.append("includes code block")
+        
+        if code_score >= 0.7:
+            parts.append("good code structure")
+        elif code_score < 0.4:
+            parts.append("minimal code structure")
+        
+        if style_score >= 0.7:
+            parts.append("follows best practices")
+        elif style_score < 0.4:
+            parts.append("style improvements needed")
+        
+        return "; ".join(parts) if parts else "code analysis complete"
+
+
+class ComparativeScorer(QualityScorer):
+    """
+    Phase 2: Compares multiple responses to determine relative quality.
+    
+    Useful for model comparison and ranking.
+    """
+    
+    def __init__(self):
+        self.base_scorer = HeuristicScorer()
+        self.response_cache: list[tuple[AgentResult, QualityScore]] = []
+    
+    async def score(self, result: AgentResult, task: Task) -> QualityScore:
+        """Score relative to other cached responses."""
+        return self.score_sync(result, task)
+    
+    def score_sync(self, result: AgentResult, task: Task) -> QualityScore:
+        """Compare against cached responses."""
+        base_score = self.base_scorer.score_sync(result, task)
+        
+        if not self.response_cache:
+            # First response - use base score
+            self.response_cache.append((result, base_score))
+            return base_score
+        
+        # Calculate relative metrics
+        all_scores = [s for _, s in self.response_cache]
+        all_scores.append(base_score)
+        
+        avg_overall = sum(s.overall for s in all_scores) / len(all_scores)
+        
+        # Percentile ranking
+        better_than = sum(1 for s in all_scores if base_score.overall > s.overall)
+        percentile = better_than / len(all_scores)
+        
+        # Adjusted score based on relative performance
+        relative_bonus = (base_score.overall - avg_overall) * 0.2
+        adjusted_overall = min(1.0, max(0.0, base_score.overall + relative_bonus))
+        
+        self.response_cache.append((result, base_score))
+        
+        return QualityScore(
+            overall=adjusted_overall,
+            relevance=base_score.relevance,
+            completeness=base_score.completeness,
+            structure=base_score.structure,
+            accuracy=percentile,  # Use accuracy field for percentile
+            clarity=base_score.clarity,
+            reasoning=f"Rank: {percentile:.0%} percentile, {len(self.response_cache)} responses"
+        )
+    
+    def clear_cache(self):
+        """Clear response cache for new comparison."""
+        self.response_cache.clear()
+
+
+class MultiJudgeScorer(QualityScorer):
+    """
+    Phase 2: Uses multiple LLM judges for more robust scoring.
+    
+    Aggregates scores from different models to reduce bias.
+    """
+    
+    def __init__(
+        self,
+        judge_models: Optional[list[str]] = None,
+        base_url: str = "http://localhost:11434"
+    ):
+        self.judge_models = judge_models or ["qwen3:4b", "gemma3:4b"]
+        self.base_url = base_url
+        self.judges: list[LLMQualityScorer] = [
+            LLMQualityScorer(model=m, base_url=base_url) for m in self.judge_models
+        ]
+    
+    async def score(self, result: AgentResult, task: Task) -> QualityScore:
+        """Get consensus score from multiple judges."""
+        scores = []
+        
+        for judge in self.judges:
+            try:
+                score = await judge.score(result, task)
+                scores.append(score)
+            except Exception:
+                continue  # Skip failed judges
+        
+        if not scores:
+            # Fallback to heuristic
+            return HeuristicScorer().score_sync(result, task)
+        
+        # Aggregate scores (mean)
+        n = len(scores)
+        return QualityScore(
+            overall=sum(s.overall for s in scores) / n,
+            relevance=sum(s.relevance for s in scores) / n,
+            completeness=sum(s.completeness for s in scores) / n,
+            structure=sum(s.structure for s in scores) / n,
+            accuracy=sum(s.accuracy for s in scores) / n,
+            clarity=sum(s.clarity for s in scores) / n,
+            reasoning=f"Multi-judge consensus ({n} judges)"
+        )
+    
+    def score_sync(self, result: AgentResult, task: Task) -> QualityScore:
+        """Sync fallback to heuristic."""
+        return HeuristicScorer().score_sync(result, task)
+    
+    async def close(self):
+        """Clean up all judges."""
+        for judge in self.judges:
+            await judge.close()
+
+
 class CompositeScorer(QualityScorer):
     """
     Combines multiple scorers with configurable weights.
@@ -446,6 +694,81 @@ class CompositeScorer(QualityScorer):
     def score_sync(self, result: AgentResult, task: Task) -> QualityScore:
         """Sync scoring uses only heuristic."""
         return self.heuristic_scorer.score_sync(result, task)
+    
+    async def close(self):
+        """Clean up resources."""
+        if self.llm_scorer:
+            await self.llm_scorer.close()
+
+
+class AdaptiveScorer(QualityScorer):
+    """
+    Phase 2: Automatically selects the best scoring strategy based on task type.
+    """
+    
+    def __init__(self, use_llm: bool = True):
+        self.heuristic = HeuristicScorer()
+        self.code_scorer = CodeQualityScorer()
+        self.llm_scorer = LLMQualityScorer() if use_llm else None
+        self.use_llm = use_llm
+    
+    async def score(self, result: AgentResult, task: Task) -> QualityScore:
+        """Adaptively select and apply scorer."""
+        task_type = self._detect_task_type(task)
+        
+        if task_type == "code":
+            base_score = self.code_scorer.score_sync(result, task)
+        else:
+            base_score = self.heuristic.score_sync(result, task)
+        
+        # Optionally enhance with LLM for complex tasks
+        if self.use_llm and self.llm_scorer and task.complexity > 0.6:
+            try:
+                llm_score = await self.llm_scorer.score(result, task)
+                # Blend scores
+                return QualityScore(
+                    overall=(base_score.overall * 0.4 + llm_score.overall * 0.6),
+                    relevance=(base_score.relevance + llm_score.relevance) / 2,
+                    completeness=(base_score.completeness + llm_score.completeness) / 2,
+                    structure=base_score.structure,
+                    accuracy=llm_score.accuracy,
+                    clarity=(base_score.clarity + llm_score.clarity) / 2,
+                    reasoning=f"Adaptive ({task_type}): {llm_score.reasoning}"
+                )
+            except Exception:
+                pass
+        
+        return QualityScore(
+            overall=base_score.overall,
+            relevance=base_score.relevance,
+            completeness=base_score.completeness,
+            structure=base_score.structure,
+            accuracy=base_score.accuracy,
+            clarity=base_score.clarity,
+            reasoning=f"Adaptive ({task_type}): {base_score.reasoning}"
+        )
+    
+    def score_sync(self, result: AgentResult, task: Task) -> QualityScore:
+        """Sync scoring with task-type detection."""
+        task_type = self._detect_task_type(task)
+        
+        if task_type == "code":
+            return self.code_scorer.score_sync(result, task)
+        return self.heuristic.score_sync(result, task)
+    
+    def _detect_task_type(self, task: Task) -> str:
+        """Detect task type from description."""
+        desc_lower = task.description.lower()
+        
+        code_keywords = ["code", "function", "implement", "write", "program", "script", "class"]
+        if any(kw in desc_lower for kw in code_keywords):
+            return "code"
+        
+        analysis_keywords = ["analyze", "compare", "explain", "describe", "review"]
+        if any(kw in desc_lower for kw in analysis_keywords):
+            return "analysis"
+        
+        return "general"
     
     async def close(self):
         """Clean up resources."""

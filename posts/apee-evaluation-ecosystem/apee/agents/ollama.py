@@ -2,6 +2,7 @@
 
 import time
 from typing import Optional
+from enum import Enum
 
 import httpx
 
@@ -12,6 +13,70 @@ from apee.agents.base import Agent
 OLLAMA_BASE_URL = "http://localhost:11434"
 DEFAULT_MODEL = "qwen2.5-coder:3b"
 DEFAULT_TIMEOUT = 60.0
+
+
+# Available model pool with characteristics
+MODEL_POOL = {
+    # Coding-focused models
+    "qwen2.5-coder:3b": {
+        "type": "coding",
+        "size": "small",
+        "strengths": ["code_generation", "debugging", "fast"],
+    },
+    "qwen2.5-coder:7b": {
+        "type": "coding",
+        "size": "medium",
+        "strengths": ["code_generation", "code_review", "balanced"],
+    },
+    # General-purpose models
+    "qwen3:4b": {
+        "type": "general",
+        "size": "small",
+        "strengths": ["reasoning", "analysis", "fast"],
+    },
+    "qwen3:8b": {
+        "type": "general",
+        "size": "medium",
+        "strengths": ["reasoning", "synthesis", "balanced"],
+    },
+    "gemma3:4b": {
+        "type": "general",
+        "size": "small",
+        "strengths": ["analysis", "clarity", "fast"],
+    },
+    "llama3.2:3b": {
+        "type": "general",
+        "size": "small",
+        "strengths": ["general", "fast"],
+    },
+}
+
+
+class ModelSize(str, Enum):
+    """Model size categories."""
+    SMALL = "small"   # 3-4B params
+    MEDIUM = "medium" # 7-8B params
+    LARGE = "large"   # 14B+ params
+
+
+def get_recommended_model(role: AgentRole, prefer_fast: bool = True) -> str:
+    """
+    Get recommended model for a given agent role.
+    
+    Args:
+        role: The agent's role
+        prefer_fast: If True, prefer smaller/faster models
+    """
+    role_model_map = {
+        AgentRole.ANALYZER: "qwen3:4b" if prefer_fast else "qwen3:8b",
+        AgentRole.CODER: "qwen2.5-coder:3b" if prefer_fast else "qwen2.5-coder:7b",
+        AgentRole.EXECUTOR: "qwen2.5-coder:3b" if prefer_fast else "qwen2.5-coder:7b",
+        AgentRole.REVIEWER: "gemma3:4b" if prefer_fast else "qwen3:8b",
+        AgentRole.SYNTHESIZER: "qwen3:4b" if prefer_fast else "qwen3:8b",
+        AgentRole.PLANNER: "qwen3:4b" if prefer_fast else "qwen3:8b",
+        AgentRole.CUSTOM: DEFAULT_MODEL,
+    }
+    return role_model_map.get(role, DEFAULT_MODEL)
 
 
 class OllamaClient:

@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from typing import Optional
+from typing import Optional, Sequence
 from uuid import uuid4
 
 from apee.models import Task, AgentResult, Message
@@ -20,7 +20,7 @@ class Coordinator:
     - Selective: Route tasks to specific agents based on criteria
     """
     
-    def __init__(self, agents: list[Agent]):
+    def __init__(self, agents: Sequence[Agent]):
         self.agents: dict[str, Agent] = {a.agent_id: a for a in agents}
         self.message_log: list[Message] = []
         self.results: list[AgentResult] = []
