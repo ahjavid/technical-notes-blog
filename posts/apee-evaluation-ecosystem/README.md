@@ -241,53 +241,55 @@ examples/
 
 ## 📊 Evaluation Dimensions
 
-### Individual Agent Performance
-| Metric | Description | Measurement |
-|--------|-------------|-------------|
-| Task Completion | Success rate per agent | Percentage |
-| Response Quality | Multi-dimensional scoring | Score 0-1.0 |
-| Latency | Processing time | Milliseconds |
-| Token Usage | Output verbosity | Token count |
+### Level 1: Individual Agent Performance (LLM-Evaluated)
+| Metric | Description | Scale |
+|--------|-------------|-------|
+| Goal Alignment | Did agent achieve the task? | 0-10 |
+| Semantic Quality | Is reasoning clear and logical? | 0-10 |
 
-### Multi-Agent Collaboration
-| Metric | Description | Measurement |
-|--------|-------------|-------------|
-| Response Consistency | Agreement across agents | Similarity score |
-| Coordination Efficiency | Parallel vs sequential gain | Multiplier |
-| Synergy Score | Combined vs individual performance | Ratio |
+### Level 2: Multi-Agent Collaboration (LLM-Evaluated)
+| Metric | Description | Scale |
+|--------|-------------|-------|
+| Collaboration Effectiveness | Did agents work well together? | 0-10 |
+| Synthesis Quality | Is combined output coherent? | 0-10 |
 
-### Ecosystem Health
-| Metric | Description | Measurement |
-|--------|-------------|-------------|
-| Throughput | Tasks processed per second | Tasks/sec |
-| Total Execution Time | End-to-end latency | Milliseconds |
-| Agent Utilization | Work distribution balance | Variance |
+### Level 3: Ecosystem Health (Computed)
+| Metric | Description | Scale |
+|--------|-------------|-------|
+| Efficiency | Output quality per unit time | 0-10 |
+| Stability | Inverse of conflicts | 0-10 |
+| Throughput | Agents utilized effectively | 0-10 |
+| Adaptability | Pattern appropriateness | 0-10 |
 
 ---
 
-## 🔬 Quality Scoring (Phase 2)
+## 🔬 Evaluation Methods
 
-APEE includes multiple scoring strategies:
+APEE supports two evaluation approaches:
 
+### 1. LLM-as-a-Judge (Recommended)
 ```python
-from apee.evaluation.quality import (
-    HeuristicScorer,    # Rule-based scoring
-    ComparativeScorer,  # Relative comparison
-    LLMScorer,          # LLM-as-judge
-    CompositeScorer,    # Weighted combination
+from apee.evaluation.llm_evaluator import EnsembleEvaluator
+
+# Ensemble of large judges from different families
+evaluator = EnsembleEvaluator(
+    judge_models=["qwen3:14b", "gemma3:12b"],
+    aggregation="median",
 )
 
-# Create composite scorer
-scorer = CompositeScorer([
-    (HeuristicScorer(), 0.6),
-    (ComparativeScorer(), 0.4),
-])
+# Evaluates: goal alignment, semantic quality, collaboration, synthesis
+result = evaluator.evaluate_full(collaborative_trace)
+print(f"Overall: {result['overall_apee_score']}/10")
+```
 
-# Score a result
+### 2. Heuristic Scoring (Fast, no LLM needed)
+```python
+from apee.evaluation.quality import CompositeScorer, HeuristicScorer
+
+scorer = CompositeScorer([
+    (HeuristicScorer(), 1.0),
+])
 score = scorer.score(result, task)
-print(f"Overall: {score.overall_score:.2f}")
-print(f"Completeness: {score.dimension_scores['completeness']:.2f}")
-print(f"Latency: {score.dimension_scores['latency']:.2f}")
 ```
 
 ---
@@ -453,9 +455,16 @@ print(result.quality_ranking)
 - [x] Adaptive engine with pattern detection
 - [x] 6 collaboration patterns implemented
 - [x] Multi-agent evaluation demo
-- [x] All 34 tests passing
 
-### Phase 5: Future Enhancements
+### Phase 5: LLM-as-a-Judge Evaluation ✅
+- [x] Research CrewAI evaluation patterns
+- [x] Implement LLM-based evaluators (Goal, Semantic, Collaboration, Synthesis)
+- [x] Create EnsembleEvaluator with multiple judge models
+- [x] Role-optimized agent selection based on benchmarks
+- [x] Proper judge/agent family separation (no bias)
+- [x] Judge size hierarchy (12-14B judges for 3B agents)
+
+### Phase 6: Future Enhancements
 - [ ] Create visualization utilities
 - [ ] Add more collaboration scenarios
 - [ ] Implement advanced anomaly detection
