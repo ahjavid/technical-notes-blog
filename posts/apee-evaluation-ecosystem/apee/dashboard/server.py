@@ -78,6 +78,58 @@ class DashboardState:
             "scenarios": self.scenarios,
             "summary": self.get_summary(),
         }
+    
+    def load_from_json(self, filepath: str) -> bool:
+        """Load evaluation results from a JSON file."""
+        try:
+            with open(filepath, 'r') as f:
+                data = json.load(f)
+            
+            # Load scenarios as evaluations
+            if 'scenarios' in data:
+                for scenario in data['scenarios']:
+                    eval_entry = {
+                        'scenario_id': scenario.get('scenario_id', 'unknown'),
+                        'pattern': scenario.get('pattern', 'unknown'),
+                        'overall_score': scenario.get('overall_apee_score', 0),
+                        'l1_average': scenario.get('level1_individual', {}).get('average', 0),
+                        'l2_average': scenario.get('level2_collaborative', {}).get('average', 0),
+                        'l3_average': scenario.get('level3_ecosystem', {}).get('overall', 0),
+                        'duration': scenario.get('duration_seconds', 0),
+                        'details': scenario,
+                        '_timestamp': data.get('timestamp', datetime.now().isoformat())
+                    }
+                    self.evaluations.append(eval_entry)
+                    self.scenarios.append(scenario)
+            
+            # Load agents from agent_models
+            if 'agent_models' in data:
+                for role, model in data['agent_models'].items():
+                    self.agents[role] = {
+                        'role': role,
+                        'model': model,
+                        'status': 'active',
+                        '_updated': data.get('timestamp', datetime.now().isoformat())
+                    }
+            
+            # Load summary stats
+            if 'summary_statistics' in data:
+                stats = data['summary_statistics']
+                # Check for any anomalies based on low scores
+                if stats.get('min_score', 10) < 5.0:
+                    self.anomalies.append({
+                        'type': 'low_score',
+                        'severity': 'warning',
+                        'description': f"Low score detected: {stats.get('min_score', 0):.1f}/10",
+                        'metric': 'overall_score',
+                        'deviation': (5.0 - stats.get('min_score', 0)) / 5.0
+                    })
+            
+            self.last_updated = datetime.now()
+            return True
+        except Exception as e:
+            print(f"Error loading JSON: {e}")
+            return False
 
 
 # Global dashboard state
@@ -230,7 +282,11 @@ class DashboardServer:
         Args:
             open_browser: Whether to open the dashboard in a browser
         """
-        self.server = socketserver.TCPServer(
+        # Use ThreadingTCPServer for better concurrency
+        class ThreadedServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
+            allow_reuse_address = True
+        
+        self.server = ThreadedServer(
             (self.host, self.port),
             DashboardHandler
         )
@@ -304,69 +360,49 @@ def _get_dashboard_html() -> str:
 <body>
     <div class="container">
         <header>
-            <h1>🎯 APEE Dashboard</h1>
-            <p class="subtitle">Adaptive Poly-Agentic Evaluation Ecosystem</p>
-            <div class="refresh-info">
-                <span id="last-update">Last updated: -</span>
-                <button id="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+            <div class="header-row">
+                <div>
+                    <h1>🎯 APEE Dashboard</h1>
+                    <span class="subtitle">Adaptive Poly-Agentic Evaluation Ecosystem</span>
+                </div>
+                <div class="header-stats">
+                    <span class="stat"><strong id="eval-count">0</strong> evals</span>
+                    <span class="stat"><strong id="agent-count">0</strong> agents</span>
+                    <span class="stat"><strong id="anomaly-count">0</strong> anomalies</span>
+                    <button id="refresh-btn" onclick="refreshData()">🔄</button>
+                </div>
             </div>
         </header>
         
-        <div class="summary-cards">
-            <div class="card">
-                <div class="card-icon">📊</div>
-                <div class="card-value" id="eval-count">0</div>
-                <div class="card-label">Evaluations</div>
-            </div>
-            <div class="card">
-                <div class="card-icon">🤖</div>
-                <div class="card-value" id="agent-count">0</div>
-                <div class="card-label">Active Agents</div>
-            </div>
-            <div class="card">
-                <div class="card-icon">⚠️</div>
-                <div class="card-value" id="anomaly-count">0</div>
-                <div class="card-label">Anomalies</div>
-            </div>
-            <div class="card">
-                <div class="card-icon">🎭</div>
-                <div class="card-value" id="scenario-count">0</div>
-                <div class="card-label">Scenarios</div>
-            </div>
-        </div>
-        
-        <div class="grid">
-            <section class="panel">
-                <h2>📈 Recent Evaluations</h2>
+        <div class="main-grid">
+            <section class="panel eval-panel">
+                <h2>📈 Evaluations</h2>
                 <div id="evaluations-list" class="list-container">
                     <p class="placeholder">No evaluations yet</p>
                 </div>
             </section>
             
-            <section class="panel">
+            <section class="panel details-panel">
+                <h2>📋 Details</h2>
+                <div id="eval-details" class="details-container">
+                    <p class="placeholder">Click an evaluation</p>
+                </div>
+            </section>
+            
+            <section class="panel agents-panel">
                 <h2>🤖 Agents</h2>
-                <div id="agents-list" class="list-container">
-                    <p class="placeholder">No agents registered</p>
+                <div id="agents-list" class="list-container small">
+                    <p class="placeholder">No agents</p>
+                </div>
+                <h2 style="margin-top:12px;">⚠️ Anomalies <span id="anomaly-count" style="font-size:12px;color:#888;">(0)</span></h2>
+                <div id="anomalies-list" class="list-container small">
+                    <p class="placeholder">None ✓</p>
                 </div>
             </section>
         </div>
         
-        <section class="panel full-width">
-            <h2>⚠️ Anomalies</h2>
-            <div id="anomalies-list" class="list-container">
-                <p class="placeholder">No anomalies detected</p>
-            </div>
-        </section>
-        
-        <section class="panel full-width">
-            <h2>📋 Evaluation Details</h2>
-            <div id="eval-details" class="details-container">
-                <p class="placeholder">Select an evaluation to view details</p>
-            </div>
-        </section>
-        
         <footer>
-            <p>APEE - <a href="https://ahjavid.github.io/technical-notes-blog/" target="_blank">Technical Notes Blog</a></p>
+            <span id="last-update">-</span> | <a href="https://ahjavid.github.io/technical-notes-blog/" target="_blank">APEE Blog</a>
         </footer>
     </div>
     
@@ -385,283 +421,171 @@ def _get_dashboard_css() -> str:
     --warning: #f39c12;
     --danger: #e74c3c;
     --dark: #2c3e50;
-    --light: #ecf0f1;
+    --light: #f0f2f5;
     --bg: #f5f7fa;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg);
     color: var(--dark);
-    line-height: 1.6;
+    font-size: 13px;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
 }
 
 header {
     background: linear-gradient(135deg, var(--primary), var(--secondary));
     color: white;
-    padding: 30px;
-    border-radius: 16px;
-    margin-bottom: 24px;
-    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    padding: 12px 20px;
+    border-radius: 10px;
+    flex-shrink: 0;
 }
 
-header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 8px;
-}
-
-.subtitle {
-    opacity: 0.9;
-    font-size: 1.1rem;
-}
-
-.refresh-info {
+.header-row {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 16px;
-    margin-top: 16px;
 }
+
+header h1 { font-size: 1.3rem; display: inline; }
+.subtitle { opacity: 0.8; font-size: 0.85rem; margin-left: 10px; }
+
+.header-stats {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.stat { background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 15px; font-size: 12px; }
+.stat strong { font-size: 14px; }
 
 #refresh-btn {
     background: rgba(255,255,255,0.2);
-    color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    transition: background 0.2s;
 }
+#refresh-btn:hover { background: rgba(255,255,255,0.3); }
 
-#refresh-btn:hover {
-    background: rgba(255,255,255,0.3);
-}
-
-.summary-cards {
+.main-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-bottom: 24px;
-}
-
-.card {
-    background: white;
-    border-radius: 16px;
-    padding: 24px;
-    text-align: center;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-}
-
-.card-icon {
-    font-size: 2rem;
-    margin-bottom: 8px;
-}
-
-.card-value {
-    font-size: 2.5rem;
-    font-weight: bold;
-    color: var(--primary);
-}
-
-.card-label {
-    color: #666;
-    font-size: 0.9rem;
-    margin-top: 4px;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 24px;
-    margin-bottom: 24px;
+    grid-template-columns: 260px 1fr 240px;
+    gap: 10px;
+    flex: 1;
+    min-height: 0;
 }
 
 .panel {
     background: white;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-}
-
-.panel.full-width {
-    grid-column: 1 / -1;
+    border-radius: 10px;
+    padding: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .panel h2 {
-    color: var(--dark);
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 2px solid var(--light);
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--light);
+    flex-shrink: 0;
 }
 
 .list-container {
-    max-height: 400px;
+    flex: 1;
     overflow-y: auto;
+    min-height: 0;
 }
 
-.placeholder {
-    color: #999;
-    text-align: center;
-    padding: 40px;
-}
+.list-container.small { font-size: 13px; }
 
-.eval-item, .agent-item, .anomaly-item {
-    padding: 16px;
-    border-radius: 12px;
-    margin-bottom: 12px;
+.placeholder { color: #999; text-align: center; padding: 15px; font-size: 12px; }
+
+.eval-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
     background: var(--light);
     cursor: pointer;
-    transition: background 0.2s;
-}
-
-.eval-item:hover, .agent-item:hover {
-    background: #e0e5ec;
-}
-
-.eval-item.selected {
-    background: rgba(102, 126, 234, 0.2);
-    border-left: 4px solid var(--primary);
-}
-
-.eval-score {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
+.eval-item:hover { background: #e4e7eb; }
+.eval-item.selected { background: rgba(102,126,234,0.15); border-left: 3px solid var(--primary); }
+
+.agent-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: var(--light);
+}
+.agent-item strong { font-size: 13px; display: block; margin-bottom: 2px; }
+.agent-role { color: #666; font-size: 12px; }
 
 .score-circle {
-    width: 50px;
-    height: 50px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
+    font-size: 12px;
     color: white;
-    font-size: 1.1rem;
+    flex-shrink: 0;
 }
-
 .score-good { background: var(--success); }
 .score-medium { background: var(--warning); }
 .score-poor { background: var(--danger); }
 
-.eval-meta {
-    flex: 1;
-}
+.eval-meta h4 { font-size: 12px; font-weight: 600; }
+.eval-meta small { color: #888; font-size: 11px; }
 
-.eval-meta h4 {
-    margin-bottom: 4px;
-}
-
-.eval-meta small {
-    color: #666;
-}
-
-.anomaly-item {
-    border-left: 4px solid var(--warning);
-}
-
-.anomaly-item.critical {
-    border-left-color: var(--danger);
-    background: rgba(231, 76, 60, 0.1);
-}
-
-.anomaly-type {
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    margin-bottom: 4px;
-}
-
-.agent-item {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.agent-icon {
-    font-size: 1.5rem;
-}
-
-.agent-info {
-    flex: 1;
-}
-
-.agent-role {
-    font-size: 0.85rem;
-    color: #666;
-}
-
-.details-container {
-    background: var(--light);
-    border-radius: 12px;
-    padding: 20px;
-    min-height: 200px;
-}
-
-.details-container pre {
-    background: var(--dark);
-    color: #f8f8f2;
-    padding: 16px;
-    border-radius: 8px;
-    overflow-x: auto;
-    font-size: 0.9rem;
-}
+.details-container { flex: 1; overflow-y: auto; }
 
 .metric-bar {
-    height: 12px;
-    background: #ddd;
-    border-radius: 6px;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    margin: 4px 0;
     overflow: hidden;
-    margin: 8px 0;
 }
-
 .metric-fill {
     height: 100%;
-    border-radius: 6px;
-    transition: width 0.5s ease;
+    border-radius: 4px;
+    transition: width 0.3s;
 }
-
 .metric-fill.l1 { background: var(--primary); }
-.metric-fill.l2 { background: var(--success); }
-.metric-fill.l3 { background: var(--secondary); }
+.metric-fill.l2 { background: var(--secondary); }
+.metric-fill.l3 { background: var(--success); }
 
 footer {
     text-align: center;
-    padding: 24px;
-    color: #666;
+    padding: 8px;
+    font-size: 11px;
+    color: #888;
+    flex-shrink: 0;
 }
+footer a { color: var(--primary); }
 
-footer a {
-    color: var(--primary);
-}
-
-@media (max-width: 768px) {
-    .grid {
-        grid-template-columns: 1fr;
-    }
-    
-    header h1 {
-        font-size: 1.8rem;
-    }
+@media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
 }
 '''
 
@@ -672,6 +596,13 @@ def _get_dashboard_js() -> str:
 // APEE Dashboard JavaScript
 
 let selectedEvalId = null;
+let evalDataCache = [];
+
+// Format snake_case to Title Case
+function formatName(str) {
+    if (!str) return '';
+    return str.replace(/_/g, ' ').replace(/\\b\\w/g, c => c.toUpperCase());
+}
 
 async function fetchAPI(endpoint) {
     try {
@@ -692,10 +623,8 @@ async function refreshData() {
     if (summary) {
         document.getElementById('eval-count').textContent = summary.total_evaluations || 0;
         document.getElementById('agent-count').textContent = summary.active_agents || 0;
-        document.getElementById('anomaly-count').textContent = summary.total_anomalies || 0;
-        document.getElementById('scenario-count').textContent = summary.scenarios_run || 0;
-        document.getElementById('last-update').textContent = 
-            'Last updated: ' + (summary.last_updated ? new Date(summary.last_updated).toLocaleTimeString() : '-');
+        document.getElementById('anomaly-count').textContent = '(' + (summary.total_anomalies || 0) + ')';
+        document.getElementById('last-update').textContent = summary.last_updated ? new Date(summary.last_updated).toLocaleTimeString() : '-';
     }
     
     renderEvaluations(evaluations || []);
@@ -707,120 +636,103 @@ function renderEvaluations(evaluations) {
     const container = document.getElementById('evaluations-list');
     
     if (!evaluations.length) {
-        container.innerHTML = '<p class="placeholder">No evaluations yet</p>';
+        container.innerHTML = '<p class="placeholder">No evaluations</p>';
         return;
     }
     
-    container.innerHTML = evaluations.reverse().map((eval, idx) => {
-        const score = eval.overall_apee_score || 0;
+    evalDataCache = [...evaluations].reverse();
+    
+    container.innerHTML = evalDataCache.map((ev, idx) => {
+        const score = ev.overall_score || ev.overall_apee_score || 0;
         const scoreClass = score >= 7 ? 'score-good' : score >= 5 ? 'score-medium' : 'score-poor';
-        const scenario = eval.scenario_id || 'Evaluation ' + (evaluations.length - idx);
-        const time = eval._timestamp ? new Date(eval._timestamp).toLocaleTimeString() : '';
+        const scenario = formatName(ev.scenario_id || 'Eval ' + idx);
+        const pattern = formatName(ev.pattern || '');
         const selected = selectedEvalId === idx ? 'selected' : '';
         
-        return `
-            <div class="eval-item ${selected}" onclick="showEvalDetails(${idx}, ${JSON.stringify(eval).replace(/"/g, '&quot;')})">
-                <div class="eval-score">
-                    <div class="score-circle ${scoreClass}">${score.toFixed(1)}</div>
-                    <div class="eval-meta">
-                        <h4>${scenario}</h4>
-                        <small>${time}</small>
-                    </div>
-                </div>
-            </div>
-        `;
+        return `<div class="eval-item ${selected}" onclick="showEvalDetails(${idx})">
+            <div class="score-circle ${scoreClass}">${score.toFixed(1)}</div>
+            <div class="eval-meta"><h4>${scenario}</h4><small>${pattern}</small></div>
+        </div>`;
     }).join('');
 }
 
 function renderAgents(agents) {
     const container = document.getElementById('agents-list');
-    const agentList = Object.entries(agents);
+    const list = Object.entries(agents);
     
-    if (!agentList.length) {
-        container.innerHTML = '<p class="placeholder">No agents registered</p>';
+    if (!list.length) {
+        container.innerHTML = '<p class="placeholder">No agents</p>';
         return;
     }
     
-    container.innerHTML = agentList.map(([id, data]) => {
-        const role = data.role || 'unknown';
-        const model = data.model || 'unknown';
-        return `
-            <div class="agent-item">
-                <div class="agent-icon">🤖</div>
-                <div class="agent-info">
-                    <strong>${id}</strong>
-                    <div class="agent-role">${role} | ${model}</div>
-                </div>
-            </div>
-        `;
-    }).join('');
+    container.innerHTML = list.map(([id, d]) => `
+        <div class="agent-item">
+            <strong>🤖 ${formatName(id)}</strong>
+            <div class="agent-role">${d.model || ''}</div>
+        </div>
+    `).join('');
 }
 
 function renderAnomalies(anomalies) {
     const container = document.getElementById('anomalies-list');
     
-    if (!anomalies.length) {
-        container.innerHTML = '<p class="placeholder">No anomalies detected ✓</p>';
+    if (!anomalies || !anomalies.length) {
+        container.innerHTML = '<p class="placeholder" style="padding:10px;">None ✓</p>';
         return;
     }
     
-    container.innerHTML = anomalies.slice(-10).reverse().map(anomaly => {
-        const isCritical = anomaly.severity === 'critical' || anomaly.severity === 'emergency';
-        return `
-            <div class="anomaly-item ${isCritical ? 'critical' : ''}">
-                <div class="anomaly-type">${anomaly.severity || 'warning'}: ${anomaly.type || 'anomaly'}</div>
-                <div>${anomaly.description || 'Unknown anomaly'}</div>
-                <small>Metric: ${anomaly.metric || '-'} | Deviation: ${(anomaly.deviation * 100 || 0).toFixed(0)}%</small>
-            </div>
-        `;
+    container.innerHTML = anomalies.map(a => {
+        const severity = a.severity || 'warning';
+        const color = severity === 'critical' ? 'var(--danger)' : 'var(--warning)';
+        return `<div style="padding:6px 8px;margin-bottom:4px;background:${color}22;border-left:3px solid ${color};border-radius:4px;font-size:11px;">
+            <strong>${formatName(a.type || 'Anomaly')}</strong>
+            <div style="color:#666;">${a.description || ''}</div>
+        </div>`;
     }).join('');
 }
 
-function showEvalDetails(idx, evalData) {
+function showEvalDetails(idx) {
     selectedEvalId = idx;
     const container = document.getElementById('eval-details');
+    const ev = evalDataCache[idx];
     
-    // Re-render list to show selection
-    fetchAPI('evaluations?limit=20').then(evals => renderEvaluations(evals || []));
+    document.querySelectorAll('.eval-item').forEach((el, i) => el.classList.toggle('selected', i === idx));
     
-    if (!evalData) {
-        container.innerHTML = '<p class="placeholder">No data available</p>';
-        return;
-    }
+    if (!ev) { container.innerHTML = '<p class="placeholder">No data</p>'; return; }
     
-    const l1 = evalData.l1_average || 0;
-    const l2 = evalData.l2_average || 0;
-    const l3 = evalData.l3_average || 0;
+    const score = ev.overall_score || ev.overall_apee_score || 0;
+    const l1 = ev.l1_average || 0, l2 = ev.l2_average || 0, l3 = ev.l3_average || 0;
+    const scoreColor = score >= 7 ? 'var(--success)' : score >= 5 ? 'var(--warning)' : 'var(--danger)';
     
     container.innerHTML = `
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;">
-            <div>
-                <strong>L1 Individual</strong>
-                <div class="metric-bar"><div class="metric-fill l1" style="width: ${l1 * 10}%"></div></div>
-                <span>${l1.toFixed(1)}/10</span>
-            </div>
-            <div>
-                <strong>L2 Collaborative</strong>
-                <div class="metric-bar"><div class="metric-fill l2" style="width: ${l2 * 10}%"></div></div>
-                <span>${l2.toFixed(1)}/10</span>
-            </div>
-            <div>
-                <strong>L3 Ecosystem</strong>
-                <div class="metric-bar"><div class="metric-fill l3" style="width: ${l3 * 10}%"></div></div>
-                <span>${l3.toFixed(1)}/10</span>
+        <div style="margin-bottom:12px;">
+            <h3 style="color:var(--primary);font-size:1rem;margin-bottom:6px;">${formatName(ev.scenario_id || 'Evaluation')}</h3>
+            <div style="font-size:12px;color:#666;">
+                <span style="margin-right:12px;"><b>Pattern:</b> ${formatName(ev.pattern || '-')}</span>
+                <span style="margin-right:12px;"><b>Time:</b> ${(ev.duration || 0).toFixed(1)}s</span>
+                <span><b>Score:</b> <span style="color:${scoreColor};font-weight:bold;font-size:14px;">${score.toFixed(2)}</span>/10</span>
             </div>
         </div>
-        <details>
-            <summary style="cursor: pointer; padding: 8px;">View Raw JSON</summary>
-            <pre>${JSON.stringify(evalData, null, 2)}</pre>
-        </details>
-    `;
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;">
+            <div><div style="font-size:11px;font-weight:600;">L1 Individual</div>
+                <div class="metric-bar"><div class="metric-fill l1" style="width:${l1*10}%"></div></div>
+                <div style="font-size:12px;">${l1.toFixed(1)}</div></div>
+            <div><div style="font-size:11px;font-weight:600;">L2 Collaborative</div>
+                <div class="metric-bar"><div class="metric-fill l2" style="width:${l2*10}%"></div></div>
+                <div style="font-size:12px;">${l2.toFixed(1)}</div></div>
+            <div><div style="font-size:11px;font-weight:600;">L3 Ecosystem</div>
+                <div class="metric-bar"><div class="metric-fill l3" style="width:${l3*10}%"></div></div>
+                <div style="font-size:12px;">${l3.toFixed(1)}</div></div>
+        </div>
+        <details><summary style="cursor:pointer;padding:6px 10px;background:var(--light);border-radius:4px;font-size:11px;">📄 Raw JSON</summary>
+            <pre style="background:#1e1e1e;color:#d4d4d4;padding:10px;border-radius:0 0 4px 4px;font-size:10px;max-height:250px;overflow:auto;">${JSON.stringify(ev, null, 2)}</pre>
+        </details>`;
 }
 
 // Initial load
 refreshData();
 
-// Auto-refresh every 5 seconds
+// Auto-refresh every 10 seconds
 setInterval(refreshData, 5000);
 '''
 
@@ -849,10 +761,39 @@ def main():
         action="store_true",
         help="Don't open browser automatically"
     )
+    parser.add_argument(
+        "--data", "-d",
+        type=str,
+        default=None,
+        help="Path to JSON file with evaluation results to load"
+    )
     
     args = parser.parse_args()
     
+    # Try to auto-detect data file if not specified
+    data_file = args.data
+    if not data_file:
+        # Look for default data files
+        default_paths = [
+            Path.cwd() / "data" / "apee_evaluation_results.json",
+            Path.cwd() / "apee_evaluation_results.json",
+            Path(__file__).parent.parent.parent / "data" / "apee_evaluation_results.json",
+        ]
+        for path in default_paths:
+            if path.exists():
+                data_file = str(path)
+                break
+    
     server = DashboardServer(port=args.port, host=args.host)
+    
+    # Load data if available
+    if data_file:
+        state = get_dashboard_state()
+        if state.load_from_json(data_file):
+            print(f"📊 Loaded {len(state.evaluations)} evaluations from {data_file}")
+        else:
+            print(f"⚠️  Failed to load data from {data_file}")
+    
     server.start(open_browser=not args.no_browser)
     
     print("\nPress Ctrl+C to stop the dashboard...\n")
