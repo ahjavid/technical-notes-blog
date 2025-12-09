@@ -4,28 +4,16 @@
 
 ---
 
-## 📖 Study Overview
+## 📖 Overview
 
-The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a novel framework for systematically evaluating multi-agent AI systems. This research introduces adaptive evaluation methodologies that dynamically assess agent interactions, collaboration patterns, and emergent behaviors in complex AI ecosystems.
+The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systematically evaluating multi-agent AI systems. It provides adaptive evaluation methodologies that dynamically assess agent interactions, collaboration patterns, and emergent behaviors in complex AI ecosystems.
 
-### 🎯 Key Objectives
+### 🎯 Key Features
 - **Adaptive Evaluation**: Dynamic assessment that evolves with agent behavior
-- **Poly-Agent Analysis**: Multi-agent interaction pattern recognition
+- **Poly-Agent Analysis**: Multi-agent interaction pattern recognition  
 - **Ecosystem Metrics**: Holistic system-level performance measurement
-- **Reproducible Benchmarks**: Standardized evaluation protocols
-
----
-
-## 📁 Study Contents
-
-### Primary Research
-- **[`comprehensive_apee_study.md`](comprehensive_apee_study.md)** - Complete consolidated study with research findings and methodology
-- **[`technical_implementation.md`](technical_implementation.md)** - Detailed technical implementation guide
-
-### Supporting Materials
-- **[`data/`](data/)** - Experimental data and benchmark results
-- **[`code/`](code/)** - Reference implementations and evaluation scripts
-- **[`images/`](images/)** - Visualizations and architecture diagrams
+- **Quality Scoring**: Multi-dimensional response quality assessment (Phase 2)
+- **Ollama Integration**: Ready-to-use local LLM agent implementation
 
 ---
 
@@ -36,52 +24,110 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a novel framework for s
 - Ollama running locally (`ollama serve`)
 - A model pulled (e.g., `ollama pull qwen2.5-coder:3b`)
 
-### Run the Demo
+### Installation
 
 ```bash
-# Basic simulation demo (no Ollama required)
-cd code/
-python demo_apee.py
+# Clone the repository
+git clone https://github.com/ahjavid/technical-notes-blog.git
+cd technical-notes-blog/posts/apee-evaluation-ecosystem
 
-# Real LLM demo with Ollama
-pip install httpx
-python demo_apee_ollama.py
+# Install the package
+pip install -e .
+
+# Or install with dev dependencies
+pip install -e ".[dev]"
 ```
 
-### Sample Output
-The Ollama demo runs 3 scenarios:
-1. **Parallel Analysis** - All agents analyze the same question
-2. **Code Review Pipeline** - Sequential agent collaboration
-3. **Agent Debate** - Multi-round discussion between agents
+### Run the Full Evaluation
+
+```bash
+# Activate your Python environment (optional)
+source /path/to/your/venv/bin/activate
+
+# Run the full evaluation example
+python examples/full_evaluation.py
+```
+
+### Basic Usage
+
+```python
+import asyncio
+from apee import OllamaAgent, Coordinator, Evaluator, Task, AgentRole
+
+async def main():
+    # Create specialized agents
+    agents = [
+        OllamaAgent("analyst", AgentRole.ANALYZER, model="qwen2.5-coder:3b"),
+        OllamaAgent("coder", AgentRole.EXECUTOR, model="qwen2.5-coder:3b"),
+    ]
+    
+    # Define tasks
+    tasks = [
+        Task(task_id="t1", description="Analyze REST vs GraphQL"),
+        Task(task_id="t2", description="Write a Fibonacci function"),
+    ]
+    
+    # Execute and evaluate
+    coordinator = Coordinator(agents=agents)
+    results = await coordinator.execute_parallel(tasks)
+    
+    evaluator = Evaluator()
+    report = evaluator.evaluate(coordinator)
+    print(f"Success Rate: {report.individual.success_rate:.1%}")
+
+asyncio.run(main())
+```
 
 ---
 
-## 🏗️ APEE Architecture
+## 📦 Package Structure
+
+```
+apee/
+├── __init__.py           # Package exports
+├── models.py             # Pydantic data models
+├── agents/
+│   ├── base.py           # Abstract Agent class
+│   └── ollama.py         # Ollama LLM implementation
+├── coordination/
+│   └── coordinator.py    # Task distribution & execution
+├── evaluation/
+│   ├── evaluator.py      # Main evaluation engine
+│   ├── quality.py        # Phase 2: Quality scoring
+│   └── report.py         # Report data models
+└── utils/
+    ├── logging.py        # Logging utilities
+    └── helpers.py        # Helper functions
+```
+
+---
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    APEE Framework                                │
+│                    APEE Framework                               │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   Agent A    │  │   Agent B    │  │   Agent N    │          │
-│  │  (Analyzer)  │  │  (Executor)  │  │ (Evaluator)  │          │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
+│  │   Agent A    │  │   Agent B    │  │   Agent N    │           │
+│  │  (Analyzer)  │  │  (Executor)  │  │   (Critic)   │           │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘           │
 │         │                 │                 │                   │
-│         └────────────┬────┴────────────────┘                   │
+│         └────────────┬────┴─────────────────┘                   │
 │                      │                                          │
-│         ┌────────────▼────────────┐                            │
+│         ┌────────────▼─────────────┐                            │
 │         │   Adaptive Coordinator   │                            │
 │         │  • Task Distribution     │                            │
-│         │  • State Management      │                            │
-│         │  • Conflict Resolution   │                            │
-│         └────────────┬────────────┘                            │
+│         │  • Parallel Execution    │                            │
+│         │  • Pipeline Orchestration│                            │
+│         └────────────┬─────────────┘                            │
 │                      │                                          │
-│         ┌────────────▼────────────┐                            │
+│         ┌────────────▼─────────────┐                            │
 │         │   Evaluation Engine      │                            │
 │         │  • Performance Metrics   │                            │
-│         │  • Behavior Analysis     │                            │
-│         │  • Emergent Patterns     │                            │
-│         └─────────────────────────┘                            │
+│         │  • Quality Scoring       │                            │
+│         │  • Ecosystem Analysis    │                            │
+│         └──────────────────────────┘                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -89,65 +135,54 @@ The Ollama demo runs 3 scenarios:
 
 ## 📊 Evaluation Dimensions
 
-### 1. Individual Agent Performance
+### Individual Agent Performance
 | Metric | Description | Measurement |
 |--------|-------------|-------------|
 | Task Completion | Success rate per agent | Percentage |
-| Response Quality | Output accuracy/relevance | Score 0-100 |
+| Response Quality | Multi-dimensional scoring | Score 0-1.0 |
 | Latency | Processing time | Milliseconds |
-| Resource Usage | Compute/memory footprint | MB/FLOPS |
+| Token Usage | Output verbosity | Token count |
 
-### 2. Multi-Agent Collaboration
+### Multi-Agent Collaboration
 | Metric | Description | Measurement |
 |--------|-------------|-------------|
-| Coordination Efficiency | Inter-agent communication overhead | Messages/task |
-| Conflict Resolution | Disagreement handling effectiveness | Resolution rate |
-| Emergent Behavior | Novel collaboration patterns | Pattern count |
-| Synergy Score | Combined vs individual performance | Multiplier |
+| Response Consistency | Agreement across agents | Similarity score |
+| Coordination Efficiency | Parallel vs sequential gain | Multiplier |
+| Synergy Score | Combined vs individual performance | Ratio |
 
-### 3. Ecosystem Health
+### Ecosystem Health
 | Metric | Description | Measurement |
 |--------|-------------|-------------|
-| Stability | System reliability over time | Uptime % |
-| Scalability | Performance with agent count | Linear/Sub-linear |
-| Adaptability | Response to novel scenarios | Success rate |
-| Robustness | Failure tolerance | Recovery time |
+| Throughput | Tasks processed per second | Tasks/sec |
+| Total Execution Time | End-to-end latency | Milliseconds |
+| Agent Utilization | Work distribution balance | Variance |
 
 ---
 
-## 🔬 Research Methodology
+## 🔬 Quality Scoring (Phase 2)
 
-### Phase 1: Baseline Establishment
-- Define evaluation scenarios
-- Establish single-agent benchmarks
-- Create controlled test environments
+APEE includes multiple scoring strategies:
 
-### Phase 2: Multi-Agent Experiments
-- Deploy poly-agent configurations
-- Measure interaction patterns
-- Collect performance metrics
+```python
+from apee.evaluation.quality import (
+    HeuristicScorer,    # Rule-based scoring
+    ComparativeScorer,  # Relative comparison
+    LLMScorer,          # LLM-as-judge
+    CompositeScorer,    # Weighted combination
+)
 
-### Phase 3: Adaptive Analysis
-- Apply adaptive evaluation algorithms
-- Identify emergent behaviors
-- Generate ecosystem insights
+# Create composite scorer
+scorer = CompositeScorer([
+    (HeuristicScorer(), 0.6),
+    (ComparativeScorer(), 0.4),
+])
 
-### Phase 4: Validation & Iteration
-- Cross-validate findings
-- Refine evaluation criteria
-- Publish reproducible results
-
----
-
-## 💡 Key Insights (Preliminary)
-
-> **Note**: This section will be populated with experimental findings as research progresses.
-
-### Expected Findings
-- [ ] Optimal agent count for different task types
-- [ ] Communication pattern impact on performance
-- [ ] Emergent collaboration strategies
-- [ ] Scalability boundaries and solutions
+# Score a result
+score = scorer.score(result, task)
+print(f"Overall: {score.overall_score:.2f}")
+print(f"Completeness: {score.dimension_scores['completeness']:.2f}")
+print(f"Latency: {score.dimension_scores['latency']:.2f}")
+```
 
 ---
 
@@ -157,86 +192,90 @@ The Ollama demo runs 3 scenarios:
 Runtime:
   - Python 3.10+
   - asyncio for concurrent agents
-  - httpx for Ollama API calls
+  - httpx for HTTP client
+  - Pydantic for data validation
   
 LLM Backend:
   - Ollama (local, free, private)
-  - Tested models: qwen2.5-coder:3b, llama3.2:3b
+  - Tested: qwen2.5-coder:3b, qwen3:8b, llama3.2:3b
   
-Evaluation:
-  - Custom metrics (quality, latency, tokens)
-  - JSON report generation
-  - Console-based visualization
+Testing:
+  - pytest
+  - pytest-asyncio
 ```
 
 ---
 
-## 📈 Roadmap (Solo Developer)
+## 📈 Roadmap
 
-> Realistic milestones for a single person managing this project part-time.
-
-### Phase 1: Foundation ✅ (Week 1-2)
+### Phase 1: Foundation ✅
 - [x] Define APEE framework architecture
 - [x] Create evaluation metric taxonomy
-- [x] Build basic demo with simulated agents
-- [x] Create Ollama-powered real LLM demo
-- [x] Document initial framework design
+- [x] Build proper Python package structure
+- [x] Implement Ollama agent integration
+- [x] Create coordinator with multiple execution modes
+- [x] Build evaluator with comprehensive metrics
 
-### Phase 2: Core Evaluation (Week 3-4)
-- [ ] Implement robust quality scoring algorithms
-- [ ] Add configurable evaluation presets
-- [ ] Create comparison benchmarks (single vs multi-agent)
-- [ ] Build CLI for running evaluations
-- [ ] Write unit tests for core components
+### Phase 2: Quality Scoring ✅
+- [x] Implement heuristic-based scoring
+- [x] Add comparative scoring
+- [x] Create composite scorer framework
+- [x] Add LLM-as-judge scorer skeleton
+- [x] Write unit tests for scoring
 
-### Phase 3: Real-World Testing (Week 5-6)
-- [ ] Test with different Ollama models (qwen, llama, etc.)
+### Phase 3: Real-World Testing
+- [ ] Test with different Ollama models
 - [ ] Document performance across model sizes
-- [ ] Create 3-5 evaluation scenarios
-- [ ] Publish initial findings as blog post
-- [ ] Gather feedback from community
+- [ ] Create diverse evaluation scenarios
+- [ ] Benchmark single vs multi-agent performance
+- [ ] Publish findings
 
-### Phase 4: Polish & Share (Week 7-8)
-- [ ] Refactor based on learnings
-- [ ] Create pip-installable package (optional)
+### Phase 4: Polish & Share
+- [ ] Add CLI for running evaluations
+- [ ] Create visualization utilities
 - [ ] Write comprehensive documentation
-- [ ] Create video walkthrough
-- [ ] Submit to relevant communities (Reddit, HN)
+- [ ] Publish to PyPI (optional)
 
-### Future Ideas (Backlog)
-- [ ] Web dashboard for visualizing results
-- [ ] Support for OpenAI/Anthropic APIs
-- [ ] Automated benchmark suite
-- [ ] Integration with LangChain/LangGraph
+---
+
+## 🧪 Running Tests
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Run tests
+pytest tests/ -v
+
+# Run with coverage
+pytest tests/ --cov=apee
+```
 
 ---
 
 ## 🤝 Contributing
 
-This is an active research project. Contributions welcome in:
+Contributions welcome in:
 - Evaluation metric proposals
 - Agent scenario design
-- Implementation improvements
-- Documentation enhancements
+- Additional scorer implementations
+- Documentation improvements
 
 ---
 
 ## 📚 References
 
-*To be populated with relevant citations*
-
-- Multi-Agent Systems: A Survey
-- Evaluation Frameworks for AI Systems
+- Multi-Agent Systems: A Modern Approach
+- LLM-as-a-Judge Evaluation Patterns
 - Emergent Behavior in Complex Systems
 
 ---
 
 ## 📄 License
 
-This research is released under the MIT License. See [LICENSE](../../LICENSE) for details.
+MIT License. See [LICENSE](../../LICENSE) for details.
 
 ---
 
-**Last Updated**: December 8, 2025  
 **Status**: 🚧 Active Development  
 **Author**: [ahjavid](https://github.com/ahjavid)
