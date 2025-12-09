@@ -7,8 +7,14 @@ Phase 3: Comprehensive model evaluation with proper benchmarking methodology.
 from .datasets import BenchmarkDataset, TaskCategory, Complexity, EvaluationScenario
 from .runner import BenchmarkRunner, BenchmarkConfig, BenchmarkResult
 from .analyzer import BenchmarkAnalyzer, StatisticalAnalysis, ModelComparison
+from .collaborative import (
+    MultiAgentDataset,
+    CollaborativeScenario,
+    CollaborationPattern,
+)
 
 __all__ = [
+    # Single-agent benchmarks
     "BenchmarkDataset",
     "TaskCategory",
     "Complexity",
@@ -19,4 +25,8 @@ __all__ = [
     "BenchmarkAnalyzer",
     "StatisticalAnalysis",
     "ModelComparison",
+    # Multi-agent benchmarks (APEE core)
+    "MultiAgentDataset",
+    "CollaborativeScenario",
+    "CollaborationPattern",
 ]

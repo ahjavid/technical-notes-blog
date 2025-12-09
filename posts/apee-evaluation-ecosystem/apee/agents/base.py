@@ -62,11 +62,13 @@ class Agent(ABC):
         self, 
         agent_id: str, 
         role: AgentRole,
-        system_prompt: Optional[str] = None
+        system_prompt: Optional[str] = None,
+        model: Optional[str] = None
     ):
         self.agent_id = agent_id
         self.role = role
         self.system_prompt = system_prompt or ROLE_SYSTEM_PROMPTS.get(role, "")
+        self.model = model  # Optional model identifier
         self.metrics = AgentMetrics()
         self.message_inbox: list[Message] = []
     

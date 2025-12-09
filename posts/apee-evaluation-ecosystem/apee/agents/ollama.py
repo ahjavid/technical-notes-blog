@@ -175,8 +175,7 @@ class OllamaAgent(Agent):
         max_tokens: int = 500,
         system_prompt: Optional[str] = None
     ):
-        super().__init__(agent_id, role, system_prompt)
-        self.model = model
+        super().__init__(agent_id, role, system_prompt, model=model)
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.client = OllamaClient(base_url=base_url, model=model)
