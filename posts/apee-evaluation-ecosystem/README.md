@@ -1,66 +1,71 @@
 # Adaptive Poly-Agentic Evaluation Ecosystem (APEE)
 
-*A comprehensive framework for evaluating and benchmarking multi-agent AI systems*
+*A comprehensive framework for evaluating and benchmarking multi-agent AI systems using LLM-as-a-Judge methodology*
 
 ---
 
 ## 📖 Overview
 
-The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systematically evaluating multi-agent AI systems. It provides adaptive evaluation methodologies that dynamically assess agent interactions, collaboration patterns, and emergent behaviors in complex AI ecosystems.
+The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systematically evaluating multi-agent AI systems. It uses **LLM-as-a-Judge** evaluation (inspired by CrewAI) where large language models evaluate agent outputs rather than simple heuristics, providing meaningful, nuanced scores.
 
 ### 🎯 Key Features
+- **LLM-as-a-Judge Evaluation**: Large models (12-14B) evaluate smaller agent outputs
+- **Ensemble Judges**: Multiple judge models from different families reduce bias
 - **Poly-Agentic Collaboration**: Multiple agents working together (debate, pipeline, peer review)
 - **Three-Tier Metrics**: Individual → Collaborative → Ecosystem evaluation
-- **Adaptive Evaluation**: Dynamic pattern detection and criteria adjustment
-- **Quality Scoring**: Multi-dimensional response quality assessment
-- **Ollama Integration**: Ready-to-use local LLM agent implementation
+- **Role-Optimized Agents**: Agent selection based on benchmark strengths
 - **6 Collaboration Patterns**: parallel, sequential, debate, consensus, hierarchical, peer_review
 
 ---
 
-## 🏆 Latest Results
+## 🏆 Latest Results (LLM-as-a-Judge)
+
+### Configuration
+
+**Agents** (small, diverse families - matched to role strengths):
+| Role | Model | Family | Benchmark Strength |
+|------|-------|--------|-------------------|
+| Coder (Executor) | llama3.2:3b | Llama | code_generation: 0.950 |
+| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | analysis: 0.964 |
+| Reviewer | granite4:3b | Granite | code_review: 0.935 |
+
+**Judges** (large, different families - no overlap with agents):
+| Judge | Model | Size | Family |
+|-------|-------|------|--------|
+| Judge 1 | qwen3:14b | 14B | Qwen |
+| Judge 2 | gemma3:12b | 12B | Gemma |
 
 ### Multi-Agent Collaborative Evaluation
 
-**Configuration**: 3 agents × 6 scenarios using debate, pipeline, and parallel patterns
-
 | Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
 |----------|---------|---------------|------------------|--------------|---------|
-| collab_code_review | peer_review | 0.94 | 1.00 | 1.00 | **0.98** |
-| research_synthesis | sequential | 0.94 | 1.00 | 1.00 | **0.98** |
-| constrained_problem | debate | 0.92 | 1.00 | 1.00 | **0.98** |
-| emergent_behavior | parallel | 0.94 | 0.67 | 1.00 | **0.85** |
-| scalability_test | hierarchical | 0.94 | 0.67 | 1.00 | **0.85** |
-| conflict_resolution | consensus | 0.94 | 0.67 | 1.00 | **0.85** |
+| collab_code_review | peer_review | 7.9/10 | 7.0/10 | 8.3/10 | **7.6/10** |
+| research_synthesis | sequential | 8.1/10 | 7.0/10 | 8.1/10 | **7.6/10** |
+| constrained_problem | debate | 7.2/10 | 5.9/10 | 7.2/10 | **6.6/10** |
 
-### Aggregate APEE Scores
+### Ensemble Judge Agreement
 
-| Metric | Score |
-|--------|-------|
-| **Level 1 (Individual)** | 0.936 |
-| **Level 2 (Collaborative)** | 0.833 |
-| **Level 3 (Ecosystem)** | 1.000 |
-| **Overall APEE Score** | **0.915** |
+```
+Judge Models: qwen3:14b, gemma3:12b
+Aggregation: median
+
+Individual Judge Scores (code_review scenario):
+  • qwen3:14b: Overall=7.58, L1=7.92, L2=7.0
+  • gemma3:12b: Overall=7.63, L1=8.0, L2=7.0
+
+Disagreement Metrics:
+  • Overall StdDev: 0.04
+  • Overall Range: 0.05
+  • High Disagreement: ✅ No
+```
 
 ### Key Insights
 
-1. **Structured patterns outperform parallel**: Debate, sequential, and peer_review achieve **0.98** overall vs **0.85** for parallel patterns
-2. **L2 Collaborative differentiates patterns**: Full collaboration (1.0) vs independent work (0.67)
-3. **L3 Ecosystem perfect**: All scenarios complete without crashes
-4. **Adaptive engine detected 2 patterns**: "convergent_behavior" and "emergent_collaboration"
-
-### APEE Framework Compliance ✅
-
-| Component | Status | Evidence |
-|-----------|--------|----------|
-| Multi-Agent Collaboration | ✅ | 3 agents working together |
-| Debate Pattern | ✅ | 1 scenario (0.98 score) |
-| Pipeline Pattern | ✅ | 1 scenario (0.98 score) |
-| Level 1 Metrics (Individual) | ✅ | Response quality, latency |
-| Level 2 Metrics (Collaborative) | ✅ | Coordination efficiency, participation |
-| Level 3 Metrics (Ecosystem) | ✅ | Stability, latency, completion |
-| Adaptive Engine | ✅ | 2 patterns detected |
-| Focus Areas | ✅ | collaboration_dynamics, diversity_check |
+1. **Peer review & sequential outperform debate**: 7.6/10 vs 6.6/10
+2. **Debate pattern has collaboration issues**: L2 score 5.9/10 (lowest)
+3. **Reviewer (granite4:3b) excels**: Goal=9.0, Semantic=9.0 (highest individual)
+4. **Judges agree closely**: StdDev 0.04 indicates reliable evaluation
+5. **Meaningful differentiation**: Scores range from 5.9 to 9.0 (not all perfect)
 
 ---
 
@@ -69,7 +74,17 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 ### Prerequisites
 - Python 3.10+
 - Ollama running locally (`ollama serve`)
-- A model pulled (e.g., `ollama pull qwen2.5-coder:3b`)
+- Models pulled:
+  ```bash
+  # Agents (small, diverse)
+  ollama pull llama3.2:3b
+  ollama pull qwen2.5-coder:3b
+  ollama pull granite4:3b
+  
+  # Judges (large, different families)
+  ollama pull qwen3:14b
+  ollama pull gemma3:12b
+  ```
 
 ### Installation
 
@@ -85,42 +100,42 @@ pip install -e .
 pip install -e ".[dev]"
 ```
 
-### Run the Full Evaluation
+### Run the LLM-as-a-Judge Evaluation
 
 ```bash
-# Activate your Python environment (optional)
-source /path/to/your/venv/bin/activate
-
-# Run the full evaluation example
-python examples/full_evaluation.py
+# Run proper APEE evaluation with ensemble judges
+python examples/proper_apee_evaluation.py
 ```
 
 ### Basic Usage
 
 ```python
 import asyncio
-from apee import OllamaAgent, Coordinator, Evaluator, Task, AgentRole
+from apee import OllamaAgent, Coordinator, Task, AgentRole
+from apee.evaluation.llm_evaluator import EnsembleEvaluator
 
 async def main():
-    # Create specialized agents
+    # Create role-optimized agents (small, diverse families)
     agents = [
+        OllamaAgent("coder", AgentRole.EXECUTOR, model="llama3.2:3b"),
         OllamaAgent("analyst", AgentRole.ANALYZER, model="qwen2.5-coder:3b"),
-        OllamaAgent("coder", AgentRole.EXECUTOR, model="qwen2.5-coder:3b"),
+        OllamaAgent("reviewer", AgentRole.REVIEWER, model="granite4:3b"),
     ]
     
-    # Define tasks
-    tasks = [
-        Task(task_id="t1", description="Analyze REST vs GraphQL"),
-        Task(task_id="t2", description="Write a Fibonacci function"),
-    ]
+    # Create ensemble evaluator (large judges, different families)
+    evaluator = EnsembleEvaluator(
+        judge_models=["qwen3:14b", "gemma3:12b"],
+        aggregation="median",
+    )
     
-    # Execute and evaluate
+    # Coordinate and evaluate
     coordinator = Coordinator(agents=agents)
-    results = await coordinator.execute_parallel(tasks)
+    task = Task(task_id="t1", description="Review this code for bugs")
+    results = await coordinator.run_pipeline(task, ["coder", "analyst", "reviewer"])
     
-    evaluator = Evaluator()
-    report = evaluator.evaluate(coordinator)
-    print(f"Success Rate: {report.individual.success_rate:.1%}")
+    # Evaluate with LLM-as-a-Judge
+    # ... build CollaborativeTrace from results
+    # evaluation = evaluator.evaluate_full(trace)
 
 asyncio.run(main())
 ```
@@ -135,27 +150,29 @@ apee/
 ├── models.py                # Pydantic data models
 ├── agents/
 │   ├── base.py              # Abstract Agent class
-│   └── ollama.py            # Ollama LLM implementation (7 models)
+│   └── ollama.py            # Ollama LLM implementation
 ├── coordination/
 │   └── coordinator.py       # Task distribution & execution modes
 ├── evaluation/
-│   ├── evaluator.py         # Main evaluation engine
-│   ├── quality.py           # Quality scoring (heuristic, LLM, composite)
-│   ├── adaptive.py          # 🆕 Adaptive engine with pattern detection
+│   ├── evaluator.py         # Heuristic evaluation engine
+│   ├── llm_evaluator.py     # 🆕 LLM-as-a-Judge evaluators
+│   ├── quality.py           # Quality scoring strategies
+│   ├── adaptive.py          # Adaptive pattern detection
 │   └── report.py            # Report data models
 ├── benchmarks/
 │   ├── datasets.py          # 19 scenarios, 11 categories
 │   ├── runner.py            # Statistical benchmark runner
 │   ├── analyzer.py          # Analysis with confidence intervals
-│   └── collaborative.py     # 🆕 Multi-agent evaluation scenarios
+│   └── collaborative.py     # Multi-agent evaluation scenarios
 └── utils/
     ├── logging.py           # Logging utilities
     └── helpers.py           # Helper functions
 
 examples/
-├── full_evaluation.py       # Basic evaluation demo
-├── comprehensive_benchmark.py # Single-model benchmarks
-└── multi_agent_evaluation.py  # 🆕 Full APEE multi-agent demo
+├── full_evaluation.py           # Basic evaluation demo
+├── comprehensive_benchmark.py   # Single-model benchmarks
+├── multi_agent_evaluation.py    # Multi-agent with heuristics
+└── proper_apee_evaluation.py    # 🆕 LLM-as-a-Judge evaluation
 ```
 
 ---
@@ -166,22 +183,31 @@ examples/
 ┌─────────────────────────────────────────────────────────────────────┐
 │                     APEE Framework                                  │
 ├─────────────────────────────────────────────────────────────────────┤
-│                                                                     │
+│  AGENTS (Small 3B models - diverse families)                        │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │   Agent A    │  │   Agent B    │  │   Agent N    │               │
-│  │  (Analyzer)  │  │   (Coder)    │  │  (Reviewer)  │               │
-│  │ qwen2.5:3b   │  │  gemma3:4b   │  │  qwen3:4b    │               │
+│  │   Coder      │  │   Analyst    │  │   Reviewer   │               │
+│  │  (Executor)  │  │  (Analyzer)  │  │  (Reviewer)  │               │
+│  │ llama3.2:3b  │  │qwen2.5-coder │  │ granite4:3b  │               │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
 │         │                 │                 │                       │
 │         └────────────┬────┴─────────────────┘                       │
 │                      │                                              │
 │         ┌────────────▼─────────────┐                                │
-│         │   Adaptive Coordinator   │                                │
-│         │  • Parallel Execution    │                                │
+│         │      Coordinator         │                                │
 │         │  • Pipeline Orchestration│                                │
 │         │  • Debate Management     │                                │
-│         │  • Consensus Building    │                                │
+│         │  • Parallel Execution    │                                │
 │         └────────────┬─────────────┘                                │
+│                      │                                              │
+│  JUDGES (Large 12-14B models - different families)                  │
+│  ┌─────────────────────────────────────────────┐                    │
+│  │  ┌──────────┐          ┌──────────┐         │                    │
+│  │  │  Qwen    │    +     │  Gemma   │         │                    │
+│  │  │  14B     │          │   12B    │         │                    │
+│  │  └──────────┘          └──────────┘         │                    │
+│  │         │ Ensemble Evaluation │             │                    │
+│  │         └──────────┬──────────┘             │                    │
+│  └───────────────────────────────────────────────┘                  │
 │                      │                                              │
 │  ┌───────────────────┼───────────────────┐                          │
 │  │                   │                   │                          │
@@ -190,14 +216,18 @@ examples/
 │ │ Level 1 │    │   Level 2   │    │  Level 3   │                    │
 │ │Individual│   │Collaborative│    │ Ecosystem  │                    │
 │ │ Metrics │    │   Metrics   │    │  Metrics   │                    │
+│ │Goal,Sem.│    │Collab,Synth│    │Eff,Stab,Thr│                    │
 │ └────┬────┘    └──────┬──────┘    └─────┬──────┘                    │
 │      │               │                  │                           │
 │      └───────────────┼──────────────────┘                           │
 │                      │                                              │
 │         ┌────────────▼─────────────┐                                │
-│         │    Adaptive Engine       │                                │
-│         │  • Pattern Detection     │                                │
-│         │  • Anomaly Detection     │                                │
+│         │   Overall APEE Score     │                                │
+│         │  (L1×0.30 + L2×0.45 +    │                                │
+│         │   L3×0.25)               │                                │
+│         └──────────────────────────┘                                │
+└─────────────────────────────────────────────────────────────────────┘
+```
 │         │  • Criteria Adjustment   │                                │
 │         └──────────────────────────┘                                │
 └─────────────────────────────────────────────────────────────────────┘
