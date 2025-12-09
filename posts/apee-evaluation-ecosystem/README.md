@@ -45,9 +45,12 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 | Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
 |----------|---------|---------------|------------------|--------------|---------|
-| collab_code_review | peer_review | 7.9/10 | 7.0/10 | 8.3/10 | **7.6/10** |
-| research_synthesis | sequential | 8.1/10 | 7.0/10 | 8.1/10 | **7.6/10** |
-| constrained_problem | debate | 7.2/10 | 5.9/10 | 7.2/10 | **6.6/10** |
+| collab_code_review | peer_review | 7.3/10 | 6.2/10 | 7.1/10 | **6.8/10** |
+| research_synthesis | sequential | 7.5/10 | 6.0/10 | 7.9/10 | **6.9/10** |
+| constrained_problem | debate | 7.1/10 | 5.6/10 | 7.1/10 | **6.5/10** |
+| emergent_behavior | parallel | 7.9/10 | 5.0/10 | 8.0/10 | **6.6/10** |
+| scalability_test | hierarchical | 7.2/10 | 5.8/10 | 7.9/10 | **6.7/10** |
+| conflict_resolution | consensus | 8.6/10 | 7.0/10 | 8.1/10 | **7.8/10** |
 
 ### Ensemble Judge Agreement
 
@@ -56,22 +59,42 @@ Judge Models: qwen3:14b, gemma3:12b
 Aggregation: median
 
 Individual Judge Scores (code_review scenario):
-  • qwen3:14b: Overall=7.58, L1=7.92, L2=7.0
-  • gemma3:12b: Overall=7.63, L1=8.0, L2=7.0
+  • qwen3:14b: Overall=6.62, L1=7.33, L2=6.25
+  • gemma3:12b: Overall=6.98, L1=7.5, L2=6.5
 
 Disagreement Metrics:
-  • Overall StdDev: 0.04
-  • Overall Range: 0.05
+  • Overall StdDev: 0.25
+  • Overall Range: 0.36
   • High Disagreement: ✅ No
+```
+
+### Detailed Metric Breakdown (Code Review Scenario)
+
+```
+Level 1 (Individual - per agent):
+  • executor: Goal=9.0, Semantic=8.0
+  • analyzer: Goal=8.0, Semantic=7.0
+  • reviewer: Goal=7.0, Semantic=4.0
+
+Level 2 (Collaborative):
+  • Collaboration: 4.0/10
+  • Synthesis: 8.0/10
+
+Level 3 (Ecosystem):
+  • Efficiency: 2.3/10
+  • Stability: 10.0/10
+  • Throughput: 10.0/10
+  • Adaptability: 6.0/10
 ```
 
 ### Key Insights
 
-1. **Peer review & sequential outperform debate**: 7.6/10 vs 6.6/10
-2. **Debate pattern has collaboration issues**: L2 score 5.9/10 (lowest)
-3. **Reviewer (granite4:3b) excels**: Goal=9.0, Semantic=9.0 (highest individual)
-4. **Judges agree closely**: StdDev 0.04 indicates reliable evaluation
-5. **Meaningful differentiation**: Scores range from 5.9 to 9.0 (not all perfect)
+1. **Consensus pattern wins**: 7.8/10 overall (highest) - agents agreeing works best
+2. **Parallel has lowest L2**: 5.0/10 - independent work hurts collaboration score
+3. **Debate struggles with collaboration**: L2=5.6/10
+4. **Executor (llama3.2:3b) excels**: Goal=9.0, Semantic=8.0 (highest individual)
+5. **Judges agree reasonably**: StdDev 0.25 indicates reliable evaluation
+6. **All 6 patterns tested**: peer_review, sequential, debate, parallel, hierarchical, consensus
 
 ---
 
