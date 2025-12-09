@@ -95,8 +95,78 @@ async def run_and_evaluate_scenario(
                     duration_seconds=(datetime.now() - start_time).total_seconds() / 3,
                 )
                 agent_traces.append(trace)
+                
+        elif pattern.value == "hierarchical":
+            # Leader delegates to workers
+            leader_id = agent_ids[0]  # First agent is leader
+            worker_ids = agent_ids[1:3]  # Others are workers
+            results = await coordinator.run_hierarchical(
+                task=task, leader_id=leader_id, worker_ids=worker_ids
+            )
+            final_output = results[-1].output if results else ""  # Synthesis is last
+            
+            for result in results:
+                agent = coordinator.agents.get(result.agent_id)
+                if agent:
+                    trace = ExecutionTrace(
+                        agent_id=result.agent_id,
+                        agent_role=agent.role.value if hasattr(agent.role, 'value') else str(agent.role),
+                        task_description=scenario.task_description,
+                        expected_output="Hierarchical contribution",
+                        final_output=result.output,
+                        duration_seconds=(datetime.now() - start_time).total_seconds() / len(results),
+                    )
+                    agent_traces.append(trace)
+                    
+        elif pattern.value == "consensus":
+            results = await coordinator.run_consensus(
+                task=task, max_rounds=2, agent_ids=agent_ids[:3]
+            )
+            final_output = results[-1].output if results else ""
+            
+            # Group by agent for traces (may have multiple rounds)
+            seen_agents = set()
+            for result in results:
+                if result.agent_id not in seen_agents:
+                    agent = coordinator.agents.get(result.agent_id)
+                    if agent:
+                        trace = ExecutionTrace(
+                            agent_id=result.agent_id,
+                            agent_role=agent.role.value if hasattr(agent.role, 'value') else str(agent.role),
+                            task_description=scenario.task_description,
+                            expected_output="Consensus contribution seeking agreement",
+                            final_output=result.output,
+                            duration_seconds=(datetime.now() - start_time).total_seconds() / len(agent_ids[:3]),
+                        )
+                        agent_traces.append(trace)
+                        seen_agents.add(result.agent_id)
+                        
+        elif pattern.value == "peer_review":
+            results = await coordinator.run_peer_review(
+                task=task, agent_ids=agent_ids[:3]
+            )
+            # Last phase results are the revised outputs
+            final_output = results[-1].output if results else ""
+            
+            # Use the final revision results for traces
+            n_agents = len(agent_ids[:3])
+            revision_results = results[-n_agents:]  # Last n results are revisions
+            
+            for result in revision_results:
+                agent = coordinator.agents.get(result.agent_id)
+                if agent:
+                    trace = ExecutionTrace(
+                        agent_id=result.agent_id,
+                        agent_role=agent.role.value if hasattr(agent.role, 'value') else str(agent.role),
+                        task_description=scenario.task_description,
+                        expected_output="Peer-reviewed and revised output",
+                        final_output=result.output,
+                        duration_seconds=(datetime.now() - start_time).total_seconds() / n_agents,
+                    )
+                    agent_traces.append(trace)
+                    
         else:
-            # Parallel execution
+            # Parallel execution (default)
             results = await coordinator.run_parallel(task)
             final_output = results[0].output if results else ""
             
@@ -202,11 +272,12 @@ async def main():
     for model in judge_models:
         console.print(f"  ✓ Judge: {model}")
     
-    # Load scenarios (use subset for demo)
+    # Load all 6 scenarios (one per collaboration pattern)
     dataset = MultiAgentDataset()
-    scenarios = dataset.scenarios[:3]  # Just 3 for demo (LLM eval is slower)
+    scenarios = dataset.scenarios  # All 6 patterns: peer_review, sequential, debate, parallel, hierarchical, consensus
     
-    console.print(f"\n[bold]Running {len(scenarios)} collaborative scenarios...[/bold]\n")
+    console.print(f"\n[bold]Running {len(scenarios)} collaborative scenarios (all patterns)...[/bold]")
+    console.print("  [dim]Patterns: peer_review, sequential, debate, parallel, hierarchical, consensus[/dim]\n")
     
     all_results = []
     

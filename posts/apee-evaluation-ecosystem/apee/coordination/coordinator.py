@@ -202,6 +202,293 @@ class Coordinator:
         
         return list(results)
     
+    async def run_hierarchical(
+        self,
+        task: Task,
+        leader_id: str,
+        worker_ids: Optional[list[str]] = None
+    ) -> list[AgentResult]:
+        """
+        Run agents in a hierarchical pattern with a leader delegating to workers.
+        
+        The leader first analyzes the task and breaks it down, then workers
+        execute subtasks, and finally the leader synthesizes results.
+        
+        Best for: Complex task breakdown, large projects.
+        
+        Args:
+            task: The task to process
+            leader_id: ID of the leader agent
+            worker_ids: IDs of worker agents (default: all except leader)
+        """
+        start_time = time.time()
+        results = []
+        
+        leader = self.agents.get(leader_id)
+        if not leader:
+            raise ValueError(f"Leader agent '{leader_id}' not found")
+        
+        # Default workers: all agents except leader
+        if worker_ids is None:
+            worker_ids = [aid for aid in self.agents.keys() if aid != leader_id]
+        
+        workers = [self.agents[wid] for wid in worker_ids if wid in self.agents]
+        
+        # Phase 1: Leader analyzes and plans
+        planning_task = Task(
+            task_id=f"{task.task_id}_plan",
+            description=f"As team leader, analyze this task and create a plan. Task: {task.description}",
+            complexity=task.complexity,
+            context={
+                **task.context,
+                "role": "leader",
+                "phase": "planning",
+                "worker_count": len(workers),
+            }
+        )
+        leader_plan = await leader.execute(planning_task)
+        results.append(leader_plan)
+        
+        # Phase 2: Workers execute in parallel
+        worker_tasks = []
+        for i, worker in enumerate(workers):
+            worker_task = Task(
+                task_id=f"{task.task_id}_worker{i}",
+                description=f"Execute your part of the task. Leader's guidance: {leader_plan.output[:500]}\n\nOriginal task: {task.description}",
+                complexity=task.complexity,
+                context={
+                    **task.context,
+                    "role": "worker",
+                    "phase": "execution",
+                    "leader_plan": leader_plan.output[:800],
+                }
+            )
+            worker_tasks.append((worker, worker_task))
+        
+        worker_results = await asyncio.gather(*[
+            w.execute(t) for w, t in worker_tasks
+        ], return_exceptions=True)
+        
+        for i, result in enumerate(worker_results):
+            if isinstance(result, Exception):
+                result = AgentResult(
+                    task_id=f"{task.task_id}_worker{i}",
+                    agent_id=workers[i].agent_id,
+                    agent_role=workers[i].role.value,
+                    output="",
+                    quality_score=0.0,
+                    latency_ms=0.0,
+                    success=False,
+                    error=str(result)
+                )
+            results.append(result)
+        
+        # Phase 3: Leader synthesizes
+        worker_outputs = "\n---\n".join([
+            f"Worker {r.agent_id}: {r.output[:400]}"
+            for r in results[1:] if r.success
+        ])
+        
+        synthesis_task = Task(
+            task_id=f"{task.task_id}_synthesize",
+            description=f"Synthesize worker outputs into a final cohesive result.\n\nWorker outputs:\n{worker_outputs}\n\nOriginal task: {task.description}",
+            complexity=task.complexity,
+            context={
+                **task.context,
+                "role": "leader",
+                "phase": "synthesis",
+            }
+        )
+        synthesis_result = await leader.execute(synthesis_task)
+        results.append(synthesis_result)
+        
+        self.results.extend(results)
+        self._log_execution("hierarchical", task, results, time.time() - start_time)
+        
+        return results
+    
+    async def run_consensus(
+        self,
+        task: Task,
+        max_rounds: int = 3,
+        agreement_threshold: float = 0.8,
+        agent_ids: Optional[list[str]] = None
+    ) -> list[AgentResult]:
+        """
+        Run agents until they reach consensus on the output.
+        
+        Agents iterate, viewing each other's responses, until sufficient
+        agreement is reached or max rounds exceeded.
+        
+        Best for: Critical decisions, validation tasks.
+        
+        Args:
+            task: The task to process
+            max_rounds: Maximum number of consensus rounds
+            agreement_threshold: Required similarity for consensus (0-1)
+            agent_ids: Specific agents to include (default: all)
+        """
+        start_time = time.time()
+        all_results = []
+        
+        participating_agents = (
+            [self.agents[aid] for aid in agent_ids if aid in self.agents]
+            if agent_ids else list(self.agents.values())
+        )
+        
+        if len(participating_agents) < 2:
+            raise ValueError("Consensus requires at least 2 agents")
+        
+        consensus_reached = False
+        
+        for round_num in range(max_rounds):
+            round_context = dict(task.context)
+            round_context["consensus_round"] = round_num + 1
+            round_context["max_rounds"] = max_rounds
+            round_context["goal"] = "reach agreement with other agents"
+            
+            # Add previous round's responses
+            if all_results:
+                prev_round_start = -len(participating_agents)
+                prev_responses = {
+                    r.agent_id: r.output[:500]
+                    for r in all_results[prev_round_start:]
+                }
+                round_context["other_agent_responses"] = prev_responses
+                round_context["instruction"] = (
+                    "Review other agents' responses and adjust your answer to find common ground. "
+                    "If you agree with the consensus, state so clearly. "
+                    "If you disagree, explain your reasoning."
+                )
+            
+            # Run all agents for this round
+            round_results = []
+            for agent in participating_agents:
+                consensus_task = Task(
+                    task_id=f"{task.task_id}_consensus_r{round_num}_{agent.agent_id}",
+                    description=task.description,
+                    complexity=task.complexity,
+                    context=round_context
+                )
+                
+                result = await agent.execute(consensus_task)
+                round_results.append(result)
+            
+            all_results.extend(round_results)
+            
+            # Check for consensus (simple heuristic: look for agreement keywords)
+            agreement_keywords = ["agree", "consensus", "same conclusion", "concur"]
+            agreements = sum(
+                1 for r in round_results
+                if any(kw in r.output.lower() for kw in agreement_keywords)
+            )
+            
+            if agreements / len(round_results) >= agreement_threshold:
+                consensus_reached = True
+                break
+        
+        self.results.extend(all_results)
+        self._log_execution(
+            f"consensus{'_reached' if consensus_reached else '_partial'}",
+            task, all_results, time.time() - start_time
+        )
+        
+        return all_results
+    
+    async def run_peer_review(
+        self,
+        task: Task,
+        agent_ids: Optional[list[str]] = None
+    ) -> list[AgentResult]:
+        """
+        Run agents where each reviews others' work.
+        
+        Phase 1: All agents produce initial output
+        Phase 2: Each agent reviews one other agent's work
+        Phase 3: Original authors respond to feedback
+        
+        Best for: Code review, document review, quality assurance.
+        
+        Args:
+            task: The task to process
+            agent_ids: Specific agents to include (default: all)
+        """
+        start_time = time.time()
+        results = []
+        
+        participating_agents = (
+            [self.agents[aid] for aid in agent_ids if aid in self.agents]
+            if agent_ids else list(self.agents.values())
+        )
+        
+        if len(participating_agents) < 2:
+            raise ValueError("Peer review requires at least 2 agents")
+        
+        # Phase 1: Initial work
+        initial_results = []
+        for agent in participating_agents:
+            initial_task = Task(
+                task_id=f"{task.task_id}_initial_{agent.agent_id}",
+                description=task.description,
+                complexity=task.complexity,
+                context={**task.context, "phase": "initial_work"}
+            )
+            result = await agent.execute(initial_task)
+            initial_results.append(result)
+        
+        results.extend(initial_results)
+        
+        # Phase 2: Peer review (circular: agent 0 reviews agent 1, 1 reviews 2, etc.)
+        review_results = []
+        n_agents = len(participating_agents)
+        
+        for i, reviewer in enumerate(participating_agents):
+            reviewee_idx = (i + 1) % n_agents
+            reviewee_work = initial_results[reviewee_idx]
+            reviewee_name = participating_agents[reviewee_idx].agent_id
+            
+            review_task = Task(
+                task_id=f"{task.task_id}_review_{reviewer.agent_id}",
+                description=f"Review {reviewee_name}'s work and provide constructive feedback.\n\nOriginal task: {task.description}\n\n{reviewee_name}'s work:\n{reviewee_work.output}",
+                complexity=task.complexity,
+                context={
+                    **task.context,
+                    "phase": "peer_review",
+                    "reviewing": reviewee_name,
+                }
+            )
+            review = await reviewer.execute(review_task)
+            review_results.append(review)
+        
+        results.extend(review_results)
+        
+        # Phase 3: Authors respond to feedback
+        response_results = []
+        for i, author in enumerate(participating_agents):
+            reviewer_idx = (i - 1) % n_agents
+            feedback = review_results[reviewer_idx]
+            reviewer_name = participating_agents[reviewer_idx].agent_id
+            
+            response_task = Task(
+                task_id=f"{task.task_id}_response_{author.agent_id}",
+                description=f"Consider {reviewer_name}'s feedback and provide your revised/final response.\n\nOriginal task: {task.description}\n\nYour original work:\n{initial_results[i].output[:500]}\n\nFeedback from {reviewer_name}:\n{feedback.output}",
+                complexity=task.complexity,
+                context={
+                    **task.context,
+                    "phase": "revision",
+                    "feedback_from": reviewer_name,
+                }
+            )
+            response = await author.execute(response_task)
+            response_results.append(response)
+        
+        results.extend(response_results)
+        
+        self.results.extend(results)
+        self._log_execution("peer_review", task, results, time.time() - start_time)
+        
+        return results
+    
     def send_message(
         self, 
         sender_id: str, 
