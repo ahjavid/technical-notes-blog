@@ -330,15 +330,31 @@ Following LLM evaluation best practices from lm-evaluation-harness and DeepEval.
 
 ### Model Pool
 
-| Model            | Parameters | Purpose                   |
-|------------------|------------|---------------------------|
-| qwen2.5-coder:3b | 3B         | Fast code generation      |
-| qwen2.5-coder:7b | 7B         | Balanced code generation  |
-| qwen3:4b         | 4B         | Reasoning with thinking mode |
-| qwen3:8b         | 8B         | Advanced reasoning        |
-| gemma3:4b        | 4B         | Google's efficient model  |
-| granite4:3b      | 3B         | IBM's enterprise model    |
-| llama3.2:3b      | 3B         | Meta's efficient model    |
+Following LLM-as-a-Judge best practices, models are designated as either **agents** (being evaluated) or **judges** (doing evaluation).
+
+#### Agent Models (Small, 3-4B)
+
+| Model            | Family  | Params | Role Optimization | Benchmark Score |
+|------------------|---------|--------|-------------------|-----------------|
+| llama3.2:3b      | Llama   | 3B     | CODER             | code_gen=0.950  |
+| qwen2.5-coder:3b | Qwen    | 3B     | ANALYZER          | analysis=0.964  |
+| granite4:3b      | Granite | 3B     | REVIEWER          | code_review=0.935 |
+
+#### Judge Models (Large, 12-14B+)
+
+| Model      | Family | Params | Purpose                        |
+|------------|--------|--------|--------------------------------|
+| qwen3:14b  | Qwen   | 14B    | Primary judge, deep reasoning  |
+| gemma3:12b | Gemma  | 12B    | Secondary judge, clear analysis |
+
+#### Legacy Models (Available for Benchmarking)
+
+| Model            | Family | Params | Notes                          |
+|------------------|--------|--------|--------------------------------|
+| qwen2.5-coder:7b | Qwen   | 7B     | Medium coding model            |
+| qwen3:4b         | Qwen   | 4B     | Small reasoning model          |
+| qwen3:8b         | Qwen   | 8B     | Medium reasoning model         |
+| gemma3:4b        | Gemma  | 4B     | Small analysis model           |
 
 ### Comprehensive Benchmark Results
 

@@ -631,7 +631,7 @@ class EnsembleEvaluator:
     3. Detects high disagreement (potential evaluation uncertainty)
     
     Best practice: Use models from different families than the agents being evaluated.
-    E.g., If agents use Qwen, use Llama+Gemma as judges.
+    E.g., If agents use Llama/Granite/Qwen 3B, use Qwen 14B + Gemma 12B as judges.
     """
     
     def __init__(
@@ -645,7 +645,7 @@ class EnsembleEvaluator:
         
         Args:
             judge_models: List of model names from DIFFERENT families
-                         e.g., ["llama3.2:3b", "gemma3:4b"]
+                         e.g., ["qwen3:14b", "gemma3:12b"]
             base_url: Ollama API URL
             aggregation: How to combine scores - "mean", "median", or "weighted"
         """
@@ -784,11 +784,13 @@ def create_ensemble_evaluator(
     """
     Factory to create an ensemble evaluator with sensible defaults.
     
-    Default uses Llama and Gemma families as judges (different from Qwen agents).
+    Default uses large judges (12-14B) from different families.
+    Agents: llama3.2:3b, qwen2.5-coder:3b, granite4:3b (3B)
+    Judges: qwen3:14b, gemma3:12b (12-14B)
     """
     if judge_models is None:
-        # Default: Use different model families than typical agents
-        judge_models = ["llama3.2:3b", "gemma3:4b"]
+        # Default: Large judges from different families
+        judge_models = ["qwen3:14b", "gemma3:12b"]
     
     return EnsembleEvaluator(
         judge_models=judge_models,

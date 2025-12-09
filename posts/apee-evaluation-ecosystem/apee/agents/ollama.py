@@ -16,45 +16,106 @@ DEFAULT_TIMEOUT = 60.0
 
 
 # Available model pool with characteristics
+# Following LLM-as-a-Judge best practices:
+# - AGENT models: Small (3-4B), diverse families, being evaluated
+# - JUDGE models: Large (12-14B+), different families from agents
 MODEL_POOL = {
-    # Coding-focused models
+    # ============ AGENT MODELS (Small, 3-4B) ============
+    # These models are used as agents in collaborative workflows
+    # Selected based on benchmark performance by task category
+    "llama3.2:3b": {
+        "type": "agent",
+        "family": "llama",
+        "size": "small",
+        "params": "3B",
+        "strengths": ["code_generation", "general"],
+        "best_for": ["CODER"],  # Benchmark: code_gen=0.950
+    },
     "qwen2.5-coder:3b": {
-        "type": "coding",
+        "type": "agent",
+        "family": "qwen",
         "size": "small",
-        "strengths": ["code_generation", "debugging", "fast"],
-    },
-    "qwen2.5-coder:7b": {
-        "type": "coding",
-        "size": "medium",
-        "strengths": ["code_generation", "code_review", "balanced"],
-    },
-    # General-purpose models
-    "qwen3:4b": {
-        "type": "general",
-        "size": "small",
-        "strengths": ["reasoning", "analysis", "fast"],
-    },
-    "qwen3:8b": {
-        "type": "general",
-        "size": "medium",
-        "strengths": ["reasoning", "synthesis", "balanced"],
-    },
-    "gemma3:4b": {
-        "type": "general",
-        "size": "small",
-        "strengths": ["analysis", "clarity", "fast"],
+        "params": "3B",
+        "strengths": ["analysis", "reasoning", "code_debug"],
+        "best_for": ["ANALYZER"],  # Benchmark: analysis=0.964, reasoning=0.950
     },
     "granite4:3b": {
-        "type": "general",
+        "type": "agent",
+        "family": "granite",
         "size": "small",
-        "strengths": ["enterprise", "structured", "fast"],
+        "params": "3B",
+        "strengths": ["code_review", "math", "qa_factual"],
+        "best_for": ["REVIEWER"],  # Benchmark: code_review=0.935, math=0.918
     },
-    "llama3.2:3b": {
-        "type": "general",
+    # ============ JUDGE MODELS (Large, 12-14B+) ============
+    # These models evaluate agent outputs in LLM-as-a-Judge
+    # Must be from DIFFERENT families than agents being evaluated
+    "qwen3:14b": {
+        "type": "judge",
+        "family": "qwen",
+        "size": "large",
+        "params": "14B",
+        "strengths": ["reasoning", "evaluation", "nuanced_assessment"],
+        "best_for": ["judge"],
+    },
+    "gemma3:12b": {
+        "type": "judge",
+        "family": "gemma",
+        "size": "large",
+        "params": "12B",
+        "strengths": ["analysis", "clarity", "evaluation"],
+        "best_for": ["judge"],
+    },
+    # ============ LEGACY/ALTERNATIVE MODELS ============
+    # Kept for backward compatibility and benchmarking
+    "qwen2.5-coder:7b": {
+        "type": "legacy",
+        "family": "qwen",
+        "size": "medium",
+        "params": "7B",
+        "strengths": ["code_generation", "code_review"],
+        "best_for": ["CODER", "REVIEWER"],
+    },
+    "qwen3:4b": {
+        "type": "legacy",
+        "family": "qwen",
         "size": "small",
-        "strengths": ["general", "fast"],
+        "params": "4B",
+        "strengths": ["reasoning", "analysis"],
+        "best_for": ["ANALYZER"],
+    },
+    "qwen3:8b": {
+        "type": "legacy",
+        "family": "qwen",
+        "size": "medium",
+        "params": "8B",
+        "strengths": ["reasoning", "synthesis"],
+        "best_for": ["SYNTHESIZER"],
+    },
+    "gemma3:4b": {
+        "type": "legacy",
+        "family": "gemma",
+        "size": "small",
+        "params": "4B",
+        "strengths": ["analysis", "clarity"],
+        "best_for": ["REVIEWER"],
     },
 }
+
+
+# Recommended configurations
+RECOMMENDED_AGENTS = ["llama3.2:3b", "qwen2.5-coder:3b", "granite4:3b"]
+RECOMMENDED_JUDGES = ["qwen3:14b", "gemma3:12b"]
+
+
+def get_agent_models() -> list[str]:
+    """Get list of models suitable for agent roles."""
+    return [k for k, v in MODEL_POOL.items() if v.get("type") == "agent"]
+
+
+def get_judge_models() -> list[str]:
+    """Get list of models suitable for judge roles."""
+    return [k for k, v in MODEL_POOL.items() if v.get("type") == "judge"]
 
 
 class ModelSize(str, Enum):
@@ -68,17 +129,23 @@ def get_recommended_model(role: AgentRole, prefer_fast: bool = True) -> str:
     """
     Get recommended model for a given agent role.
     
+    Selection based on comprehensive benchmark results:
+    - llama3.2:3b: Best at code_generation (0.950)
+    - qwen2.5-coder:3b: Best at analysis (0.964), reasoning (0.950)
+    - granite4:3b: Best at code_review (0.935), math (0.918)
+    
     Args:
         role: The agent's role
         prefer_fast: If True, prefer smaller/faster models
     """
+    # Benchmark-optimized role mappings
     role_model_map = {
-        AgentRole.ANALYZER: "qwen3:4b" if prefer_fast else "qwen3:8b",
-        AgentRole.CODER: "qwen2.5-coder:3b" if prefer_fast else "qwen2.5-coder:7b",
-        AgentRole.EXECUTOR: "qwen2.5-coder:3b" if prefer_fast else "qwen2.5-coder:7b",
-        AgentRole.REVIEWER: "gemma3:4b" if prefer_fast else "qwen3:8b",
-        AgentRole.SYNTHESIZER: "qwen3:4b" if prefer_fast else "qwen3:8b",
-        AgentRole.PLANNER: "qwen3:4b" if prefer_fast else "qwen3:8b",
+        AgentRole.ANALYZER: "qwen2.5-coder:3b",  # analysis=0.964
+        AgentRole.CODER: "llama3.2:3b",  # code_gen=0.950
+        AgentRole.EXECUTOR: "llama3.2:3b",  # code_gen=0.950
+        AgentRole.REVIEWER: "granite4:3b",  # code_review=0.935
+        AgentRole.SYNTHESIZER: "qwen2.5-coder:3b",  # reasoning=0.950
+        AgentRole.PLANNER: "qwen2.5-coder:3b",  # analysis=0.964
         AgentRole.CUSTOM: DEFAULT_MODEL,
     }
     return role_model_map.get(role, DEFAULT_MODEL)

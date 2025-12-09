@@ -580,6 +580,7 @@ class MultiJudgeScorer(QualityScorer):
     Phase 2: Uses multiple LLM judges for more robust scoring.
     
     Aggregates scores from different models to reduce bias.
+    Uses large models (12-14B+) as judges for better evaluation quality.
     """
     
     def __init__(
@@ -587,7 +588,8 @@ class MultiJudgeScorer(QualityScorer):
         judge_models: Optional[list[str]] = None,
         base_url: str = "http://localhost:11434"
     ):
-        self.judge_models = judge_models or ["qwen3:4b", "gemma3:4b"]
+        # Default to large judges from different families
+        self.judge_models = judge_models or ["qwen3:14b", "gemma3:12b"]
         self.base_url = base_url
         self.judges: list[LLMQualityScorer] = [
             LLMQualityScorer(model=m, base_url=base_url) for m in self.judge_models
