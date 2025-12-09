@@ -11,10 +11,16 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 ### 🎯 Key Features
 - **LLM-as-a-Judge Evaluation**: Large models (12-14B) evaluate smaller agent outputs
 - **Ensemble Judges**: Multiple judge models from different families reduce bias
-- **Poly-Agentic Collaboration**: Multiple agents working together (debate, pipeline, peer review)
+- **Poly-Agentic Collaboration**: Multiple agents working together with 6 patterns
 - **Three-Tier Metrics**: Individual → Collaborative → Ecosystem evaluation
 - **Role-Optimized Agents**: Agent selection based on benchmark strengths
-- **6 Collaboration Patterns**: parallel, sequential, debate, consensus, hierarchical, peer_review
+- **6 Collaboration Patterns**:
+  - `run_parallel()` - All agents work independently
+  - `run_pipeline()` - Sequential output flow
+  - `run_debate()` - Multi-round argument
+  - `run_hierarchical()` - Leader delegates to workers
+  - `run_consensus()` - Iterate until agreement
+  - `run_peer_review()` - Work → review → revise
 
 ---
 
@@ -194,9 +200,12 @@ examples/
 │                      │                                              │
 │         ┌────────────▼─────────────┐                                │
 │         │      Coordinator         │                                │
-│         │  • Pipeline Orchestration│                                │
-│         │  • Debate Management     │                                │
-│         │  • Parallel Execution    │                                │
+│         │  • run_parallel()        │                                │
+│         │  • run_pipeline()        │                                │
+│         │  • run_debate()          │                                │
+│         │  • run_hierarchical()    │                                │
+│         │  • run_consensus()       │                                │
+│         │  • run_peer_review()     │                                │
 │         └────────────┬─────────────┘                                │
 │                      │                                              │
 │  JUDGES (Large 12-14B models - different families)                  │
@@ -429,14 +438,14 @@ print(result.quality_ranking)
 
 ### Multi-Agent Collaboration Patterns
 
-| Pattern | Description | Use Case |
-|---------|-------------|----------|
-| `parallel` | All agents work independently | Diverse perspectives |
-| `sequential` | Pipeline: output flows to next | Multi-stage analysis |
-| `debate` | Agents argue/critique each other | Decision making |
-| `consensus` | Agents must agree on output | Critical decisions |
-| `hierarchical` | Leader delegates to workers | Complex task breakdown |
-| `peer_review` | Each agent reviews others' work | Code review workflows |
+| Pattern | Method | Description | Use Case |
+|---------|--------|-------------|----------|
+| `parallel` | `run_parallel()` | All agents work independently | Diverse perspectives |
+| `sequential` | `run_pipeline()` | Output flows to next agent | Multi-stage analysis |
+| `debate` | `run_debate()` | Multi-round argument/critique | Decision making |
+| `hierarchical` | `run_hierarchical()` | Leader → workers → synthesis | Complex task breakdown |
+| `consensus` | `run_consensus()` | Iterate until agreement | Critical decisions |
+| `peer_review` | `run_peer_review()` | Work → review → revise | Code review workflows |
 
 ---
 
@@ -528,7 +537,9 @@ MIT License. See [LICENSE](../../LICENSE) for details.
 
 ---
 
-**Status**: ✅ APEE Framework Complete (Phases 1-4)  
+**Status**: ✅ APEE Framework Complete (Phases 1-5)  
 **Tests**: 34 passing  
-**Models Tested**: 7 (qwen2.5-coder:3b/7b, qwen3:4b/8b, gemma3:4b, granite4:3b, llama3.2:3b)  
+**Agents**: llama3.2:3b, qwen2.5-coder:3b, granite4:3b (3B diverse families)  
+**Judges**: qwen3:14b, gemma3:12b (12-14B evaluation models)  
+**Patterns**: 6 (parallel, sequential, debate, hierarchical, consensus, peer_review)  
 **Author**: [ahjavid](https://github.com/ahjavid)
