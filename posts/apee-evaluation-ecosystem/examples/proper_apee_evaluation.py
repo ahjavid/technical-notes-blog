@@ -72,12 +72,12 @@ async def run_and_evaluate_scenario(
     try:
         if pattern.value == "debate":
             results = await coordinator.run_debate(
-                task=task, rounds=2, agent_ids=agent_ids[:2]
+                task=task, rounds=2, agent_ids=agent_ids[:3]
             )
             final_output = results[-1].output if results else ""
             
             # Build traces for each participating agent
-            for i, agent_id in enumerate(agent_ids[:2]):
+            for i, agent_id in enumerate(agent_ids[:3]):
                 agent = coordinator.agents[agent_id]
                 trace = ExecutionTrace(
                     agent_id=agent_id,
