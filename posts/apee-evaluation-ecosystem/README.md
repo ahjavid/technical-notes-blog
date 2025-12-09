@@ -9,11 +9,51 @@
 The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systematically evaluating multi-agent AI systems. It provides adaptive evaluation methodologies that dynamically assess agent interactions, collaboration patterns, and emergent behaviors in complex AI ecosystems.
 
 ### 🎯 Key Features
-- **Adaptive Evaluation**: Dynamic assessment that evolves with agent behavior
-- **Poly-Agent Analysis**: Multi-agent interaction pattern recognition  
-- **Ecosystem Metrics**: Holistic system-level performance measurement
-- **Quality Scoring**: Multi-dimensional response quality assessment (Phase 2)
+- **Poly-Agentic Collaboration**: Multiple agents working together (debate, pipeline, peer review)
+- **Three-Tier Metrics**: Individual → Collaborative → Ecosystem evaluation
+- **Adaptive Evaluation**: Dynamic pattern detection and criteria adjustment
+- **Quality Scoring**: Multi-dimensional response quality assessment
 - **Ollama Integration**: Ready-to-use local LLM agent implementation
+- **6 Collaboration Patterns**: parallel, sequential, debate, consensus, hierarchical, peer_review
+
+---
+
+## 🏆 Latest Results
+
+### Multi-Agent Collaborative Evaluation
+
+**Configuration**: 3 agents × 6 scenarios using debate, pipeline, and parallel patterns
+
+| Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
+|----------|---------|---------------|------------------|--------------|---------|
+| collab_code_review | peer_review | 0.61 | 0.93 | 1.00 | **0.87** |
+| research_synthesis | sequential | 0.64 | 0.97 | 1.00 | **0.89** |
+| constrained_problem | debate | 0.60 | 0.90 | 1.00 | **0.85** |
+| emergent_behavior | parallel | 0.64 | 0.66 | 1.00 | **0.76** |
+| scalability_test | hierarchical | 0.62 | 0.64 | 1.00 | **0.75** |
+| conflict_resolution | consensus | 0.63 | 0.64 | 1.00 | **0.75** |
+
+### Aggregate APEE Scores
+
+| Metric | Score |
+|--------|-------|
+| **Level 1 (Individual)** | 0.624 |
+| **Level 2 (Collaborative)** | 0.790 |
+| **Level 3 (Ecosystem)** | 1.000 |
+| **Overall APEE Score** | **0.813** |
+
+### APEE Framework Compliance ✅
+
+| Component | Status | Evidence |
+|-----------|--------|----------|
+| Multi-Agent Collaboration | ✅ | 3 agents working together |
+| Debate Pattern | ✅ | 1 scenario |
+| Pipeline Pattern | ✅ | 1 scenario |
+| Level 1 Metrics (Individual) | ✅ | Response time, length, success |
+| Level 2 Metrics (Collaborative) | ✅ | Coordination efficiency, participation |
+| Level 3 Metrics (Ecosystem) | ✅ | Stability, latency, completion |
+| Adaptive Engine | ✅ | Pattern detection active |
+| Pattern Detection | ✅ | "convergent_behavior" detected |
 
 ---
 
@@ -84,20 +124,31 @@ asyncio.run(main())
 
 ```
 apee/
-├── __init__.py           # Package exports
-├── models.py             # Pydantic data models
+├── __init__.py              # Package exports
+├── models.py                # Pydantic data models
 ├── agents/
-│   ├── base.py           # Abstract Agent class
-│   └── ollama.py         # Ollama LLM implementation
+│   ├── base.py              # Abstract Agent class
+│   └── ollama.py            # Ollama LLM implementation (7 models)
 ├── coordination/
-│   └── coordinator.py    # Task distribution & execution
+│   └── coordinator.py       # Task distribution & execution modes
 ├── evaluation/
-│   ├── evaluator.py      # Main evaluation engine
-│   ├── quality.py        # Phase 2: Quality scoring
-│   └── report.py         # Report data models
+│   ├── evaluator.py         # Main evaluation engine
+│   ├── quality.py           # Quality scoring (heuristic, LLM, composite)
+│   ├── adaptive.py          # 🆕 Adaptive engine with pattern detection
+│   └── report.py            # Report data models
+├── benchmarks/
+│   ├── datasets.py          # 19 scenarios, 11 categories
+│   ├── runner.py            # Statistical benchmark runner
+│   ├── analyzer.py          # Analysis with confidence intervals
+│   └── collaborative.py     # 🆕 Multi-agent evaluation scenarios
 └── utils/
-    ├── logging.py        # Logging utilities
-    └── helpers.py        # Helper functions
+    ├── logging.py           # Logging utilities
+    └── helpers.py           # Helper functions
+
+examples/
+├── full_evaluation.py       # Basic evaluation demo
+├── comprehensive_benchmark.py # Single-model benchmarks
+└── multi_agent_evaluation.py  # 🆕 Full APEE multi-agent demo
 ```
 
 ---
@@ -105,31 +156,53 @@ apee/
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    APEE Framework                               │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
-│  │   Agent A    │  │   Agent B    │  │   Agent N    │           │
-│  │  (Analyzer)  │  │  (Executor)  │  │   (Critic)   │           │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘           │
-│         │                 │                 │                   │
-│         └────────────┬────┴─────────────────┘                   │
-│                      │                                          │
-│         ┌────────────▼─────────────┐                            │
-│         │   Adaptive Coordinator   │                            │
-│         │  • Task Distribution     │                            │
-│         │  • Parallel Execution    │                            │
-│         │  • Pipeline Orchestration│                            │
-│         └────────────┬─────────────┘                            │
-│                      │                                          │
-│         ┌────────────▼─────────────┐                            │
-│         │   Evaluation Engine      │                            │
-│         │  • Performance Metrics   │                            │
-│         │  • Quality Scoring       │                            │
-│         │  • Ecosystem Analysis    │                            │
-│         └──────────────────────────┘                            │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                     APEE Framework                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐              │
+│  │   Agent A    │  │   Agent B    │  │   Agent N    │              │
+│  │  (Analyzer)  │  │   (Coder)    │  │  (Reviewer)  │              │
+│  │ qwen2.5:3b   │  │  gemma3:4b   │  │  qwen3:4b    │              │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘              │
+│         │                 │                 │                      │
+│         └────────────┬────┴─────────────────┘                      │
+│                      │                                             │
+│         ┌────────────▼─────────────┐                               │
+│         │   Adaptive Coordinator   │                               │
+│         │  • Parallel Execution    │                               │
+│         │  • Pipeline Orchestration│                               │
+│         │  • Debate Management     │                               │
+│         │  • Consensus Building    │                               │
+│         └────────────┬─────────────┘                               │
+│                      │                                             │
+│  ┌───────────────────┼───────────────────┐                         │
+│  │                   │                   │                         │
+│  ▼                   ▼                   ▼                         │
+│ ┌─────────┐    ┌─────────────┐    ┌────────────┐                   │
+│ │ Level 1 │    │   Level 2   │    │  Level 3   │                   │
+│ │Individual│   │Collaborative│    │ Ecosystem  │                   │
+│ │ Metrics │    │   Metrics   │    │  Metrics   │                   │
+│ └────┬────┘    └──────┬──────┘    └─────┬──────┘                   │
+│      │               │                  │                          │
+│      └───────────────┼──────────────────┘                          │
+│                      │                                             │
+│         ┌────────────▼─────────────┐                               │
+│         │    Adaptive Engine       │                               │
+│         │  • Pattern Detection     │                               │
+│         │  • Anomaly Detection     │                               │
+│         │  • Criteria Adjustment   │                               │
+│         └──────────────────────────┘                               │
+└─────────────────────────────────────────────────────────────────────┘
 ```
+
+### Three-Tier Evaluation Metrics
+
+| Level | Focus | Metrics |
+|-------|-------|---------|
+| **L1: Individual** | Single agent performance | Success rate, latency, quality score |
+| **L2: Collaborative** | Multi-agent interaction | Coordination efficiency, synergy, conflict rate |
+| **L3: Ecosystem** | System-level health | Stability, scalability, throughput |
 
 ---
 
@@ -282,8 +355,11 @@ Following LLM evaluation best practices from lm-evaluation-harness and DeepEval.
 ### Running Your Own Benchmark
 
 ```bash
-# Run the comprehensive benchmark
+# Run the comprehensive single-model benchmark
 python examples/comprehensive_benchmark.py
+
+# Run the full APEE multi-agent evaluation
+python examples/multi_agent_evaluation.py
 
 # Or quick test with subset
 python -c "
@@ -299,6 +375,17 @@ result = asyncio.run(BenchmarkRunner().run(config))
 print(result.quality_ranking)
 "
 ```
+
+### Multi-Agent Collaboration Patterns
+
+| Pattern | Description | Use Case |
+|---------|-------------|----------|
+| `parallel` | All agents work independently | Diverse perspectives |
+| `sequential` | Pipeline: output flows to next | Multi-stage analysis |
+| `debate` | Agents argue/critique each other | Decision making |
+| `consensus` | Agents must agree on output | Critical decisions |
+| `hierarchical` | Leader delegates to workers | Complex task breakdown |
+| `peer_review` | Each agent reviews others' work | Code review workflows |
 
 ---
 
@@ -317,9 +404,9 @@ print(result.quality_ranking)
 - [x] Add comparative scoring
 - [x] Create composite scorer framework
 - [x] Add LLM-as-judge scorer
-- [x] Write unit tests for scoring
+- [x] Write unit tests for scoring (18 tests)
 
-### Phase 3: Real-World Testing ✅
+### Phase 3: Comprehensive Benchmarks ✅
 - [x] Create benchmark dataset (19 scenarios, 11 categories)
 - [x] Implement statistical analysis (mean, std, CI)
 - [x] Test with 5+ different Ollama models
@@ -327,11 +414,19 @@ print(result.quality_ranking)
 - [x] Run multiple iterations for significance
 - [x] Generate comprehensive reports
 
-### Phase 4: Polish & Share
-- [x] Add CLI for running evaluations
-- [x] Benchmark analyzer with comparisons
+### Phase 4: Full APEE Compliance ✅
+- [x] Multi-agent collaborative scenarios
+- [x] Three-tier metrics (Individual → Collaborative → Ecosystem)
+- [x] Adaptive engine with pattern detection
+- [x] 6 collaboration patterns implemented
+- [x] Multi-agent evaluation demo
+- [x] All 34 tests passing
+
+### Phase 5: Future Enhancements
 - [ ] Create visualization utilities
-- [ ] Write comprehensive documentation
+- [ ] Add more collaboration scenarios
+- [ ] Implement advanced anomaly detection
+- [ ] Web dashboard for results
 - [ ] Publish to PyPI (optional)
 
 ---
@@ -375,5 +470,7 @@ MIT License. See [LICENSE](../../LICENSE) for details.
 
 ---
 
-**Status**: 🚧 Active Development  
+**Status**: ✅ APEE Framework Complete (Phases 1-4)  
+**Tests**: 34 passing  
+**Models Tested**: 7 (qwen2.5-coder:3b/7b, qwen3:4b/8b, gemma3:4b, granite4:3b, llama3.2:3b)  
 **Author**: [ahjavid](https://github.com/ahjavid)
