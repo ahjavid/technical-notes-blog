@@ -9,7 +9,7 @@
 The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systematically evaluating multi-agent AI systems. It uses **LLM-as-a-Judge** evaluation (inspired by CrewAI) where large language models evaluate agent outputs rather than simple heuristics, providing meaningful, nuanced scores.
 
 ### 🎯 Key Features
-- **LLM-as-a-Judge Evaluation**: Large models (12-14B) evaluate smaller agent outputs
+- **LLM-as-a-Judge Evaluation**: Large models (20-24B) evaluate smaller agent outputs
 - **Ensemble Judges**: Multiple judge models from different families reduce bias
 - **Poly-Agentic Collaboration**: Multiple agents working together with 6 patterns
 - **Three-Tier Metrics**: Individual → Collaborative → Ecosystem evaluation
@@ -45,18 +45,18 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 | Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
 |----------|---------|---------------|------------------|--------------|---------|
-| collab_code_review | peer_review | 7.5/10 | 6.0/10 | 6.9/10 | **6.7/10** |
-| research_synthesis | sequential | 7.6/10 | 5.8/10 | 7.8/10 | **6.8/10** |
-| constrained_problem | debate | 6.4/10 | 3.8/10 | 6.8/10 | **5.3/10** |
-| emergent_behavior | parallel | 7.0/10 | 3.2/10 | 7.7/10 | **5.5/10** |
-| scalability_test | hierarchical | 6.9/10 | 4.0/10 | 8.3/10 | **6.0/10** |
-| conflict_resolution | consensus | 7.2/10 | 6.8/10 | 8.5/10 | **7.3/10** |
-| knowledge_transfer | sequential | 6.5/10 | 6.0/10 | 8.4/10 | **6.8/10** |
-| error_recovery | hierarchical | 5.6/10 | 5.0/10 | 8.4/10 | **6.0/10** |
-| creative_collab | debate | 5.6/10 | 5.8/10 | 7.5/10 | **6.2/10** |
-| realtime_collab | parallel | 7.2/10 | 6.8/10 | 9.2/10 | **7.5/10** |
-| adversarial_review | debate | 6.9/10 | 6.8/10 | 7.8/10 | **7.1/10** |
-| doc_sprint | peer_review | 6.4/10 | 4.8/10 | 6.9/10 | **5.8/10** |
+| collab_code_review | peer_review | 7.5/10 | 5.2/10 | 7.0/10 | **6.4/10** |
+| research_synthesis | sequential | 7.2/10 | 6.6/10 | 8.6/10 | **7.3/10** |
+| constrained_problem | debate | 6.4/10 | 5.0/10 | 7.3/10 | **6.0/10** |
+| emergent_behavior | parallel | 6.2/10 | 3.8/10 | 8.4/10 | **5.6/10** |
+| scalability_test | hierarchical | 7.1/10 | 6.2/10 | 8.8/10 | **7.1/10** |
+| conflict_resolution | consensus | 7.7/10 | 6.5/10 | 8.5/10 | **7.4/10** |
+| knowledge_transfer | sequential | 6.6/10 | 6.2/10 | 8.5/10 | **6.9/10** |
+| error_recovery | hierarchical | 5.9/10 | 5.0/10 | 8.5/10 | **6.2/10** |
+| creative_collab | debate | 6.0/10 | 5.9/10 | 7.6/10 | **6.3/10** |
+| realtime_collab | parallel | 6.8/10 | 6.5/10 | 9.1/10 | **7.3/10** |
+| adversarial_review | debate | 7.2/10 | 5.8/10 | 7.6/10 | **6.6/10** |
+| doc_sprint | peer_review | 6.3/10 | 5.2/10 | 7.0/10 | **6.0/10** |
 
 ### Ensemble Judge Agreement
 
@@ -95,14 +95,14 @@ Level 3 (Ecosystem):
 
 ### Key Insights
 
-1. **Realtime collaboration wins**: 7.5/10 overall (highest) - coordinated parallel work excels
-2. **Consensus pattern strong**: 7.3/10 overall - agents agreeing works well
-3. **Adversarial review effective**: 7.1/10 - constructive conflict improves quality
-4. **Debate struggles most**: Constrained problem (5.3/10) - lowest overall score
-5. **Parallel has weakest L2**: 3.2/10 (emergent behavior) - independent work hurts collaboration
-6. **Reviewer (granite4:3b) excels**: Goal=9.0, Semantic=9.0 (highest individual)
-7. **Judges agree well**: StdDev 0.21 indicates reliable evaluation
-8. **All 12 scenarios tested**: Comprehensive evaluation across 6 collaboration patterns
+1. **Consensus pattern leads**: 7.4/10 overall (highest) - agents iterating to agreement produces best results
+2. **Sequential/parallel tie for second**: 7.3/10 - both research_synthesis and realtime_collab excel
+3. **Hierarchical strong**: 7.1/10 (scalability_test) - leader-worker delegation works well
+4. **Emergent behavior struggles**: 5.6/10 (lowest) - parallel work without coordination hurts collaboration
+5. **L2 Collaborative is the bottleneck**: Average 5.6/10 vs L1 (6.7/10) and L3 (8.0/10)
+6. **L3 Ecosystem strongest**: All scenarios score 7.0-9.1/10 - system-level metrics consistently high
+7. **Parallel pattern shows L2 weakness**: emergent_behavior has lowest L2 (3.8/10)
+8. **Score range 5.6-7.4**: Mean 6.6/10 across all 12 scenarios
 
 ---
 

@@ -47,11 +47,38 @@ from apee.dashboard.server import create_dashboard, DashboardServer
 from apee.dashboard.api import DashboardAPI
 
 
+def load_evaluation_results():
+    """Load real evaluation results from JSON file."""
+    results_file = Path(__file__).parent.parent / "data" / "apee_evaluation_results.json"
+    if results_file.exists():
+        with open(results_file) as f:
+            return json.load(f)
+    return None
+
+
 def demo_visualization():
-    """Demonstrate visualization capabilities."""
+    """Demonstrate visualization capabilities using REAL evaluation data from JSON."""
     print("\n" + "="*60)
     print("📊 VISUALIZATION DEMO")
     print("="*60 + "\n")
+    
+    # Load real evaluation results
+    results = load_evaluation_results()
+    
+    if not results:
+        print("⚠️  No evaluation results found!")
+        print("   Run 'python examples/proper_apee_evaluation.py' first to generate results.")
+        print("   Then run this demo again.")
+        return
+    
+    print(f"✓ Loaded results from: data/apee_evaluation_results.json")
+    print(f"  Timestamp: {results['timestamp']}")
+    print(f"  Judge Models: {', '.join(results['judge_models'])}")
+    print(f"  Scenarios: {len(results['scenarios'])}")
+    
+    # Use first scenario for detailed visualization
+    first_scenario = results["scenarios"][0]
+    scenario_id = first_scenario["scenario_id"]
     
     # Create visualizer
     config = ChartConfig(
@@ -62,39 +89,39 @@ def demo_visualization():
     )
     visualizer = MetricsVisualizer(config)
     
-    # Sample evaluation data
-    l1_scores = {
-        "executor_goal": 9.0,
-        "executor_semantic": 8.0,
-        "analyzer_goal": 8.0,
-        "analyzer_semantic": 7.0,
-        "reviewer_goal": 7.0,
-        "reviewer_semantic": 4.0,
-    }
+    # Extract L1 scores from real data
+    l1_data = first_scenario["level1_individual"]
+    l1_scores = {}
+    for agent_id, scores in l1_data.get("scores_by_agent", {}).items():
+        l1_scores[f"{agent_id}_goal"] = scores.get("goal_alignment", {}).get("score", 0)
+        l1_scores[f"{agent_id}_semantic"] = scores.get("semantic_quality", {}).get("score", 0)
     
+    # Extract L2 scores from real data
+    l2_data = first_scenario["level2_collaborative"]
     l2_scores = {
-        "collaboration": 6.5,
-        "synthesis": 7.5,
+        "collaboration": l2_data.get("scores", {}).get("collaboration_effectiveness", {}).get("score", 0),
+        "synthesis": l2_data.get("scores", {}).get("synthesis_quality", {}).get("score", 0),
     }
     
+    # Extract L3 scores from real data
+    l3_data = first_scenario["level3_ecosystem"]
     l3_scores = {
-        "efficiency": 6.0,
-        "stability": 9.0,
-        "throughput": 8.5,
-        "adaptability": 7.0,
+        "efficiency": l3_data.get("efficiency", 0),
+        "stability": l3_data.get("stability", 0),
+        "throughput": l3_data.get("throughput", 0),
+        "adaptability": l3_data.get("adaptability", 0),
     }
     
     # Create level comparison chart
-    print("Creating three-tier metrics comparison...")
+    print(f"\nCreating three-tier metrics comparison for: {scenario_id}...")
     chart = visualizer.create_level_comparison(
         l1_scores, l2_scores, l3_scores,
-        title="APEE Three-Tier Evaluation"
+        title=f"APEE Three-Tier Evaluation ({scenario_id})"
     )
     
     # Handle both plotly and text output
     if hasattr(chart, 'to_html'):
         print("✅ Plotly chart created (interactive)")
-        # Save to file
         output_dir = Path(__file__).parent.parent / "data"
         output_dir.mkdir(exist_ok=True)
         chart.write_html(str(output_dir / "evaluation_chart.html"))
@@ -103,17 +130,21 @@ def demo_visualization():
         print("📝 Text-based chart (plotly not installed):")
         print(chart.get("text_representation", ""))
     
-    # Create agent performance radar
+    # Create agent performance radar with REAL data
     print("\nCreating agent performance radar...")
-    agent_metrics = {
-        "executor": {"goal": 9.0, "semantic": 8.0, "latency": 7.0, "quality": 8.5},
-        "analyzer": {"goal": 8.0, "semantic": 7.0, "latency": 8.0, "quality": 7.5},
-        "reviewer": {"goal": 7.0, "semantic": 4.0, "latency": 9.0, "quality": 6.0},
-    }
+    agent_metrics = {}
+    for agent_id, scores in l1_data.get("scores_by_agent", {}).items():
+        agent_metrics[agent_id] = {
+            "goal": scores.get("goal_alignment", {}).get("score", 0),
+            "semantic": scores.get("semantic_quality", {}).get("score", 0),
+            "latency": 7.0,  # Placeholder - could be calculated from duration
+            "quality": (scores.get("goal_alignment", {}).get("score", 0) + 
+                       scores.get("semantic_quality", {}).get("score", 0)) / 2,
+        }
     
     radar = visualizer.create_agent_performance_radar(
         agent_metrics,
-        title="Agent Performance Comparison"
+        title="Agent Performance Comparison (Real Data)"
     )
     
     if hasattr(radar, 'to_html'):
@@ -122,38 +153,63 @@ def demo_visualization():
         print("📝 Text-based radar:")
         print(radar.get("text_representation", ""))
     
-    # Generate full HTML report
+    # Generate full HTML report with REAL data
     print("\nGenerating comprehensive HTML report...")
     evaluation_result = {
-        "overall_apee_score": 7.2,
-        "l1_average": 7.5,
-        "l2_average": 7.0,
-        "l3_average": 7.6,
+        "overall_apee_score": first_scenario["overall_apee_score"],
+        "l1_average": l1_data.get("average", 0),
+        "l2_average": l2_data.get("average", 0),
+        "l3_average": l3_data.get("overall", 0),
         "individual_scores": {
-            "executor": {"goal_alignment": 9.0, "semantic_quality": 8.0},
-            "analyzer": {"goal_alignment": 8.0, "semantic_quality": 7.0},
-            "reviewer": {"goal_alignment": 7.0, "semantic_quality": 4.0},
+            agent_id: {
+                "goal_alignment": scores.get("goal_alignment", {}).get("score", 0),
+                "semantic_quality": scores.get("semantic_quality", {}).get("score", 0),
+            }
+            for agent_id, scores in l1_data.get("scores_by_agent", {}).items()
         },
-        "collaborative_scores": {"collaboration": 6.5, "synthesis": 7.5},
-        "ecosystem_scores": {"efficiency": 6.0, "stability": 9.0, "throughput": 8.5},
-        "scenario_id": "code_review_demo",
-        "pattern": "peer_review",
+        "collaborative_scores": l2_scores,
+        "ecosystem_scores": l3_scores,
+        "scenario_id": scenario_id,
+        "pattern": first_scenario["pattern"],
+        "judges": results["judge_models"],
+        "timestamp": results["timestamp"],
     }
     
     output_path = Path(__file__).parent.parent / "data" / "evaluation_report.html"
     generate_report_html(
         evaluation_result,
-        title="APEE Code Review Evaluation",
+        title=f"APEE Evaluation Report ({scenario_id})",
         output_path=str(output_path)
     )
     print(f"✅ Report saved to: {output_path}")
+    
+    # Show summary of all scenarios
+    print(f"\n📊 All Scenario Results:")
+    print("-" * 70)
+    print(f"{'Scenario':<25} {'Pattern':<15} {'L1':>6} {'L2':>6} {'L3':>6} {'Overall':>8}")
+    print("-" * 70)
+    for scenario in results["scenarios"]:
+        print(f"{scenario['scenario_id']:<25} {scenario['pattern']:<15} "
+              f"{scenario['level1_individual']['average']:>5.1f} "
+              f"{scenario['level2_collaborative']['average']:>5.1f} "
+              f"{scenario['level3_ecosystem']['overall']:>5.1f} "
+              f"{scenario['overall_apee_score']:>7.1f}")
+    print("-" * 70)
 
 
 def demo_anomaly_detection():
-    """Demonstrate anomaly detection capabilities."""
+    """Demonstrate anomaly detection capabilities using REAL evaluation data."""
     print("\n" + "="*60)
     print("⚠️ ANOMALY DETECTION DEMO")
     print("="*60 + "\n")
+    
+    # Load real evaluation results
+    results = load_evaluation_results()
+    
+    if not results:
+        print("⚠️  No evaluation results found!")
+        print("   Run 'python examples/proper_apee_evaluation.py' first.")
+        return
     
     # Create detector
     detector = AnomalyDetector(
@@ -166,103 +222,146 @@ def demo_anomaly_detection():
     alert_manager = AlertManager()
     alert_manager.add_handler(ConsoleAlertHandler(min_severity=AnomalySeverity.INFO))
     
-    # Simulate normal evaluations to build baseline
-    print("Building baseline from normal evaluations...")
-    normal_scores = [7.0, 7.2, 7.5, 6.8, 7.1, 7.3, 7.0, 6.9, 7.4, 7.2]
-    for score in normal_scores:
+    scenarios = results["scenarios"]
+    
+    # Build baseline from all scenarios
+    print("Building baseline from real evaluation results...")
+    all_scores = [s["overall_apee_score"] for s in scenarios]
+    for score in all_scores:
         detector.check_value("overall_apee_score", score)
-    print(f"   Baseline established from {len(normal_scores)} evaluations")
     
-    # Check an anomalous evaluation
-    print("\nChecking potentially anomalous evaluations...")
+    mean_score = sum(all_scores) / len(all_scores)
+    min_score = min(all_scores)
+    max_score = max(all_scores)
+    print(f"   Baseline from {len(scenarios)} scenarios")
+    print(f"   Score range: {min_score:.1f} - {max_score:.1f} (mean: {mean_score:.1f})")
     
-    # Test 1: Normal value
-    result = detector.check_value("overall_apee_score", 7.1, {"scenario": "test1"})
-    if result:
-        alert_manager.process_anomaly(result)
-    else:
-        print("✅ Score 7.1: Normal (no anomaly)")
+    # Check each scenario for anomalies
+    print("\nAnalyzing scenarios for anomalies...")
+    total_anomalies = 0
     
-    # Test 2: Low score
-    result = detector.check_value("overall_apee_score", 3.0, {"scenario": "test2"})
-    if result:
-        print(f"\n🚨 Anomaly detected for score 3.0:")
-        alert_manager.process_anomaly(result)
-    
-    # Test 3: Check complete evaluation
-    print("\n\nChecking complete evaluation result...")
-    eval_result = {
-        "overall_apee_score": 2.5,  # Very low
-        "l1_average": 3.0,
-        "l2_average": 1.0,  # Very low collaboration
-        "l3_average": 4.0,
-        "judge_scores": {
-            "judge1": 6.0,
-            "judge2": 2.0,  # High disagreement
+    for scenario in scenarios:
+        scenario_id = scenario["scenario_id"]
+        l1_avg = scenario["level1_individual"]["average"]
+        l2_avg = scenario["level2_collaborative"]["average"]
+        l3_avg = scenario["level3_ecosystem"]["overall"]
+        overall = scenario["overall_apee_score"]
+        
+        # Build evaluation result dict for anomaly checking
+        eval_result = {
+            "overall_apee_score": overall,
+            "l1_average": l1_avg,
+            "l2_average": l2_avg,
+            "l3_average": l3_avg,
         }
-    }
-    
-    anomalies = detector.check_evaluation(eval_result, "problematic_scenario")
-    print(f"\nFound {len(anomalies)} anomalies in evaluation:")
-    for anomaly in anomalies:
-        alert_manager.process_anomaly(anomaly)
+        
+        # Check for anomalies (using new detector to avoid baseline pollution)
+        check_detector = AnomalyDetector(window_size=50, z_threshold=2.5)
+        anomalies = check_detector.check_evaluation(eval_result, scenario_id)
+        
+        if anomalies:
+            total_anomalies += len(anomalies)
+            print(f"\n⚠️  {scenario_id}: {len(anomalies)} anomaly(ies)")
+            for anomaly in anomalies:
+                alert_manager.process_anomaly(anomaly)
+        else:
+            print(f"✅ {scenario_id}: Normal (L1={l1_avg:.1f}, L2={l2_avg:.1f}, L3={l3_avg:.1f}, Overall={overall:.1f})")
     
     # Print summary
-    summary = detector.get_anomaly_summary()
     print(f"\n📊 Anomaly Summary:")
-    print(f"   Total anomalies detected: {summary['total_anomalies']}")
-    print(f"   Critical/Emergency: {summary['critical_count']}")
-    print(f"   By type: {summary['by_type']}")
+    print(f"   Scenarios analyzed: {len(scenarios)}")
+    print(f"   Total anomalies found: {total_anomalies}")
+    
+    if total_anomalies == 0:
+        print("   ✅ All scenarios within normal parameters!")
 
 
 def demo_pattern_analyzers():
-    """Demonstrate pattern analysis capabilities."""
+    """Demonstrate pattern analysis capabilities using REAL evaluation data."""
     print("\n" + "="*60)
     print("📈 PATTERN ANALYSIS DEMO")
     print("="*60 + "\n")
     
+    # Load real evaluation results
+    results = load_evaluation_results()
+    
+    if not results:
+        print("⚠️  No evaluation results found!")
+        print("   Run 'python examples/proper_apee_evaluation.py' first.")
+        return
+    
+    scenarios = results["scenarios"]
+    
     # Performance pattern analyzer
-    print("Performance Pattern Analysis:")
+    print("Performance Pattern Analysis (Real Data):")
     perf_analyzer = PerformancePatternAnalyzer(min_samples=5)
     
-    # Simulate degrading performance over time
-    scores = [8.0, 7.8, 7.5, 7.2, 6.9, 6.5, 6.2, 5.8, 5.5, 5.0]
+    # Use real overall scores from evaluation
+    scores = [s["overall_apee_score"] for s in scenarios]
     for i, score in enumerate(scores):
-        perf_analyzer.record("quality_score", score, timestamp=i * 100)
+        perf_analyzer.record("overall_score", score, timestamp=i * 100)
     
-    trend = perf_analyzer.analyze_trend("quality_score")
+    print(f"   Analyzed {len(scores)} scenarios")
+    print(f"   Scores: {[f'{s:.1f}' for s in scores]}")
+    
+    trend = perf_analyzer.analyze_trend("overall_score")
     if trend:
-        print(f"   Trend direction: {trend.direction}")
-        print(f"   Trend slope: {trend.slope:.4f}")
-        print(f"   Confidence: {trend.confidence:.2%}")
-        print(f"   Data points: {trend.data_points}")
+        print(f"\n   Trend Analysis:")
+        print(f"     Direction: {trend.direction}")
+        print(f"     Slope: {trend.slope:.4f}")
+        print(f"     Confidence: {trend.confidence:.2%}")
+        
+        if trend.direction == "stable":
+            print("     ✅ Performance is stable across scenarios")
+        elif trend.direction == "increasing":
+            print("     📈 Performance improving across scenarios")
+        else:
+            print("     📉 Performance declining - may need investigation")
     
-    anomalies = perf_analyzer.detect_anomalies("quality_score")
+    anomalies = perf_analyzer.detect_anomalies("overall_score")
     if anomalies:
         print(f"\n   ⚠️ Detected {len(anomalies)} performance anomalies")
         for a in anomalies:
             print(f"      - {a.anomaly_type.value}: {a.description}")
+    else:
+        print(f"\n   ✅ No performance anomalies detected")
     
-    # Quality pattern analyzer
-    print("\n\nQuality Pattern Analysis:")
+    # Quality pattern analyzer with L1 scores
+    print("\n\nQuality Pattern Analysis (L1 Individual Scores):")
     quality_analyzer = QualityPatternAnalyzer()
     
-    # Record varied quality scores
-    scores = [7.5, 8.0, 7.2, 2.0, 7.8, 7.5, 1.5, 8.2, 7.0, 7.5]  # Some outliers
-    for score in scores:
-        quality_analyzer.record("semantic_quality", score)
+    # Extract all L1 scores from real data
+    l1_scores = [s["level1_individual"]["average"] for s in scenarios]
+    for score in l1_scores:
+        quality_analyzer.record("l1_quality", score)
     
-    dist = quality_analyzer.analyze_distribution("semantic_quality")
+    dist = quality_analyzer.analyze_distribution("l1_quality")
     print(f"   Distribution stats:")
     print(f"     Mean: {dist['mean']:.2f}")
     print(f"     Std: {dist['std']:.2f}")
     print(f"     Min: {dist['min']:.2f}")
     print(f"     Max: {dist['max']:.2f}")
     
-    outliers = quality_analyzer.detect_outliers("semantic_quality")
-    print(f"   Outliers detected: {len(outliers)}")
-    for idx, val in outliers:
-        print(f"     - Index {idx}: {val:.2f}")
+    outliers = quality_analyzer.detect_outliers("l1_quality")
+    if outliers:
+        print(f"   Outliers detected: {len(outliers)}")
+        for idx, val in outliers:
+            print(f"     - Index {idx}: {val:.2f}")
+    else:
+        print(f"   ✅ No outliers detected")
+    
+    # Pattern by collaboration type
+    print("\n\nPerformance by Collaboration Pattern:")
+    pattern_scores = {}
+    for s in scenarios:
+        pattern = s["pattern"]
+        if pattern not in pattern_scores:
+            pattern_scores[pattern] = []
+        pattern_scores[pattern].append(s["overall_apee_score"])
+    
+    for pattern, scores in sorted(pattern_scores.items()):
+        avg = sum(scores) / len(scores)
+        print(f"   {pattern}: avg={avg:.1f} (n={len(scores)})")
 
 
 def demo_dashboard():
@@ -303,48 +402,76 @@ def demo_dashboard():
 
 
 def demo_anomaly_heatmap():
-    """Demonstrate anomaly heatmap visualization."""
+    """Demonstrate anomaly heatmap visualization using REAL evaluation data."""
     print("\n" + "="*60)
     print("🗺️ ANOMALY HEATMAP DEMO")
     print("="*60 + "\n")
     
-    # Sample anomaly data across scenarios
-    anomaly_data = {
-        "code_review": {
-            "quality": 0.1,
-            "collaboration": 0.3,
-            "latency": 0.2,
-            "consistency": 0.4,
-        },
-        "research_synthesis": {
-            "quality": 0.2,
-            "collaboration": 0.6,
-            "latency": 0.8,  # Warning
-            "consistency": 0.3,
-        },
-        "constrained_problem": {
-            "quality": 0.9,  # Anomaly!
-            "collaboration": 0.4,
-            "latency": 0.3,
-            "consistency": 0.2,
-        },
-        "emergent_behavior": {
-            "quality": 0.3,
-            "collaboration": 0.2,
-            "latency": 0.5,
-            "consistency": 0.7,  # Warning
-        },
-    }
+    # Load real evaluation results
+    results = load_evaluation_results()
+    
+    if not results:
+        print("⚠️  No evaluation results found!")
+        print("   Run 'python examples/proper_apee_evaluation.py' first.")
+        return
+    
+    scenarios = results["scenarios"]
+    
+    # Calculate relative concern level for each metric
+    # Higher concern = lower score relative to the ideal
+    # Values are normalized 0-1 where 0=excellent (at max), 1=poor (at or below min)
+    
+    def calc_concern(value, ideal_min, ideal_max):
+        """
+        Calculate concern level (0-1 scale).
+        0.0 = excellent (at or above ideal_max)
+        0.5 = acceptable (at midpoint)
+        1.0 = poor (at or below ideal_min)
+        """
+        if value >= ideal_max:
+            return 0.0  # Excellent - at or above ideal
+        if value <= ideal_min:
+            return 1.0  # Poor - at or below minimum
+        # Linear interpolation between min and max
+        # Higher score = lower concern
+        range_size = ideal_max - ideal_min
+        position = (value - ideal_min) / range_size  # 0 to 1, higher = better
+        return 1.0 - position  # Invert: 0 = good, 1 = bad
+    
+    anomaly_data = {}
+    for scenario in scenarios:
+        scenario_id = scenario["scenario_id"]
+        l1 = scenario["level1_individual"]["average"]
+        l2 = scenario["level2_collaborative"]["average"]
+        l3 = scenario["level3_ecosystem"]["overall"]
+        overall = scenario["overall_apee_score"]
+        
+        anomaly_data[scenario_id] = {
+            "L1_quality": calc_concern(l1, 5.0, 9.0),
+            "L2_collab": calc_concern(l2, 4.0, 8.0),
+            "L3_ecosystem": calc_concern(l3, 5.0, 9.0),
+            "overall": calc_concern(overall, 5.0, 8.0),
+        }
+    
+    print(f"Generated heatmap data for {len(anomaly_data)} scenarios")
+    print("(Values: 0.0=excellent, 0.5=acceptable, 1.0=needs attention)\n")
+    
+    # Print text summary
+    print(f"{'Scenario':<25} {'L1':>8} {'L2':>8} {'L3':>8} {'Overall':>8}")
+    print("-" * 60)
+    for scenario_id, metrics in anomaly_data.items():
+        print(f"{scenario_id:<25} {metrics['L1_quality']:>7.2f} {metrics['L2_collab']:>7.2f} "
+              f"{metrics['L3_ecosystem']:>7.2f} {metrics['overall']:>7.2f}")
     
     heatmap = create_anomaly_heatmap(anomaly_data)
     
     if hasattr(heatmap, 'to_html'):
-        print("✅ Interactive heatmap created (plotly)")
+        print("\n✅ Interactive heatmap created (plotly)")
         output_dir = Path(__file__).parent.parent / "data"
         heatmap.write_html(str(output_dir / "anomaly_heatmap.html"))
         print(f"   Saved to: data/anomaly_heatmap.html")
     else:
-        print("📝 Text-based heatmap:")
+        print("\n📝 Text-based heatmap:")
         print(heatmap.get("text_representation", ""))
 
 

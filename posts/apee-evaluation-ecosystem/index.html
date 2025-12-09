@@ -4,557 +4,816 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>APEE: Adaptive Poly-Agentic Evaluation Ecosystem | Technical Notes Blog</title>
-    <link rel="stylesheet" href="../../assets/css/style.css">
+    <meta name="description" content="A comprehensive framework for evaluating and benchmarking multi-agent AI systems using LLM-as-a-Judge methodology">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../../assets/css/post.css">
     <style>
-        :root {
-            --primary-color: #7c3aed;
-            --secondary-color: #10b981;
-            --accent-color: #f59e0b;
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #e2e8f0;
-            --text-muted: #94a3b8;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-color);
-            line-height: 1.7;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-        
-        header {
-            background: linear-gradient(135deg, var(--bg-color) 0%, #1e1b4b 100%);
-            padding: 4rem 0;
-            border-bottom: 1px solid rgba(124, 58, 237, 0.3);
-        }
-        
-        .header-content {
-            text-align: center;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            background: rgba(124, 58, 237, 0.2);
-            border: 1px solid var(--primary-color);
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
+        /* APEE-specific styles - purple/teal theme */
+        .hero-section {
             background: linear-gradient(135deg, #7c3aed 0%, #10b981 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-        }
-        
-        .subtitle {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        
-        .meta {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
-        }
-        
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-muted);
-        }
-        
-        .meta-item svg {
-            width: 1.25rem;
-            height: 1.25rem;
-        }
-        
-        main {
-            padding: 4rem 0;
-        }
-        
-        section {
-            margin-bottom: 4rem;
-        }
-        
-        h2 {
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        h2::before {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 1.5rem;
-            background: var(--primary-color);
-            border-radius: 2px;
-        }
-        
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .card {
-            background: var(--card-bg);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.2s, border-color 0.2s;
-        }
-        
-        .card:hover {
-            transform: translateY(-4px);
-            border-color: var(--primary-color);
-        }
-        
-        .card h3 {
-            font-size: 1.25rem;
-            margin-bottom: 0.75rem;
-            color: var(--text-color);
-        }
-        
-        .card p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-        
-        .card-icon {
-            width: 3rem;
-            height: 3rem;
-            background: rgba(124, 58, 237, 0.2);
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-        
-        .architecture-diagram {
-            background: var(--card-bg);
-            border-radius: 1rem;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow-x: auto;
-        }
-        
-        .architecture-diagram pre {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-            color: var(--secondary-color);
-            margin: 0;
-        }
-        
-        .metrics-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: var(--card-bg);
-            border-radius: 1rem;
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+            position: relative;
             overflow: hidden;
         }
         
-        .metrics-table th,
-        .metrics-table td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><pattern id="agents" width="100" height="20" patternUnits="userSpaceOnUse"><circle cx="15" cy="10" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="5" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="85" cy="12" r="2.5" fill="rgba(255,255,255,0.06)"/><line x1="15" y1="10" x2="50" y2="5" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/><line x1="50" y1="5" x2="85" y2="12" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100%" height="100%" fill="url(%23agents)"/></svg>') repeat;
+            opacity: 0.3;
         }
         
-        .metrics-table th {
-            background: rgba(124, 58, 237, 0.2);
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-size: 3.2em;
+            margin-bottom: 20px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero-subtitle {
+            font-size: 1.4em;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        
+        .post-meta {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .post-meta span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .article-content {
+            max-width: 900px;
+            margin: -50px auto 60px;
+            background: white;
+            border-radius: 20px;
+            padding: 60px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 2;
+            line-height: 1.7;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            font-size: 1.8em;
+            margin: 40px 0 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #7c3aed;
+        }
+        
+        h3 {
+            color: #34495e;
+            margin: 25px 0 15px;
+        }
+        
+        p {
+            color: #5a6c7d;
+            margin-bottom: 15px;
+        }
+        
+        /* Key findings box */
+        .insight-box {
+            background: linear-gradient(135deg, #f3e8ff, #ecfdf5);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            border-left: 5px solid #7c3aed;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.1);
+        }
+        
+        .insight-box h3 {
+            color: #7c3aed;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .insight-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .insight-box li {
+            padding: 8px 0;
+            color: #4a5568;
+        }
+        
+        /* Performance table */
+        .performance-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 35px;
+            margin: 40px 0;
+            border-left: 5px solid #10b981;
+        }
+        
+        .performance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            font-size: 0.9em;
+        }
+        
+        .performance-table th,
+        .performance-table td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        
+        .performance-table th {
+            background: linear-gradient(135deg, #7c3aed, #10b981);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        .performance-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .score-high {
+            color: #10b981;
+            font-weight: 700;
+        }
+        
+        .score-medium {
+            color: #f59e0b;
             font-weight: 600;
         }
         
-        .metrics-table tr:hover {
-            background: rgba(124, 58, 237, 0.1);
+        .score-low {
+            color: #ef4444;
+            font-weight: 600;
         }
         
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            background: rgba(245, 158, 11, 0.2);
-            border: 1px solid var(--accent-color);
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            color: var(--accent-color);
+        /* Feature cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
         }
         
-        .status-badge.active {
-            background: rgba(16, 185, 129, 0.2);
-            border-color: var(--secondary-color);
-            color: var(--secondary-color);
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e1e8ed;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15);
+            border-color: #7c3aed;
+        }
+        
+        .card-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .card p {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            margin: 0;
+        }
+        
+        /* Code block */
+        .code-section {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            margin: 30px 0;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            position: relative;
+        }
+        
+        .code-section pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .code-section code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: 0.85em;
+            line-height: 1.6;
+            font-family: inherit;
+        }
+        
+        .code-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #7c3aed, #10b981);
+        }
+        
+        /* Architecture diagram */
+        .architecture-box {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            overflow-x: auto;
+        }
+        
+        .architecture-box pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85em;
+            color: #10b981;
+            line-height: 1.4;
+        }
+        
+        /* Roadmap */
         .roadmap {
             position: relative;
-            padding-left: 2rem;
+            padding-left: 30px;
+            margin: 30px 0;
         }
         
         .roadmap::before {
             content: '';
             position: absolute;
-            left: 0.5rem;
+            left: 8px;
             top: 0;
             bottom: 0;
-            width: 2px;
-            background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+            width: 3px;
+            background: linear-gradient(to bottom, #7c3aed, #10b981);
+            border-radius: 2px;
         }
         
         .roadmap-item {
             position: relative;
-            margin-bottom: 2rem;
-            padding-left: 1.5rem;
+            margin-bottom: 25px;
+            padding-left: 25px;
         }
         
         .roadmap-item::before {
             content: '';
             position: absolute;
-            left: -1.5rem;
-            top: 0.5rem;
-            width: 1rem;
-            height: 1rem;
-            background: var(--card-bg);
-            border: 2px solid var(--primary-color);
+            left: -25px;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border: 3px solid #7c3aed;
             border-radius: 50%;
         }
         
         .roadmap-item.completed::before {
-            background: var(--secondary-color);
-            border-color: var(--secondary-color);
+            background: #10b981;
+            border-color: #10b981;
         }
         
         .roadmap-item h4 {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            margin-bottom: 8px;
         }
         
         .roadmap-item p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
+            color: #7f8c8d;
+            font-size: 0.95em;
+            margin: 0;
         }
         
+        /* CTA buttons */
         .cta-section {
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
-            border-radius: 1rem;
-            padding: 3rem;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(16, 185, 129, 0.1));
+            border-radius: 15px;
+            padding: 40px;
             text-align: center;
-            border: 1px solid rgba(124, 58, 237, 0.3);
-        }
-        
-        .cta-section h2 {
-            justify-content: center;
-        }
-        
-        .cta-section h2::before {
-            display: none;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .btn-primary {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .btn-secondary {
-            background: transparent;
-            border: 1px solid var(--text-muted);
-            color: var(--text-color);
-        }
-        
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+            margin: 40px 0;
+            border: 1px solid rgba(124, 58, 237, 0.2);
         }
         
         .btn-group {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-top: 1.5rem;
+            gap: 20px;
             flex-wrap: wrap;
+            margin-top: 25px;
         }
         
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #10b981);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #7c3aed;
+            border: 2px solid #7c3aed;
+        }
+        
+        .btn-secondary:hover {
+            background: #7c3aed;
+            color: white;
+        }
+        
+        /* Navigation */
+        .nav-back {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 12px 20px;
+            border-radius: 50px;
+            text-decoration: none;
+            color: #7c3aed;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-back:hover {
+            background: #7c3aed;
+            color: white;
+        }
+        
+        /* Footer */
         footer {
-            padding: 2rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
-            color: var(--text-muted);
+            padding: 40px 20px;
+            color: #7f8c8d;
+            border-top: 1px solid #e1e8ed;
+            margin-top: 60px;
         }
         
         footer a {
-            color: var(--primary-color);
+            color: #7c3aed;
             text-decoration: none;
         }
         
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2rem;
+            .hero-title {
+                font-size: 2.2em;
             }
             
-            .meta {
+            .article-content {
+                padding: 30px 20px;
+                margin: -30px 15px 40px;
+            }
+            
+            .post-meta {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 15px;
             }
             
-            .container {
-                padding: 0 1rem;
+            .performance-table {
+                font-size: 0.8em;
+            }
+            
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-back {
+                top: 10px;
+                left: 10px;
+                padding: 10px 15px;
+                font-size: 0.9em;
             }
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <span class="badge">🔬 Research Project</span>
-                <h1>Adaptive Poly-Agentic Evaluation Ecosystem</h1>
-                <p class="subtitle">A comprehensive framework for evaluating and benchmarking multi-agent AI systems through adaptive, dynamic assessment methodologies.</p>
-                <div class="meta">
-                    <div class="meta-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        December 2025
-                    </div>
-                    <div class="meta-item">
-                        <span class="status-badge active">🚧 Active Development</span>
-                    </div>
-                    <div class="meta-item">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        ~15 min read
-                    </div>
-                </div>
+    <a href="../../index.html" class="nav-back">
+        <i class="fas fa-arrow-left"></i> Back to Blog
+    </a>
+
+    <header class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">APEE: Adaptive Poly-Agentic Evaluation Ecosystem</h1>
+            <p class="hero-subtitle">A comprehensive framework for evaluating multi-agent AI systems using LLM-as-a-Judge methodology</p>
+            <div class="post-meta">
+                <span><i class="fas fa-calendar"></i> December 2025</span>
+                <span><i class="fas fa-clock"></i> ~15 min read</span>
+                <span><i class="fas fa-robot"></i> 12 Scenarios</span>
+                <span><i class="fas fa-flask"></i> Active Research</span>
             </div>
         </div>
     </header>
 
-    <main>
-        <div class="container">
-            <!-- Overview Section -->
-            <section>
-                <h2>Overview</h2>
-                <div class="card-grid">
-                    <div class="card">
-                        <div class="card-icon">🎯</div>
-                        <h3>Adaptive Evaluation</h3>
-                        <p>Dynamic assessment that evolves with agent behavior, adapting evaluation criteria based on observed patterns and performance characteristics.</p>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon">🤝</div>
-                        <h3>Poly-Agent Analysis</h3>
-                        <p>Multi-agent interaction pattern recognition, measuring collaboration efficiency, conflict resolution, and emergent behaviors.</p>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon">📊</div>
-                        <h3>Ecosystem Metrics</h3>
-                        <p>Holistic system-level performance measurement capturing stability, scalability, and overall ecosystem health.</p>
-                    </div>
-                    <div class="card">
-                        <div class="card-icon">🔄</div>
-                        <h3>Reproducible Benchmarks</h3>
-                        <p>Standardized evaluation protocols ensuring consistent, repeatable assessments across different multi-agent configurations.</p>
-                    </div>
-                </div>
-            </section>
+    <article class="article-content">
+        <h2 id="overview"><i class="fas fa-bullseye"></i> Overview</h2>
+        <p>
+            The <strong>Adaptive Poly-Agentic Evaluation Ecosystem (APEE)</strong> is a framework for systematically evaluating 
+            multi-agent AI systems. It uses <strong>LLM-as-a-Judge</strong> evaluation where large language models (20-24B parameters) 
+            evaluate smaller agent outputs, providing meaningful, nuanced scores rather than simple heuristics.
+        </p>
 
-            <!-- Architecture Section -->
-            <section>
-                <h2>Architecture</h2>
-                <div class="architecture-diagram">
-                    <pre>
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         APEE Framework                                   │
-├─────────────────────────────────────────────────────────────────────────┤
-│                                                                          │
-│   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐              │
-│   │   Agent A    │    │   Agent B    │    │   Agent N    │              │
-│   │  (Analyzer)  │    │  (Executor)  │    │ (Evaluator)  │              │
-│   └──────┬───────┘    └──────┬───────┘    └──────┬───────┘              │
-│          │                   │                   │                       │
-│          └─────────────┬─────┴──────────────────┘                       │
-│                        │                                                 │
-│           ┌────────────▼────────────┐                                   │
-│           │   Adaptive Coordinator   │                                   │
-│           │  • Task Distribution     │                                   │
-│           │  • State Management      │                                   │
-│           │  • Conflict Resolution   │                                   │
-│           └────────────┬────────────┘                                   │
-│                        │                                                 │
-│           ┌────────────▼────────────┐                                   │
-│           │   Evaluation Engine      │                                   │
-│           │  • Performance Metrics   │                                   │
-│           │  • Behavior Analysis     │                                   │
-│           │  • Emergent Patterns     │                                   │
-│           └─────────────────────────┘                                   │
-│                                                                          │
-└─────────────────────────────────────────────────────────────────────────┘
-                    </pre>
-                </div>
-            </section>
-
-            <!-- Evaluation Dimensions Section -->
-            <section>
-                <h2>Evaluation Dimensions</h2>
-                
-                <h3 style="margin: 1.5rem 0 1rem; color: var(--text-muted);">Individual Agent Performance</h3>
-                <table class="metrics-table">
-                    <thead>
-                        <tr>
-                            <th>Metric</th>
-                            <th>Description</th>
-                            <th>Measurement</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Task Completion</td>
-                            <td>Success rate per agent</td>
-                            <td>Percentage</td>
-                        </tr>
-                        <tr>
-                            <td>Response Quality</td>
-                            <td>Output accuracy/relevance</td>
-                            <td>Score 0-100</td>
-                        </tr>
-                        <tr>
-                            <td>Latency</td>
-                            <td>Processing time</td>
-                            <td>Milliseconds</td>
-                        </tr>
-                        <tr>
-                            <td>Resource Usage</td>
-                            <td>Compute/memory footprint</td>
-                            <td>MB/FLOPS</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <h3 style="margin: 2rem 0 1rem; color: var(--text-muted);">Multi-Agent Collaboration</h3>
-                <table class="metrics-table">
-                    <thead>
-                        <tr>
-                            <th>Metric</th>
-                            <th>Description</th>
-                            <th>Measurement</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Coordination Efficiency</td>
-                            <td>Inter-agent communication overhead</td>
-                            <td>Messages/task</td>
-                        </tr>
-                        <tr>
-                            <td>Conflict Resolution</td>
-                            <td>Disagreement handling effectiveness</td>
-                            <td>Resolution rate</td>
-                        </tr>
-                        <tr>
-                            <td>Emergent Behavior</td>
-                            <td>Novel collaboration patterns</td>
-                            <td>Pattern count</td>
-                        </tr>
-                        <tr>
-                            <td>Synergy Score</td>
-                            <td>Combined vs individual performance</td>
-                            <td>Multiplier</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </section>
-
-            <!-- Roadmap Section -->
-            <section>
-                <h2>Development Roadmap</h2>
-                <div class="roadmap">
-                    <div class="roadmap-item completed">
-                        <h4>Phase 1: Foundation</h4>
-                        <p>Define APEE framework architecture, create evaluation metric taxonomy, establish project structure.</p>
-                    </div>
-                    <div class="roadmap-item">
-                        <h4>Phase 2: Core Development</h4>
-                        <p>Develop adaptive evaluation algorithms, create poly-agent test scenarios, build visualization dashboard.</p>
-                    </div>
-                    <div class="roadmap-item">
-                        <h4>Phase 3: Validation</h4>
-                        <p>Run systematic experiments, collect and analyze data, publish findings, release open-source toolkit.</p>
-                    </div>
-                    <div class="roadmap-item">
-                        <h4>Phase 4: Production</h4>
-                        <p>Enterprise-ready deployment, comprehensive documentation, community contributions.</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- CTA Section -->
-            <section class="cta-section">
-                <h2>Get Involved</h2>
-                <p style="color: var(--text-muted); margin-bottom: 1rem;">This is an active research project. Contributions and feedback are welcome!</p>
-                <div class="btn-group">
-                    <a href="README.md" class="btn btn-primary">
-                        📖 Read Full Study
-                    </a>
-                    <a href="https://github.com/ahjavid/technical-notes-blog" class="btn btn-secondary">
-                        ⭐ Star on GitHub
-                    </a>
-                </div>
-            </section>
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <h4>LLM-as-a-Judge</h4>
+                <p>Large models evaluate smaller agent outputs with detailed feedback and reasoning.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🤝</div>
+                <h4>Ensemble Judges</h4>
+                <p>Multiple judge models from different families reduce evaluation bias.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h4>Three-Tier Metrics</h4>
+                <p>Individual (L1) → Collaborative (L2) → Ecosystem (L3) evaluation levels.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🔄</div>
+                <h4>6 Collaboration Patterns</h4>
+                <p>Parallel, sequential, debate, hierarchical, consensus, peer review.</p>
+            </div>
         </div>
-    </main>
+
+        <h2 id="results"><i class="fas fa-chart-bar"></i> Latest Results</h2>
+        
+        <div class="insight-box">
+            <h3><i class="fas fa-lightbulb"></i> Key Findings</h3>
+            <ul>
+                <li><strong>Consensus pattern leads:</strong> 7.4/10 overall - agents iterating to agreement produces best results</li>
+                <li><strong>Sequential/parallel tie:</strong> 7.3/10 - both research_synthesis and realtime_collab excel</li>
+                <li><strong>L2 Collaborative is the bottleneck:</strong> Average 5.6/10 vs L1 (6.7/10) and L3 (8.0/10)</li>
+                <li><strong>L3 Ecosystem strongest:</strong> All scenarios score 7.0-9.1/10 - system-level metrics consistently high</li>
+                <li><strong>Score range:</strong> 5.6-7.4 with mean 6.6/10 across all 12 scenarios</li>
+            </ul>
+        </div>
+
+        <h3>Configuration</h3>
+        <p><strong>Agents</strong> (small 3B models, diverse families):</p>
+        <table class="performance-table">
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Model</th>
+                    <th>Family</th>
+                    <th>Strength</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Coder (Executor)</td>
+                    <td>llama3.2:3b</td>
+                    <td>Llama</td>
+                    <td>Code Generation</td>
+                </tr>
+                <tr>
+                    <td>Analyst (Analyzer)</td>
+                    <td>qwen2.5-coder:3b</td>
+                    <td>Qwen</td>
+                    <td>Analysis</td>
+                </tr>
+                <tr>
+                    <td>Reviewer</td>
+                    <td>granite4:3b</td>
+                    <td>Granite</td>
+                    <td>Code Review</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p><strong>Judges</strong> (large models, different families):</p>
+        <table class="performance-table">
+            <thead>
+                <tr>
+                    <th>Judge</th>
+                    <th>Model</th>
+                    <th>Size</th>
+                    <th>Family</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Judge 1</td>
+                    <td>gpt-oss:20b</td>
+                    <td>20B</td>
+                    <td>GPT-OSS</td>
+                </tr>
+                <tr>
+                    <td>Judge 2</td>
+                    <td>mistral-small3.2:24b</td>
+                    <td>24B</td>
+                    <td>Mistral</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="performance-section">
+            <h3><i class="fas fa-table"></i> Multi-Agent Collaborative Evaluation</h3>
+            <table class="performance-table">
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Pattern</th>
+                        <th>L1</th>
+                        <th>L2</th>
+                        <th>L3</th>
+                        <th>Overall</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>conflict_resolution</td>
+                        <td>consensus</td>
+                        <td>7.7</td>
+                        <td>6.5</td>
+                        <td>8.5</td>
+                        <td class="score-high">7.4</td>
+                    </tr>
+                    <tr>
+                        <td>research_synthesis</td>
+                        <td>sequential</td>
+                        <td>7.2</td>
+                        <td>6.6</td>
+                        <td>8.6</td>
+                        <td class="score-high">7.3</td>
+                    </tr>
+                    <tr>
+                        <td>realtime_collab</td>
+                        <td>parallel</td>
+                        <td>6.8</td>
+                        <td>6.5</td>
+                        <td>9.1</td>
+                        <td class="score-high">7.3</td>
+                    </tr>
+                    <tr>
+                        <td>scalability_test</td>
+                        <td>hierarchical</td>
+                        <td>7.1</td>
+                        <td>6.2</td>
+                        <td>8.8</td>
+                        <td class="score-high">7.1</td>
+                    </tr>
+                    <tr>
+                        <td>knowledge_transfer</td>
+                        <td>sequential</td>
+                        <td>6.6</td>
+                        <td>6.2</td>
+                        <td>8.5</td>
+                        <td class="score-medium">6.9</td>
+                    </tr>
+                    <tr>
+                        <td>adversarial_review</td>
+                        <td>debate</td>
+                        <td>7.2</td>
+                        <td>5.8</td>
+                        <td>7.6</td>
+                        <td class="score-medium">6.6</td>
+                    </tr>
+                    <tr>
+                        <td>collab_code_review</td>
+                        <td>peer_review</td>
+                        <td>7.5</td>
+                        <td>5.2</td>
+                        <td>7.0</td>
+                        <td class="score-medium">6.4</td>
+                    </tr>
+                    <tr>
+                        <td>creative_collab</td>
+                        <td>debate</td>
+                        <td>6.0</td>
+                        <td>5.9</td>
+                        <td>7.6</td>
+                        <td class="score-medium">6.3</td>
+                    </tr>
+                    <tr>
+                        <td>error_recovery</td>
+                        <td>hierarchical</td>
+                        <td>5.9</td>
+                        <td>5.0</td>
+                        <td>8.5</td>
+                        <td class="score-medium">6.2</td>
+                    </tr>
+                    <tr>
+                        <td>constrained_problem</td>
+                        <td>debate</td>
+                        <td>6.4</td>
+                        <td>5.0</td>
+                        <td>7.3</td>
+                        <td class="score-low">6.0</td>
+                    </tr>
+                    <tr>
+                        <td>doc_sprint</td>
+                        <td>peer_review</td>
+                        <td>6.3</td>
+                        <td>5.2</td>
+                        <td>7.0</td>
+                        <td class="score-low">6.0</td>
+                    </tr>
+                    <tr>
+                        <td>emergent_behavior</td>
+                        <td>parallel</td>
+                        <td>6.2</td>
+                        <td>3.8</td>
+                        <td>8.4</td>
+                        <td class="score-low">5.6</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="text-align: center; color: #7f8c8d; font-size: 0.9em; margin-top: 15px;">
+                <strong>Legend:</strong> 
+                <span class="score-high">≥7.0 Excellent</span> | 
+                <span class="score-medium">6.0-6.9 Good</span> | 
+                <span class="score-low">&lt;6.0 Needs Work</span>
+            </p>
+        </div>
+
+        <h2 id="architecture"><i class="fas fa-sitemap"></i> Architecture</h2>
+        
+        <div class="architecture-box">
+            <pre>
+┌─────────────────────────────────────────────────────────────────────┐
+│                        APEE Framework                               │
+├─────────────────────────────────────────────────────────────────────┤
+│  AGENTS (Small 3B models - diverse families)                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │    Coder     │  │   Analyst    │  │   Reviewer   │               │
+│  │  (Executor)  │  │  (Analyzer)  │  │  (Reviewer)  │               │
+│  │ llama3.2:3b  │  │qwen2.5-coder │  │ granite4:3b  │               │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
+│         │                 │                 │                       │
+│         └────────────┬────┴─────────────────┘                       │
+│                      │                                              │
+│         ┌────────────▼─────────────┐                                │
+│         │      Coordinator         │  6 Collaboration Patterns      │
+│         │  • run_parallel()        │  • parallel, sequential        │
+│         │  • run_pipeline()        │  • debate, hierarchical        │
+│         │  • run_consensus()       │  • consensus, peer_review      │
+│         └────────────┬─────────────┘                                │
+│                      │                                              │
+│         ┌────────────▼─────────────┐                                │
+│         │   Ensemble Evaluator     │  LLM-as-a-Judge                │
+│         │  • gpt-oss:20b (Judge 1) │  L1: Individual                │
+│         │  • mistral-small3.2:24b  │  L2: Collaborative             │
+│         │  • Aggregation: median   │  L3: Ecosystem                 │
+│         └──────────────────────────┘                                │
+└─────────────────────────────────────────────────────────────────────┘
+            </pre>
+        </div>
+
+        <h2 id="features"><i class="fas fa-star"></i> Phase 6 Features</h2>
+        
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">📈</div>
+                <h4>Interactive Visualization</h4>
+                <p>Plotly charts for performance analysis, pattern comparison, and metric breakdown.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🔍</div>
+                <h4>Anomaly Detection</h4>
+                <p>Statistical methods (Z-score, IQR, MAD) to identify performance outliers.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h4>Pattern Analysis</h4>
+                <p>Trend detection, distribution analysis, and collaboration pattern insights.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🖥️</div>
+                <h4>Dashboard Server</h4>
+                <p>Real-time monitoring with WebSocket updates and interactive API.</p>
+            </div>
+        </div>
+
+        <h2 id="quickstart"><i class="fas fa-rocket"></i> Quick Start</h2>
+        
+        <div class="code-section">
+            <pre><code># Clone and install
+git clone https://github.com/ahjavid/technical-notes-blog.git
+cd technical-notes-blog/posts/apee-evaluation-ecosystem
+pip install -e .
+
+# Pull required models
+ollama pull llama3.2:3b qwen2.5-coder:3b granite4:3b
+ollama pull gpt-oss:20b mistral-small3.2:24b
+
+# Run LLM-as-a-Judge evaluation
+python examples/proper_apee_evaluation.py
+
+# Run Phase 6 visualization demo
+python examples/phase6_demo.py</code></pre>
+        </div>
+
+        <h2 id="roadmap"><i class="fas fa-road"></i> Development Roadmap</h2>
+        
+        <div class="roadmap">
+            <div class="roadmap-item completed">
+                <h4>✅ Phase 1-4: Foundation</h4>
+                <p>Core framework, agent coordination, heuristic evaluation, benchmark datasets.</p>
+            </div>
+            <div class="roadmap-item completed">
+                <h4>✅ Phase 5: LLM-as-a-Judge</h4>
+                <p>Ensemble evaluators, three-tier metrics, comprehensive collaborative scenarios.</p>
+            </div>
+            <div class="roadmap-item completed">
+                <h4>✅ Phase 6: Visualization & Anomaly</h4>
+                <p>Interactive charts, statistical anomaly detection, pattern analysis, dashboard.</p>
+            </div>
+            <div class="roadmap-item">
+                <h4>🔜 Phase 7: Production</h4>
+                <p>Enterprise deployment, comprehensive documentation, community toolkit.</p>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2><i class="fas fa-hands-helping"></i> Get Involved</h2>
+            <p style="color: #5a6c7d; margin-bottom: 20px;">
+                APEE is an active research project. Contributions, feedback, and collaboration are welcome!
+            </p>
+            <div class="btn-group">
+                <a href="README.md" class="btn btn-primary">
+                    <i class="fas fa-book"></i> Full Documentation
+                </a>
+                <a href="https://github.com/ahjavid/technical-notes-blog" class="btn btn-secondary">
+                    <i class="fab fa-github"></i> View on GitHub
+                </a>
+            </div>
+        </div>
+    </article>
 
     <footer>
-        <div class="container">
-            <p>
-                Part of <a href="../../index.html">Technical Notes & Research Blog</a> by 
-                <a href="https://github.com/ahjavid">ahjavid</a>
-            </p>
-            <p style="margin-top: 0.5rem;">Last Updated: December 8, 2025</p>
-        </div>
+        <p>
+            Part of <a href="../../index.html">Technical Notes & Research Blog</a> by 
+            <a href="https://github.com/ahjavid">ahjavid</a>
+        </p>
+        <p style="margin-top: 10px; font-size: 0.9em;">Last Updated: December 9, 2025</p>
     </footer>
 </body>
 </html>

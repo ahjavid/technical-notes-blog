@@ -6,11 +6,13 @@ This demonstrates the REAL APEE evaluation approach:
 - Uses LLM to evaluate outputs (not heuristics)
 - Evaluates goal alignment, semantic quality, collaboration
 - Provides meaningful scores that differentiate quality
+- Saves results to JSON for use by other tools
 
 Following patterns from CrewAI's evaluation framework.
 """
 
 import asyncio
+import json
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -373,6 +375,44 @@ async def main():
             f"  • High Disagreement: {'⚠️ Yes' if disagreement.get('high_disagreement') else '✅ No'}",
             title="🔍 Ensemble Evaluation Details",
         ))
+    
+    # Save results to JSON for use by phase6_demo and other tools
+    if all_results:
+        output_dir = Path(__file__).parent.parent / "data"
+        output_dir.mkdir(exist_ok=True)
+        output_file = output_dir / "apee_evaluation_results.json"
+        
+        # Prepare JSON-serializable data
+        json_results = {
+            "timestamp": datetime.now().isoformat(),
+            "judge_models": judge_models,
+            "agent_models": {
+                "coder": "llama3.2:3b",
+                "analyst": "qwen2.5-coder:3b",
+                "reviewer": "granite4:3b",
+            },
+            "scenarios": []
+        }
+        
+        for result in all_results:
+            eval_data = result["evaluation"]
+            scenario_data = {
+                "scenario_id": result["scenario_id"],
+                "pattern": result["pattern"],
+                "duration_seconds": result["duration"],
+                "overall_apee_score": eval_data["overall_apee_score"],
+                "level1_individual": eval_data["level1_individual"],
+                "level2_collaborative": eval_data["level2_collaborative"],
+                "level3_ecosystem": eval_data["level3_ecosystem"],
+            }
+            if "ensemble_metadata" in eval_data:
+                scenario_data["ensemble_metadata"] = eval_data["ensemble_metadata"]
+            json_results["scenarios"].append(scenario_data)
+        
+        with open(output_file, "w") as f:
+            json.dump(json_results, f, indent=2, default=str)
+        
+        console.print(f"\n[green]📁 Results saved to: {output_file}[/green]")
 
 
 if __name__ == "__main__":

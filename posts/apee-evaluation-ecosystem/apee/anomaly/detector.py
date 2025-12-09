@@ -90,11 +90,12 @@ class StatisticalWindow:
     
     @property
     def std(self) -> float:
-        """Calculate standard deviation of window."""
+        """Calculate sample standard deviation of window (Bessel's correction)."""
         if len(self._values) < 2:
             return 0.0
         mean = self.mean
-        variance = sum((x - mean) ** 2 for x in self._values) / len(self._values)
+        # Use N-1 (sample std) for statistical inference, not N (population std)
+        variance = sum((x - mean) ** 2 for x in self._values) / (len(self._values) - 1)
         return math.sqrt(variance)
     
     @property
@@ -108,11 +109,13 @@ class StatisticalWindow:
         return max(self._values) if self._values else 0.0
     
     def percentile(self, p: float) -> float:
-        """Calculate percentile (0-100)."""
+        """Calculate percentile (0-100) using nearest-rank method."""
         if not self._values:
             return 0.0
         sorted_values = sorted(self._values)
-        index = int((p / 100) * (len(sorted_values) - 1))
+        n = len(sorted_values)
+        # Nearest-rank method: index = ceil(p/100 * n) - 1, clamped to valid range
+        index = max(0, min(n - 1, int(math.ceil((p / 100) * n)) - 1))
         return sorted_values[index]
     
     def is_anomaly(self, value: float, sigma: float = 3.0) -> bool:
@@ -127,10 +130,14 @@ class StatisticalWindow:
     
     def z_score(self, value: float) -> float:
         """Calculate Z-score for a value."""
-        std = self.std
-        if std == 0:
+        # Validate input
+        if not math.isfinite(value):
             return 0.0
-        return (value - self.mean) / std
+        std = self.std
+        if std == 0 or not math.isfinite(std):
+            return 0.0
+        z = (value - self.mean) / std
+        return z if math.isfinite(z) else 0.0
 
 
 class AnomalyDetector:
@@ -211,6 +218,10 @@ class AnomalyDetector:
         Returns:
             AnomalyReport if anomaly detected, None otherwise
         """
+        # Validate input - reject NaN and infinite values
+        if not math.isfinite(value):
+            return None  # Skip invalid values silently
+        
         context = context or {}
         window = self._get_window(metric)
         
@@ -218,6 +229,12 @@ class AnomalyDetector:
         if metric in self._baselines:
             min_val, max_val = self._baselines[metric]
             if value < min_val * 0.5:  # 50% below minimum
+                # Safe deviation calculation: clamp to [0, 1], guard against zero
+                deviation = 0.0
+                if min_val > 0:
+                    deviation = max(0.0, min(1.0, (min_val - value) / min_val))
+                elif min_val == 0 and value < 0:
+                    deviation = 1.0  # Below zero when min is zero
                 report = AnomalyReport(
                     anomaly_type=self._get_anomaly_type(metric, "drop"),
                     severity=AnomalySeverity.CRITICAL if value < min_val * 0.25 else AnomalySeverity.WARNING,
@@ -225,7 +242,7 @@ class AnomalyDetector:
                     metric_name=metric,
                     observed_value=value,
                     expected_range=(min_val, max_val),
-                    deviation_score=min(1.0, (min_val - value) / min_val),
+                    deviation_score=deviation,
                     context=context,
                     recommendations=self._get_recommendations(metric, "low"),
                 )
@@ -235,6 +252,12 @@ class AnomalyDetector:
                 return report
             
             if value > max_val * 1.5:  # 50% above maximum
+                # Safe deviation calculation: clamp to [0, 1], guard against zero
+                deviation = 0.0
+                if max_val > 0:
+                    deviation = max(0.0, min(1.0, (value - max_val) / max_val))
+                elif max_val == 0 and value > 0:
+                    deviation = 1.0  # Above zero when max is zero
                 report = AnomalyReport(
                     anomaly_type=self._get_anomaly_type(metric, "spike"),
                     severity=AnomalySeverity.WARNING,
@@ -242,7 +265,7 @@ class AnomalyDetector:
                     metric_name=metric,
                     observed_value=value,
                     expected_range=(min_val, max_val),
-                    deviation_score=min(1.0, (value - max_val) / max_val),
+                    deviation_score=deviation,
                     context=context,
                     recommendations=self._get_recommendations(metric, "high"),
                 )

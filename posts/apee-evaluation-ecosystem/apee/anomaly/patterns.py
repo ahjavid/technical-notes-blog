@@ -79,7 +79,8 @@ class PerformancePatternAnalyzer:
         y_pred = [y_mean + slope * (x - x_mean) for x in x_vals]
         ss_res = sum((y - yp) ** 2 for y, yp in zip(y_vals, y_pred))
         ss_tot = sum((y - y_mean) ** 2 for y in y_vals)
-        r_squared = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
+        # R² can be negative if model is worse than mean; clamp to [0, 1]
+        r_squared = max(0.0, 1 - (ss_res / ss_tot)) if ss_tot != 0 else 0.0
         
         # Determine direction
         if abs(slope) < 0.01:
@@ -89,15 +90,16 @@ class PerformancePatternAnalyzer:
         else:
             direction = "decreasing"
         
-        # Check for volatility
-        std = math.sqrt(sum((y - y_mean) ** 2 for y in y_vals) / n)
-        if std > y_mean * 0.3 and r_squared < 0.5:
+        # Check for volatility using sample std (N-1)
+        std = math.sqrt(sum((y - y_mean) ** 2 for y in y_vals) / (n - 1)) if n > 1 else 0.0
+        # Only flag as volatile if mean is positive (avoid div by zero) and high relative std
+        if y_mean > 0 and std > y_mean * 0.3 and r_squared < 0.5:
             direction = "volatile"
         
         return TrendAnalysis(
             direction=direction,
             slope=slope,
-            confidence=max(0, r_squared),
+            confidence=r_squared,  # Already clamped to [0, 1] above
             data_points=n
         )
     
@@ -301,7 +303,8 @@ class CollaborationPatternAnalyzer:
                     "min": min(scores),
                     "max": max(scores),
                     "count": len(scores),
-                    "std": math.sqrt(sum((s - sum(scores)/len(scores))**2 for s in scores) / len(scores)) if len(scores) > 1 else 0,
+                    # Use sample std (N-1) for proper statistical inference
+                    "std": math.sqrt(sum((s - sum(scores)/len(scores))**2 for s in scores) / (len(scores) - 1)) if len(scores) > 1 else 0.0,
                 }
         
         return effectiveness
@@ -335,9 +338,12 @@ class QualityPatternAnalyzer:
         n = len(scores)
         mean = sum(scores) / n
         
-        # Calculate standard deviation
-        variance = sum((s - mean) ** 2 for s in scores) / n
-        std = math.sqrt(variance)
+        # Calculate sample standard deviation (Bessel's correction: N-1)
+        if n > 1:
+            variance = sum((s - mean) ** 2 for s in scores) / (n - 1)
+            std = math.sqrt(variance)
+        else:
+            std = 0.0
         
         # Calculate percentiles
         sorted_scores = sorted(scores)
@@ -390,7 +396,9 @@ class QualityPatternAnalyzer:
         
         elif method == "zscore":
             mean = sum(scores) / len(scores)
-            std = math.sqrt(sum((s - mean) ** 2 for s in scores) / len(scores))
+            n = len(scores)
+            # Use sample std (N-1) for statistical inference
+            std = math.sqrt(sum((s - mean) ** 2 for s in scores) / (n - 1)) if n > 1 else 0.0
             
             if std > 0:
                 for i, s in enumerate(scores):
@@ -428,6 +436,8 @@ class QualityPatternAnalyzer:
         
         # Check for low mean quality
         if dist["mean"] < 5.0:  # Below midpoint on 0-10 scale
+            # Clamp deviation to [0, 1] range
+            deviation = max(0.0, min(1.0, (5.0 - dist["mean"]) / 5.0))
             anomalies.append(AnomalyReport(
                 anomaly_type=AnomalyType.QUALITY_DEGRADATION,
                 severity=AnomalySeverity.WARNING,
@@ -435,7 +445,7 @@ class QualityPatternAnalyzer:
                 metric_name=f"{category}_mean",
                 observed_value=dist["mean"],
                 expected_range=(5.0, 10.0),
-                deviation_score=(5.0 - dist["mean"]) / 5.0,
+                deviation_score=deviation,
                 context=dist,
                 recommendations=[
                     "Review agent configurations",
