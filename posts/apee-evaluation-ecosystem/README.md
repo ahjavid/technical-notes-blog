@@ -114,15 +114,21 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 #### Level 3: Ecosystem Performance
 *System-level metrics (efficiency, stability, throughput, adaptability)*
 
-| Metric | Best Score | Scenario | Avg | Interpretation |
-|--------|------------|----------|-----|----------------|
-| Efficiency | 1.6/10 | collab_code_review | ~2.5 | Low efficiency common - multi-agent overhead |
-| Stability | **10.0/10** | All scenarios | 10.0 | Perfect stability - no crashes |
-| Throughput | **10.0/10** | All scenarios | 10.0 | All tasks completed successfully |
-| Adaptability | 6.0/10 | Multiple | ~7.0 | Good adaptation to different patterns |
-| **Ecosystem** | **9.2/10** | realtime_collab | 7.8 | High L3 even with low efficiency |
+**Example Breakdown (collab_code_review scenario):**
+- Efficiency: 1.6/10 - Multi-agent communication overhead
+- Stability: 10.0/10 - No crashes or failures
+- Throughput: 10.0/10 - Task completed successfully
+- Adaptability: 6.0/10 - Good pattern adaptation
 
-**Key Finding:** Despite low efficiency (multi-agent overhead), perfect stability and throughput drive strong ecosystem scores
+**Observed L3 Scores Across Scenarios:**
+| L3 Score | Scenarios | Observation |
+|----------|-----------|-------------|
+| **9.2/10** | realtime_collab | Highest ecosystem performance |
+| **8.3-8.5/10** | scalability_test, conflict_resolution, knowledge_transfer, error_recovery | Strong ecosystem metrics |
+| **7.5-7.8/10** | research_synthesis, adversarial_review, creative_collab, emergent_behavior | Good ecosystem performance |
+| **6.8-6.9/10** | collab_code_review, constrained_problem, doc_sprint | Moderate ecosystem performance |
+
+**Key Finding:** L3 scores remain high (6.8-9.2) across all scenarios despite likely low efficiency scores, suggesting that perfect stability and throughput compensate for multi-agent overhead
 
 ---
 
