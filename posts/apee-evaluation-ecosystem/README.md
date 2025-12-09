@@ -209,6 +209,16 @@ Testing:
 ## 📊 Benchmark Results
 
 Comprehensive evaluation across multiple Ollama models using the APEE framework.
+Following LLM evaluation best practices from lm-evaluation-harness and DeepEval.
+
+### Benchmark Methodology
+
+- **19 evaluation scenarios** across 11 task categories
+- **5 complexity levels**: trivial, easy, medium, hard, expert
+- **Multiple runs per scenario** for statistical significance
+- **Ground truth comparison** where available
+- **Keyword/constraint validation**
+- **Structured output checking**
 
 ### Model Pool
 
@@ -217,35 +227,77 @@ Comprehensive evaluation across multiple Ollama models using the APEE framework.
 | qwen2.5-coder:3b | 3B         | Fast code generation      |
 | qwen2.5-coder:7b | 7B         | Balanced code generation  |
 | qwen3:4b         | 4B         | Reasoning with thinking mode |
-| qwen3:8b         | 8B         | Advanced reasoning       |
+| qwen3:8b         | 8B         | Advanced reasoning        |
 | gemma3:4b        | 4B         | Google's efficient model  |
 | granite4:3b      | 3B         | IBM's enterprise model    |
 | llama3.2:3b      | 3B         | Meta's efficient model    |
 
-### Multi-Model Benchmark (5 Models)
+### Comprehensive Benchmark Results
 
-Tested on Python code generation and analysis tasks:
+**Configuration**: 5 models × 19 scenarios × 2 runs = 190 total evaluations
 
-| Model | Success Rate | Quality Score | Latency | Tokens |
-|-------|--------------|---------------|---------|--------|
-| qwen2.5-coder:3b | 100% | 0.86 | 3028ms | 1454 |
-| qwen3:4b | 100% | 0.85 | 4087ms | 1758 |
-| gemma3:4b | 100% | 0.85 | 4437ms | 1692 |
-| granite4:3b | 100% | **0.87** | 3573ms | 1576 |
-| llama3.2:3b | 100% | **0.87** | 3649ms | 1763 |
+| Model | Quality | ±Std | Success | Latency |
+|-------|---------|------|---------|---------|
+| **qwen3:4b** | **0.898** | 0.047 | 100% | 3777ms |
+| llama3.2:3b | 0.879 | 0.133 | 100% | 2446ms |
+| gemma3:4b | 0.869 | 0.108 | 100% | 3023ms |
+| granite4:3b | 0.860 | 0.132 | 100% | **1879ms** |
+| qwen2.5-coder:3b | 0.848 | 0.128 | 100% | 2011ms |
 
-### 🏆 Best Performers
+### Performance by Task Category
 
-- **Highest Quality**: `llama3.2:3b` and `granite4:3b` (0.87)
-- **Fastest Response**: `qwen2.5-coder:3b` (3028ms)
-- **Most Efficient**: `qwen2.5-coder:3b` (best quality/latency ratio)
+| Category | qwen3:4b | llama3.2:3b | gemma3:4b |
+|----------|----------|-------------|-----------|
+| code_generation | 0.895 | **0.947** | 0.883 |
+| code_review | 0.921 | **0.970** | 0.942 |
+| code_explanation | 0.912 | **0.926** | 0.895 |
+| code_debug | 0.888 | 0.879 | **0.893** |
+| reasoning | **0.901** | 0.880 | 0.902 |
+| analysis | 0.909 | **0.935** | 0.884 |
+| qa_factual | 0.911 | **0.948** | 0.908 |
+| qa_reasoning | 0.938 | 0.921 | **0.967** |
+| math | 0.886 | 0.811 | **0.895** |
+| instruction_following | **0.860** | 0.538 | 0.640 |
+| summarization | **0.871** | 0.817 | 0.769 |
+
+### 🏆 Winners
+
+| Metric | Winner | Value |
+|--------|--------|-------|
+| **Best Quality** | qwen3:4b | 0.898 |
+| **Lowest Variance** | qwen3:4b | ±0.047 |
+| **Fastest** | granite4:3b | 1879ms |
+| **Most Efficient** | granite4:3b | quality/latency |
 
 ### Key Insights
 
-1. **All models achieved 100% success rate** on standard tasks
-2. **Quality scores clustered tightly** (0.85-0.87) indicating similar capability
-3. **Smaller models competitive** with larger variants on focused tasks
-4. **qwen3:4b thinking mode** correctly captured (reasoning in separate field)
+1. **qwen3:4b achieved highest quality (0.898)** with lowest variance - most consistent
+2. **llama3.2:3b excels at code tasks** - top performer in code_generation, code_review
+3. **qwen3:4b dominates instruction_following** - significantly better than others (0.86 vs 0.54-0.64)
+4. **granite4:3b offers best speed** - nearly 2x faster than qwen3:4b
+5. **All models achieved 100% success rate** - all capable of completing tasks
+6. **gemma3:4b strong at qa_reasoning and math** - best for analytical tasks
+
+### Running Your Own Benchmark
+
+```bash
+# Run the comprehensive benchmark
+python examples/comprehensive_benchmark.py
+
+# Or quick test with subset
+python -c "
+from apee.benchmarks import BenchmarkRunner, BenchmarkConfig, TaskCategory
+import asyncio
+
+config = BenchmarkConfig(
+    models=['qwen2.5-coder:3b'],
+    runs_per_scenario=1,
+    categories=[TaskCategory.CODE_GENERATION],
+)
+result = asyncio.run(BenchmarkRunner().run(config))
+print(result.quality_ranking)
+"
+```
 
 ---
 
@@ -264,17 +316,19 @@ Tested on Python code generation and analysis tasks:
 - [x] Add comparative scoring
 - [x] Create composite scorer framework
 - [x] Add LLM-as-judge scorer
-- [x] Write unit tests for scoring (18 tests passing)
+- [x] Write unit tests for scoring
 
 ### Phase 3: Real-World Testing ✅
-- [x] Test with 7 different Ollama models
-- [x] Document performance across model sizes
-- [x] Create diverse evaluation scenarios
-- [x] Benchmark single vs multi-agent performance
-- [x] Publish findings (see benchmark above)
+- [x] Create benchmark dataset (19 scenarios, 11 categories)
+- [x] Implement statistical analysis (mean, std, CI)
+- [x] Test with 5+ different Ollama models
+- [x] Document performance across categories
+- [x] Run multiple iterations for significance
+- [x] Generate comprehensive reports
 
 ### Phase 4: Polish & Share
 - [x] Add CLI for running evaluations
+- [x] Benchmark analyzer with comparisons
 - [ ] Create visualization utilities
 - [ ] Write comprehensive documentation
 - [ ] Publish to PyPI (optional)
