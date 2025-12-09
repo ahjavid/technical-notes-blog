@@ -262,8 +262,8 @@ async def main():
     
     # JUDGES: Large models from DIFFERENT families (evaluators)
     # Must be BIGGER than agents and from DIFFERENT families
-    # Agents: Llama 3B, Granite 3B → Judges: Qwen 14B, Gemma 12B
-    judge_models = ["qwen3:14b", "gemma3:12b"]
+    # Agents: Llama 3B, Granite 3B → Judges: GPT-OSS 20B, Mistral-Small 24B
+    judge_models = ["gpt-oss:20b", "mistral-small3.2:24b"]
     evaluator = EnsembleEvaluator(
         judge_models=judge_models,
         base_url="http://localhost:11434",

@@ -26,75 +26,178 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 ## 🏆 Latest Results (LLM-as-a-Judge)
 
-### Configuration
+### 🔬 Evaluation Configuration
 
-**Agents** (small, diverse families - matched to role strengths):
-| Role | Model | Family | Benchmark Strength |
-|------|-------|--------|-------------------|
-| Coder (Executor) | llama3.2:3b | Llama | code_generation: 0.950 |
-| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | analysis: 0.964 |
-| Reviewer | granite4:3b | Granite | code_review: 0.935 |
+#### Agent Pool (Executors)
+**Small, diverse models (3B parameters) - Role-optimized based on benchmark strengths**
 
-**Judges** (large, different families - no overlap with agents):
-| Judge | Model | Size | Family |
-|-------|-------|------|--------|
-| Judge 1 | qwen3:14b | 14B | Qwen |
-| Judge 2 | gemma3:12b | 12B | Gemma |
+| Role | Model | Family | Size | Strength | Score |
+|------|-------|--------|------|----------|-------|
+| **Coder** (Executor) | llama3.2:3b | Llama | 3B | Code Generation | 0.950 |
+| **Analyst** (Analyzer) | qwen2.5-coder:3b | Qwen | 3B | Code Analysis | 0.964 |
+| **Reviewer** (Critic) | granite4:3b | Granite | 3B | Code Review | 0.935 |
 
-### Multi-Agent Collaborative Evaluation
+#### Judge Pool (Evaluators)
+**Large models (20-24B parameters) - Different families to avoid bias**
 
-| Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
-|----------|---------|---------------|------------------|--------------|---------|
-| collab_code_review | peer_review | 7.3/10 | 6.2/10 | 7.1/10 | **6.8/10** |
-| research_synthesis | sequential | 7.5/10 | 6.0/10 | 7.9/10 | **6.9/10** |
-| constrained_problem | debate | 7.1/10 | 5.6/10 | 7.1/10 | **6.5/10** |
-| emergent_behavior | parallel | 7.9/10 | 5.0/10 | 8.0/10 | **6.6/10** |
-| scalability_test | hierarchical | 7.2/10 | 5.8/10 | 7.9/10 | **6.7/10** |
-| conflict_resolution | consensus | 8.6/10 | 7.0/10 | 8.1/10 | **7.8/10** |
+| Judge | Model | Family | Size | Purpose |
+|-------|-------|--------|------|---------|
+| **Judge 1** | gpt-oss:20b | GPT-OSS | 20B | Primary evaluator - reasoning focus |
+| **Judge 2** | mistral-small3.2:24b | Mistral | 24B | Secondary evaluator - quality focus |
 
-### Ensemble Judge Agreement
+**Aggregation Method:** Median (robust to outliers)  
+**Judge Agreement:** StdDev=0.21, Range=0.30 ✅ **Excellent consensus**
 
-```
-Judge Models: qwen3:14b, gemma3:12b
-Aggregation: median
+---
 
-Individual Judge Scores (code_review scenario):
-  • qwen3:14b: Overall=6.62, L1=7.33, L2=6.25
-  • gemma3:12b: Overall=6.98, L1=7.5, L2=6.5
+### 📊 Performance Overview
 
-Disagreement Metrics:
-  • Overall StdDev: 0.25
-  • Overall Range: 0.36
-  • High Disagreement: ✅ No
-```
+#### Overall Scores by Collaboration Pattern
 
-### Detailed Metric Breakdown (Code Review Scenario)
+| Pattern | Scenarios | Avg Score | Best | Worst | Interpretation |
+|---------|-----------|-----------|------|-------|----------------|
+| 🥇 **Parallel** | 2 | **6.5/10** | 7.5 | 5.5 | Best for coordinated parallel work |
+| 🥈 **Consensus** | 1 | **7.3/10** | 7.3 | 7.3 | Strong agreement-based collaboration |
+| 🥉 **Debate** | 3 | **6.2/10** | 7.1 | 5.3 | Variable - needs constructive conflict |
+| **Sequential** | 2 | **6.8/10** | 6.8 | 6.8 | Consistent pipeline performance |
+| **Hierarchical** | 2 | **6.0/10** | 6.0 | 6.0 | Delegation works moderately well |
+| **Peer Review** | 2 | **6.3/10** | 6.7 | 5.8 | Review cycles add value |
 
-```
-Level 1 (Individual - per agent):
-  • executor: Goal=9.0, Semantic=8.0
-  • analyzer: Goal=8.0, Semantic=7.0
-  • reviewer: Goal=7.0, Semantic=4.0
+#### Top 5 Best-Performing Scenarios
 
-Level 2 (Collaborative):
-  • Collaboration: 4.0/10
-  • Synthesis: 8.0/10
+| Rank | Scenario | Pattern | Overall | L1 | L2 | L3 | Why It Works |
+|------|----------|---------|---------|----|----|----|--------------||
+| 🥇 | **Realtime Collaboration** | parallel | **7.5/10** | 7.2 | 6.8 | 9.2 | Coordinated parallel work with high ecosystem efficiency |
+| 🥈 | **Conflict Resolution** | consensus | **7.3/10** | 7.2 | 6.8 | 8.5 | Agents iterate until agreement - strong synthesis |
+| 🥉 | **Adversarial Review** | debate | **7.1/10** | 6.9 | 6.8 | 7.8 | Constructive conflict improves output quality |
+| 4 | **Research Synthesis** | sequential | **6.8/10** | 7.6 | 5.8 | 7.8 | Good individual work, pipeline flow effective |
+| 5 | **Knowledge Transfer** | sequential | **6.8/10** | 6.5 | 6.0 | 8.4 | Sequential handoff preserves context |
 
-Level 3 (Ecosystem):
-  • Efficiency: 2.3/10
-  • Stability: 10.0/10
-  • Throughput: 10.0/10
-  • Adaptability: 6.0/10
-```
+#### Bottom 3 Struggling Scenarios
 
-### Key Insights
+| Rank | Scenario | Pattern | Overall | L1 | L2 | L3 | Why It Struggles |
+|------|----------|---------|---------|----|----|----|-----------------||
+| 🔴 | **Constrained Problem** | debate | **5.3/10** | 6.4 | 3.8 | 6.8 | Debate fails under constraints - weak collaboration |
+| ⚠️ | **Emergent Behavior** | parallel | **5.5/10** | 7.0 | 3.2 | 7.7 | Independent work lacks coordination |
+| ⚠️ | **Doc Sprint** | peer_review | **5.8/10** | 6.4 | 4.8 | 6.9 | Review cycles slow documentation tasks |
 
-1. **Consensus pattern wins**: 7.8/10 overall (highest) - agents agreeing works best
-2. **Parallel has lowest L2**: 5.0/10 - independent work hurts collaboration score
-3. **Debate struggles with collaboration**: L2=5.6/10
-4. **Executor (llama3.2:3b) excels**: Goal=9.0, Semantic=8.0 (highest individual)
-5. **Judges agree reasonably**: StdDev 0.25 indicates reliable evaluation
-6. **All 6 patterns tested**: peer_review, sequential, debate, parallel, hierarchical, consensus
+---
+
+### 📈 Detailed Results by Evaluation Level
+
+#### Level 1: Individual Agent Performance
+*How well each agent achieves its assigned task (goal alignment, semantic quality)*
+
+| Scenario | Executor | Analyzer | Reviewer | Avg | Insight |
+|----------|----------|----------|----------|-----|---------|
+| collab_code_review | 7.0 | 5.0 | **9.0** | 7.0 | Reviewer excels at critique |
+| research_synthesis | **8.0** | 7.0 | 8.0 | 7.7 | All agents perform well |
+| constrained_problem | 6.0 | 6.5 | 6.5 | 6.3 | Constraints limit all agents |
+| realtime_collab | 7.5 | 7.0 | **7.0** | 7.2 | Balanced team performance |
+
+**Best Individual Agent:** Reviewer (granite4:3b) - Goal=9.0, Semantic=9.0 in code review
+
+#### Level 2: Collaborative Effectiveness
+*How well agents work together (collaboration quality, synthesis coherence)*
+
+| Pattern | Best L2 | Worst L2 | Avg L2 | Observation |
+|---------|---------|----------|--------|-------------|
+| Consensus | **6.8** | 6.8 | 6.8 | Agreement-based = strong collaboration |
+| Peer Review | **6.0** | 4.8 | 5.4 | Review helps but varies by task |
+| Sequential | **6.0** | 5.8 | 5.9 | Pipeline handoffs work consistently |
+| Debate | **6.8** | 3.8 | 5.5 | High variance - depends on conflict type |
+| Hierarchical | **5.0** | 4.0 | 4.5 | Delegation creates coordination overhead |
+| Parallel | **6.8** | 3.2 | 5.0 | Independent work = weak collaboration scores |
+
+**Key Finding:** Patterns requiring explicit coordination (consensus, debate) score higher on L2 than independent work patterns (parallel, hierarchical)
+
+#### Level 3: Ecosystem Performance
+*System-level metrics (efficiency, stability, throughput, adaptability)*
+
+| Metric | Best Score | Scenario | Avg | Interpretation |
+|--------|------------|----------|-----|----------------|
+| Efficiency | 1.6/10 | collab_code_review | ~2.5 | Low efficiency common - multi-agent overhead |
+| Stability | **10.0/10** | All scenarios | 10.0 | Perfect stability - no crashes |
+| Throughput | **10.0/10** | All scenarios | 10.0 | All tasks completed successfully |
+| Adaptability | 6.0/10 | Multiple | ~7.0 | Good adaptation to different patterns |
+| **Ecosystem** | **9.2/10** | realtime_collab | 7.8 | High L3 even with low efficiency |
+
+**Key Finding:** Despite low efficiency (multi-agent overhead), perfect stability and throughput drive strong ecosystem scores
+
+---
+
+### 🔍 Complete Scenario Results
+
+| # | Scenario | Pattern | L1 (Individual) | L2 (Collab) | L3 (Ecosystem) | Overall | Grade |
+|---|----------|---------|----------------|-------------|----------------|---------|-------|
+| 1 | Collaborative Code Review | peer_review | 7.5/10 | 6.0/10 | 6.9/10 | **6.7/10** | B- |
+| 2 | Research Synthesis | sequential | 7.6/10 | 5.8/10 | 7.8/10 | **6.8/10** | B- |
+| 3 | Constrained Problem Solving | debate | 6.4/10 | 3.8/10 | 6.8/10 | **5.3/10** | D+ |
+| 4 | Emergent Behavior Detection | parallel | 7.0/10 | 3.2/10 | 7.7/10 | **5.5/10** | D+ |
+| 5 | Agent Scalability Test | hierarchical | 6.9/10 | 4.0/10 | 8.3/10 | **6.0/10** | C |
+| 6 | Conflict Resolution | consensus | 7.2/10 | 6.8/10 | 8.5/10 | **7.3/10** | B |
+| 7 | Cross-Domain Knowledge Transfer | sequential | 6.5/10 | 6.0/10 | 8.4/10 | **6.8/10** | B- |
+| 8 | Collaborative Error Recovery | hierarchical | 5.6/10 | 5.0/10 | 8.4/10 | **6.0/10** | C |
+| 9 | Creative Collaborative Design | debate | 5.6/10 | 5.8/10 | 7.5/10 | **6.2/10** | C |
+| 10 | Realtime Incident Response | parallel | 7.2/10 | 6.8/10 | 9.2/10 | **7.5/10** | B+ |
+| 11 | Adversarial Code Review | debate | 6.9/10 | 6.8/10 | 7.8/10 | **7.1/10** | B |
+| 12 | Documentation Sprint | peer_review | 6.4/10 | 4.8/10 | 6.9/10 | **5.8/10** | D+ |
+
+**Overall Average:** 6.3/10 (C+)  
+**Score Range:** 5.3 - 7.5 (2.2 point spread)  
+**Most Consistent:** Sequential pattern (both 6.8/10)  
+**Most Variable:** Parallel pattern (5.5 to 7.5)
+
+---
+
+### 💡 Key Insights & Recommendations
+
+#### ✅ What Works Well
+
+1. **Realtime Coordination** (7.5/10) - When parallel agents coordinate in real-time, they achieve the highest scores. The ecosystem efficiency reaches 9.2/10.
+
+2. **Consensus-Building** (7.3/10) - Iterating until agents agree produces strong collaboration (L2=6.8) and ecosystem performance (L3=8.5).
+
+3. **Constructive Conflict** (7.1/10) - Adversarial review with constructive debate improves quality without sacrificing collaboration.
+
+4. **Reviewer Agent Dominance** - granite4:3b consistently achieves the highest individual scores (Goal=9.0, Semantic=9.0), especially in critique tasks.
+
+5. **Perfect Reliability** - All 12 scenarios completed with 10/10 stability and throughput. Zero crashes or failures.
+
+#### ⚠️ What Needs Improvement
+
+1. **Debate Under Constraints** (5.3/10) - The debate pattern fails when agents face constraints (L2=3.8). Agents argue rather than collaborate.
+
+2. **Independent Parallel Work** (5.5/10) - When parallel agents work independently without coordination, collaboration scores drop dramatically (L2=3.2).
+
+3. **Multi-Agent Efficiency** (~1.6-2.5/10) - All patterns suffer from low efficiency due to multi-agent communication overhead. This is a systemic issue.
+
+4. **Documentation Tasks** (5.8/10) - Peer review cycles slow down documentation sprints. Simpler tasks may not benefit from multi-agent approaches.
+
+5. **Hierarchical Delegation** (6.0/10 avg) - Leader-worker patterns create coordination overhead (L2=4.0-5.0) without clear benefits.
+
+#### 🎯 Recommendations
+
+| Pattern | When to Use | When to Avoid |
+|---------|-------------|---------------|
+| **Parallel** | Time-sensitive tasks with clear coordination | Independent subtasks without communication |
+| **Consensus** | High-stakes decisions requiring agreement | Time-constrained tasks |
+| **Debate** | Complex problems benefiting from multiple perspectives | Constrained problems with limited solution space |
+| **Sequential** | Tasks with natural pipeline structure | Highly interactive or iterative problems |
+| **Hierarchical** | Large-scale delegation with clear leader | Small teams or tasks requiring peer collaboration |
+| **Peer Review** | Quality-critical outputs needing validation | Simple documentation or routine tasks |
+
+#### 🔬 Judge Reliability Analysis
+
+**Ensemble Agreement:** Excellent (StdDev=0.21, Range=0.30)
+
+| Judge | Model | Avg Score | Bias | Reliability |
+|-------|-------|-----------|------|-------------|
+| Judge 1 | gpt-oss:20b | 6.52/10 | -0.19 (stricter) | High |
+| Judge 2 | mistral-small3.2:24b | 6.82/10 | +0.11 (lenient) | High |
+
+**Inter-Judge Agreement:** 0.30 point average difference (excellent for ensemble evaluation)  
+**No High Disagreement Cases:** Both judges aligned on scenario quality ✅
 
 ---
 
@@ -111,8 +214,8 @@ Level 3 (Ecosystem):
   ollama pull granite4:3b
   
   # Judges (large, different families)
-  ollama pull qwen3:14b
-  ollama pull gemma3:12b
+  ollama pull gpt-oss:20b
+  ollama pull mistral-small3.2:24b
   ```
 
 ### Installation
@@ -153,7 +256,7 @@ async def main():
     
     # Create ensemble evaluator (large judges, different families)
     evaluator = EnsembleEvaluator(
-        judge_models=["qwen3:14b", "gemma3:12b"],
+        judge_models=["gpt-oss:20b", "mistral-small3.2:24b"],
         aggregation="median",
     )
     
