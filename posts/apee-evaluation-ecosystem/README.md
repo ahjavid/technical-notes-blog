@@ -14,13 +14,13 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 - **Poly-Agentic Collaboration**: Multiple agents working together with 6 patterns
 - **Three-Tier Metrics**: Individual → Collaborative → Ecosystem evaluation
 - **Role-Optimized Agents**: Agent selection based on benchmark strengths
-- **6 Collaboration Patterns**:
-  - `run_parallel()` - All agents work independently
-  - `run_pipeline()` - Sequential output flow
-  - `run_debate()` - Multi-round argument
-  - `run_hierarchical()` - Leader delegates to workers
-  - `run_consensus()` - Iterate until agreement
-  - `run_peer_review()` - Work → review → revise
+- **6 Collaboration Patterns** (see [PATTERNS.md](apee/coordination/PATTERNS.md)):
+  - `run_parallel()` - All agents work independently (best result selected)
+  - `run_pipeline()` - Sequential: analyze → code → review
+  - `run_debate()` - Multi-round parallel discussion
+  - `run_hierarchical()` - Analyst leads, workers execute, leader synthesizes
+  - `run_consensus()` - Iterate with semantic agreement detection
+  - `run_peer_review()` - Work → review → revise (3 parallel phases)
 
 ---
 
@@ -28,12 +28,14 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 ### Configuration
 
-**Agents** (small, diverse families - matched to role strengths):
-| Role | Model | Family | Benchmark Strength |
-|------|-------|--------|-------------------|
-| Coder (Executor) | llama3.2:3b | Llama | code_generation: 0.950 |
-| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | analysis: 0.964 |
-| Reviewer | granite4:3b | Granite | code_review: 0.935 |
+**Agents** (small, diverse families - ordered for optimal pattern execution):
+| Role | Model | Family | Position | Benchmark Strength |
+|------|-------|--------|----------|-------------------|
+| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | 1st (Leader) | analysis: 0.964, reasoning: 0.950 |
+| Coder (Executor) | llama3.2:3b | Llama | 2nd (Worker) | code_generation: 0.950 |
+| Reviewer | granite4:3b | Granite | 3rd (Final) | code_review: 0.935 |
+
+> **Note**: Agent order matters! Analyst is first for hierarchical (planning/synthesis), then coder, then reviewer for logical pipeline flow: analyze → code → review.
 
 **Judges** (large, different families - no overlap with agents):
 | Judge | Model | Size | Family |
@@ -152,11 +154,12 @@ from apee import OllamaAgent, Coordinator, Task, AgentRole
 from apee.evaluation.llm_evaluator import EnsembleEvaluator
 
 async def main():
-    # Create role-optimized agents (small, diverse families)
+    # Create role-optimized agents (order matters for patterns!)
+    # Analyst first (leader for hierarchical), then coder, then reviewer
     agents = [
-        OllamaAgent("coder", AgentRole.EXECUTOR, model="llama3.2:3b"),
-        OllamaAgent("analyst", AgentRole.ANALYZER, model="qwen2.5-coder:3b"),
-        OllamaAgent("reviewer", AgentRole.REVIEWER, model="granite4:3b"),
+        OllamaAgent("analyst", AgentRole.ANALYZER, model="qwen2.5-coder:3b"),  # Leader
+        OllamaAgent("coder", AgentRole.EXECUTOR, model="llama3.2:3b"),          # Worker
+        OllamaAgent("reviewer", AgentRole.REVIEWER, model="granite4:3b"),       # Final
     ]
     
     # Create ensemble evaluator (large judges, different families)
@@ -168,7 +171,12 @@ async def main():
     # Coordinate and evaluate
     coordinator = Coordinator(agents=agents)
     task = Task(task_id="t1", description="Review this code for bugs")
-    results = await coordinator.run_pipeline(task, ["coder", "analyst", "reviewer"])
+    
+    # Pipeline flows: analyst → coder → reviewer (analyze → code → review)
+    results = await coordinator.run_pipeline(task, ["analyst", "coder", "reviewer"])
+    
+    # Or use hierarchical: analyst leads, coder+reviewer work, analyst synthesizes
+    # results = await coordinator.run_hierarchical(task, leader_id="analyst")
     
     # Evaluate with LLM-as-a-Judge
     # ... build CollaborativeTrace from results
@@ -190,7 +198,8 @@ apee/
 │   ├── base.py              # Abstract Agent class
 │   └── ollama.py            # Ollama LLM implementation
 ├── coordination/
-│   └── coordinator.py       # Task distribution & execution modes
+│   ├── coordinator.py       # Task distribution & execution modes
+│   └── PATTERNS.md          # 📚 Detailed pattern documentation
 ├── evaluation/
 │   ├── evaluator.py         # Heuristic evaluation engine
 │   ├── llm_evaluator.py     # LLM-as-a-Judge evaluators
@@ -222,6 +231,12 @@ examples/
 ├── multi_agent_evaluation.py    # Multi-agent with heuristics
 ├── proper_apee_evaluation.py    # LLM-as-a-Judge evaluation
 └── phase6_demo.py               # 🆕 Visualization & anomaly demo
+
+tests/
+├── test_benchmarks.py           # Benchmark tests
+├── test_models.py               # Model tests
+├── test_quality.py              # Quality scoring tests
+└── test_coordinator.py          # 📋 Coordinator pattern tests (35 tests)
 ```
 
 ---
@@ -232,23 +247,24 @@ examples/
 ┌─────────────────────────────────────────────────────────────────────┐
 │                     APEE Framework                                  │
 ├─────────────────────────────────────────────────────────────────────┤
-│  AGENTS (Small 3B models - diverse families)                        │
+│  AGENTS (Small 3B models - ordered for optimal pattern execution)   │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │   Coder      │  │   Analyst    │  │   Reviewer   │               │
-│  │  (Executor)  │  │  (Analyzer)  │  │  (Reviewer)  │               │
-│  │ llama3.2:3b  │  │qwen2.5-coder │  │ granite4:3b  │               │
+│  │   Analyst    │  │    Coder     │  │   Reviewer   │               │
+│  │  (Analyzer)  │  │  (Executor)  │  │  (Reviewer)  │               │
+│  │qwen2.5-coder │  │ llama3.2:3b  │  │ granite4:3b  │               │
+│  │  [LEADER]    │  │  [WORKER]    │  │   [FINAL]    │               │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
 │         │                 │                 │                       │
 │         └────────────┬────┴─────────────────┘                       │
 │                      │                                              │
 │         ┌────────────▼─────────────┐                                │
 │         │      Coordinator         │                                │
-│         │  • run_parallel()        │                                │
-│         │  • run_pipeline()        │                                │
-│         │  • run_debate()          │                                │
-│         │  • run_hierarchical()    │                                │
-│         │  • run_consensus()       │                                │
-│         │  • run_peer_review()     │                                │
+│         │  • run_parallel()        │ ← Best quality result          │
+│         │  • run_pipeline()        │ ← analyze → code → review      │
+│         │  • run_debate()          │ ← Multi-round parallel         │
+│         │  • run_hierarchical()    │ ← Analyst leads workers        │
+│         │  • run_consensus()       │ ← Semantic agreement detect    │
+│         │  • run_peer_review()     │ ← 3 parallel phases            │
 │         └────────────┬─────────────┘                                │
 │                      │                                              │
 │  JUDGES (Large 20-24B models - different families)                  │
