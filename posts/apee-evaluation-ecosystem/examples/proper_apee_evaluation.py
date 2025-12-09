@@ -137,27 +137,35 @@ async def run_and_evaluate_scenario(
                     agent_traces.append(trace)
                     
         elif pattern.value == "consensus":
+            n_consensus_agents = 3
+            max_rounds = 2
             results = await coordinator.run_consensus(
-                task=task, max_rounds=2, agent_ids=agent_ids[:3]
+                task=task, max_rounds=max_rounds, agent_ids=agent_ids[:n_consensus_agents]
             )
             final_output = results[-1].output if results else ""
             
-            # Group by agent for traces (may have multiple rounds)
-            seen_agents = set()
-            for result in results:
-                if result.agent_id not in seen_agents:
-                    agent = coordinator.agents.get(result.agent_id)
-                    if agent:
-                        trace = ExecutionTrace(
-                            agent_id=result.agent_id,
-                            agent_role=agent.role.value if hasattr(agent.role, 'value') else str(agent.role),
-                            task_description=scenario.task_description,
-                            expected_output="Consensus contribution seeking agreement",
-                            final_output=result.output,
-                            duration_seconds=(datetime.now() - start_time).total_seconds() / len(agent_ids[:3]),
-                        )
-                        agent_traces.append(trace)
-                        seen_agents.add(result.agent_id)
+            # Get the last round's results for each agent
+            # Results may have 1 or 2 rounds depending on early consensus
+            n_rounds_actual = len(results) // n_consensus_agents
+            if n_rounds_actual > 0:
+                last_round_start = (n_rounds_actual - 1) * n_consensus_agents
+                last_round_results = results[last_round_start:last_round_start + n_consensus_agents]
+            else:
+                last_round_results = results
+            
+            for i, agent_id in enumerate(agent_ids[:n_consensus_agents]):
+                agent = coordinator.agents.get(agent_id)
+                if agent:
+                    agent_result = last_round_results[i] if i < len(last_round_results) else None
+                    trace = ExecutionTrace(
+                        agent_id=agent_id,
+                        agent_role=agent.role.value if hasattr(agent.role, 'value') else str(agent.role),
+                        task_description=scenario.task_description,
+                        expected_output="Consensus contribution seeking agreement",
+                        final_output=agent_result.output if agent_result else "",
+                        duration_seconds=(datetime.now() - start_time).total_seconds() / n_rounds_actual if n_rounds_actual > 0 else 0,
+                    )
+                    agent_traces.append(trace)
                         
         elif pattern.value == "peer_review":
             results = await coordinator.run_peer_review(
@@ -186,7 +194,9 @@ async def run_and_evaluate_scenario(
         else:
             # Parallel execution (default)
             results = await coordinator.run_parallel(task)
-            final_output = results[0].output if results else ""
+            # Use the highest quality result as final output
+            best_result = max(results, key=lambda r: r.quality_score) if results else None
+            final_output = best_result.output if best_result else ""
             
             for agent_id, result in zip(agent_ids[:3], results):
                 agent = coordinator.agents[agent_id]
