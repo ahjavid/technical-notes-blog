@@ -71,21 +71,30 @@ async def run_and_evaluate_scenario(
     
     try:
         if pattern.value == "debate":
+            n_debate_agents = 3
+            n_rounds = 2
             results = await coordinator.run_debate(
-                task=task, rounds=2, agent_ids=agent_ids[:3]
+                task=task, rounds=n_rounds, agent_ids=agent_ids[:n_debate_agents]
             )
             final_output = results[-1].output if results else ""
             
-            # Build traces for each participating agent
-            for i, agent_id in enumerate(agent_ids[:3]):
+            # Build traces for each participating agent using LAST round results
+            # Results are ordered: [round1_agent1, round1_agent2, round1_agent3, round2_agent1, ...]
+            # Last round starts at index: (n_rounds - 1) * n_agents
+            last_round_start = (n_rounds - 1) * n_debate_agents
+            last_round_results = results[last_round_start:last_round_start + n_debate_agents]
+            
+            for i, agent_id in enumerate(agent_ids[:n_debate_agents]):
                 agent = coordinator.agents[agent_id]
+                # Get this agent's result from the last round
+                agent_result = last_round_results[i] if i < len(last_round_results) else None
                 trace = ExecutionTrace(
                     agent_id=agent_id,
                     agent_role=agent.role.value if hasattr(agent.role, 'value') else str(agent.role),
                     task_description=scenario.task_description,
                     expected_output="Debate contribution with reasoned arguments",
-                    final_output=results[i].output if i < len(results) else "",
-                    duration_seconds=(datetime.now() - start_time).total_seconds() / 2,
+                    final_output=agent_result.output if agent_result else "",
+                    duration_seconds=(datetime.now() - start_time).total_seconds() / n_rounds,
                 )
                 agent_traces.append(trace)
                 
@@ -239,22 +248,23 @@ async def main():
     console.print("\n[bold]Initializing agent pool...[/bold]")
     
     # AGENTS: Small models matched to role strengths (based on benchmark data)
-    # Gemma reserved for judges only
+    # Order matters: analyst first (leader for hierarchical), coder second, reviewer last
+    # This creates logical flow: analyze → code → review (pipeline order)
     agents = [
+        OllamaAgent(
+            agent_id="analyst",
+            role=AgentRole.ANALYZER,
+            model="qwen2.5-coder:3b",  # Best analysis: 0.964, reasoning: 0.950 - ideal for leader/planning
+        ),
         OllamaAgent(
             agent_id="coder",
             role=AgentRole.EXECUTOR,
             model="llama3.2:3b",  # Best code_generation: 0.950
         ),
         OllamaAgent(
-            agent_id="analyst",
-            role=AgentRole.ANALYZER,
-            model="qwen2.5-coder:3b",  # Best analysis: 0.964, reasoning: 0.950
-        ),
-        OllamaAgent(
             agent_id="reviewer",
             role=AgentRole.REVIEWER,
-            model="granite4:3b",  # Good code_review: 0.935
+            model="granite4:3b",  # Good code_review: 0.935 - final quality check
         ),
     ]
     
@@ -394,8 +404,8 @@ async def main():
             "timestamp": datetime.now().isoformat(),
             "judge_models": judge_models,
             "agent_models": {
+                "analyst": "qwen2.5-coder:3b",  # Leader for hierarchical
                 "coder": "llama3.2:3b",
-                "analyst": "qwen2.5-coder:3b",
                 "reviewer": "granite4:3b",
             },
             "scenarios": []
