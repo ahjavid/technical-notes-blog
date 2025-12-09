@@ -18,13 +18,23 @@ class Coordinator:
     - Pipeline: Sequential processing where each agent builds on previous output
     - Debate: Multi-round discussion where agents can see each other's responses
     - Selective: Route tasks to specific agents based on criteria
+    - Hierarchical: Leader delegates to workers and synthesizes results
+    - Consensus: Iterate until agreement is reached
+    - Peer Review: Work → review → revise cycle
     """
     
-    def __init__(self, agents: Sequence[Agent]):
+    def __init__(
+        self, 
+        agents: Sequence[Agent],
+        context_truncation_limit: int = 500,
+        output_truncation_limit: int = 1000
+    ):
         self.agents: dict[str, Agent] = {a.agent_id: a for a in agents}
         self.message_log: list[Message] = []
         self.results: list[AgentResult] = []
         self.execution_history: list[dict] = []
+        self.context_truncation_limit = context_truncation_limit
+        self.output_truncation_limit = output_truncation_limit
     
     def add_agent(self, agent: Agent) -> None:
         """Add an agent to the coordinator."""
@@ -76,7 +86,8 @@ class Coordinator:
         self, 
         task: Task, 
         agent_order: list[str],
-        pass_context: bool = True
+        pass_context: bool = True,
+        stop_on_failure: bool = False
     ) -> list[AgentResult]:
         """
         Run agents sequentially, optionally passing output to next agent.
@@ -87,7 +98,11 @@ class Coordinator:
             task: The task to process
             agent_order: List of agent IDs in execution order
             pass_context: Whether to pass each agent's output to the next
+            stop_on_failure: Whether to stop pipeline if an agent fails
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         start_time = time.time()
         results = []
         accumulated_context = dict(task.context)
@@ -95,6 +110,7 @@ class Coordinator:
         for i, agent_id in enumerate(agent_order):
             agent = self.agents.get(agent_id)
             if not agent:
+                logger.warning(f"Pipeline: Agent '{agent_id}' not found, skipping step {i}")
                 continue
             
             # Create task with accumulated context
@@ -105,13 +121,32 @@ class Coordinator:
                 context=accumulated_context.copy()
             )
             
-            result = await agent.execute(pipeline_task)
+            try:
+                result = await agent.execute(pipeline_task)
+            except Exception as e:
+                logger.error(f"Pipeline: Agent '{agent_id}' raised exception: {e}")
+                result = AgentResult(
+                    task_id=pipeline_task.task_id,
+                    agent_id=agent_id,
+                    agent_role=agent.role.value,
+                    output="",
+                    quality_score=0.0,
+                    latency_ms=0.0,
+                    success=False,
+                    error=str(e)
+                )
+            
             results.append(result)
             self.results.append(result)
             
+            # Check for failure if stop_on_failure is enabled
+            if stop_on_failure and not result.success:
+                logger.warning(f"Pipeline: Stopping due to failure at step {i} (agent '{agent_id}')")
+                break
+            
             # Add output to context for next agent
             if pass_context and result.success:
-                accumulated_context[f"{agent.role.value}_output"] = result.output[:1000]
+                accumulated_context[f"{agent.role.value}_output"] = result.output[:self.output_truncation_limit]
         
         self._log_execution("pipeline", task, results, time.time() - start_time)
         return results
@@ -125,7 +160,7 @@ class Coordinator:
         """
         Run agents in a debate format with multiple rounds.
         
-        Each round, agents can see previous responses.
+        Each round, agents can see previous responses and respond in parallel.
         Best for: Decision-making, exploring trade-offs.
         
         Args:
@@ -149,13 +184,13 @@ class Coordinator:
             if all_results:
                 prev_round_start = -len(participating_agents)
                 prev_responses = {
-                    r.agent_id: r.output[:400]
+                    r.agent_id: r.output[:self.context_truncation_limit]
                     for r in all_results[prev_round_start:]
                 }
                 round_context["previous_responses"] = prev_responses
             
-            # Run all agents for this round
-            round_results = []
+            # Prepare all debate tasks for this round
+            debate_tasks = []
             for agent in participating_agents:
                 debate_task = Task(
                     task_id=f"{task.task_id}_round{round_num}_{agent.agent_id}",
@@ -163,8 +198,27 @@ class Coordinator:
                     complexity=task.complexity,
                     context=round_context
                 )
-                
-                result = await agent.execute(debate_task)
+                debate_tasks.append((agent, debate_task))
+            
+            # Run all agents for this round IN PARALLEL
+            round_results_raw = await asyncio.gather(*[
+                agent.execute(debate_task) for agent, debate_task in debate_tasks
+            ], return_exceptions=True)
+            
+            # Process results, converting exceptions to failed results
+            round_results = []
+            for (agent, _), result in zip(debate_tasks, round_results_raw):
+                if isinstance(result, Exception):
+                    result = AgentResult(
+                        task_id=f"{task.task_id}_round{round_num}_{agent.agent_id}",
+                        agent_id=agent.agent_id,
+                        agent_role=agent.role.value,
+                        output="",
+                        quality_score=0.0,
+                        latency_ms=0.0,
+                        success=False,
+                        error=str(result)
+                    )
                 round_results.append(result)
             
             all_results.extend(round_results)
@@ -254,13 +308,13 @@ class Coordinator:
         for i, worker in enumerate(workers):
             worker_task = Task(
                 task_id=f"{task.task_id}_worker{i}",
-                description=f"Execute your part of the task. Leader's guidance: {leader_plan.output[:500]}\n\nOriginal task: {task.description}",
+                description=f"Execute your part of the task. Leader's guidance: {leader_plan.output[:self.context_truncation_limit]}\n\nOriginal task: {task.description}",
                 complexity=task.complexity,
                 context={
                     **task.context,
                     "role": "worker",
                     "phase": "execution",
-                    "leader_plan": leader_plan.output[:800],
+                    "leader_plan": leader_plan.output[:self.output_truncation_limit],
                 }
             )
             worker_tasks.append((worker, worker_task))
@@ -285,7 +339,7 @@ class Coordinator:
         
         # Phase 3: Leader synthesizes
         worker_outputs = "\n---\n".join([
-            f"Worker {r.agent_id}: {r.output[:400]}"
+            f"Worker {r.agent_id}: {r.output[:self.context_truncation_limit]}"
             for r in results[1:] if r.success
         ])
         
@@ -325,7 +379,7 @@ class Coordinator:
         Args:
             task: The task to process
             max_rounds: Maximum number of consensus rounds
-            agreement_threshold: Required similarity for consensus (0-1)
+            agreement_threshold: Required ratio of agreeing agents (0-1)
             agent_ids: Specific agents to include (default: all)
         """
         start_time = time.time()
@@ -351,18 +405,18 @@ class Coordinator:
             if all_results:
                 prev_round_start = -len(participating_agents)
                 prev_responses = {
-                    r.agent_id: r.output[:500]
+                    r.agent_id: r.output[:self.context_truncation_limit]
                     for r in all_results[prev_round_start:]
                 }
                 round_context["other_agent_responses"] = prev_responses
                 round_context["instruction"] = (
                     "Review other agents' responses and adjust your answer to find common ground. "
-                    "If you agree with the consensus, state so clearly. "
-                    "If you disagree, explain your reasoning."
+                    "If you agree with the consensus, clearly state 'I AGREE' at the start. "
+                    "If you disagree, clearly state 'I DISAGREE' at the start and explain your reasoning."
                 )
             
-            # Run all agents for this round
-            round_results = []
+            # Prepare all consensus tasks for this round
+            consensus_tasks = []
             for agent in participating_agents:
                 consensus_task = Task(
                     task_id=f"{task.task_id}_consensus_r{round_num}_{agent.agent_id}",
@@ -370,21 +424,35 @@ class Coordinator:
                     complexity=task.complexity,
                     context=round_context
                 )
-                
-                result = await agent.execute(consensus_task)
+                consensus_tasks.append((agent, consensus_task))
+            
+            # Run all agents for this round IN PARALLEL
+            round_results_raw = await asyncio.gather(*[
+                agent.execute(consensus_task) for agent, consensus_task in consensus_tasks
+            ], return_exceptions=True)
+            
+            # Process results, converting exceptions to failed results
+            round_results = []
+            for (agent, _), result in zip(consensus_tasks, round_results_raw):
+                if isinstance(result, Exception):
+                    result = AgentResult(
+                        task_id=f"{task.task_id}_consensus_r{round_num}_{agent.agent_id}",
+                        agent_id=agent.agent_id,
+                        agent_role=agent.role.value,
+                        output="",
+                        quality_score=0.0,
+                        latency_ms=0.0,
+                        success=False,
+                        error=str(result)
+                    )
                 round_results.append(result)
             
             all_results.extend(round_results)
             
-            # Check for consensus (simple heuristic: look for agreement keywords)
-            agreement_keywords = ["agree", "consensus", "same conclusion", "concur"]
-            agreements = sum(
-                1 for r in round_results
-                if any(kw in r.output.lower() for kw in agreement_keywords)
-            )
+            # Improved consensus detection with semantic analysis
+            consensus_reached = self._check_consensus(round_results, agreement_threshold)
             
-            if agreements / len(round_results) >= agreement_threshold:
-                consensus_reached = True
+            if consensus_reached:
                 break
         
         self.results.extend(all_results)
@@ -395,6 +463,149 @@ class Coordinator:
         
         return all_results
     
+    def _check_consensus(
+        self, 
+        results: list[AgentResult], 
+        threshold: float
+    ) -> bool:
+        """
+        Check if agents have reached consensus using improved semantic analysis.
+        
+        Uses multiple heuristics:
+        1. Explicit agreement/disagreement markers
+        2. Negation-aware keyword detection
+        3. Output similarity comparison
+        
+        Args:
+            results: Results from the current round
+            threshold: Required agreement ratio (0-1)
+            
+        Returns:
+            True if consensus is reached
+        """
+        if not results:
+            return False
+        
+        successful_results = [r for r in results if r.success]
+        if len(successful_results) < 2:
+            return False
+        
+        agreement_scores = []
+        
+        for result in successful_results:
+            output_lower = result.output.lower()
+            
+            # Check for explicit markers (strongest signal)
+            if output_lower.startswith("i agree") or "i agree with" in output_lower[:100]:
+                agreement_scores.append(1.0)
+                continue
+            if output_lower.startswith("i disagree") or "i disagree with" in output_lower[:100]:
+                agreement_scores.append(0.0)
+                continue
+            
+            # Negation-aware keyword analysis
+            score = self._analyze_agreement_sentiment(output_lower)
+            agreement_scores.append(score)
+        
+        # Also check output similarity (if outputs are very similar, likely consensus)
+        similarity_bonus = self._calculate_output_similarity(successful_results)
+        
+        # Combine explicit agreement ratio with similarity
+        avg_agreement = sum(agreement_scores) / len(agreement_scores) if agreement_scores else 0
+        combined_score = 0.7 * avg_agreement + 0.3 * similarity_bonus
+        
+        return combined_score >= threshold
+    
+    def _analyze_agreement_sentiment(self, text: str) -> float:
+        """
+        Analyze text for agreement/disagreement sentiment with negation awareness.
+        
+        Returns a score from 0 (strong disagreement) to 1 (strong agreement).
+        """
+        # Positive indicators (agreement)
+        positive_patterns = [
+            "agree", "consensus", "concur", "same conclusion", "aligned",
+            "correct", "right", "exactly", "precisely", "indeed",
+            "support this", "endorse", "confirm"
+        ]
+        
+        # Negative indicators (disagreement)
+        negative_patterns = [
+            "disagree", "different view", "alternative", "however",
+            "but i think", "on the contrary", "instead", "rather",
+            "not quite", "partially", "reservations", "concerns"
+        ]
+        
+        # Negation words that flip meaning
+        negations = ["not ", "don't ", "doesn't ", "cannot ", "can't ", "won't ", "wouldn't "]
+        
+        positive_count = 0
+        negative_count = 0
+        
+        for pattern in positive_patterns:
+            if pattern in text:
+                # Check if negated
+                pattern_idx = text.find(pattern)
+                context_start = max(0, pattern_idx - 20)
+                context = text[context_start:pattern_idx]
+                
+                if any(neg in context for neg in negations):
+                    negative_count += 1  # Negated positive = negative
+                else:
+                    positive_count += 1
+        
+        for pattern in negative_patterns:
+            if pattern in text:
+                # Check if negated
+                pattern_idx = text.find(pattern)
+                context_start = max(0, pattern_idx - 20)
+                context = text[context_start:pattern_idx]
+                
+                if any(neg in context for neg in negations):
+                    positive_count += 1  # Negated negative = positive
+                else:
+                    negative_count += 1
+        
+        total = positive_count + negative_count
+        if total == 0:
+            return 0.5  # Neutral
+        
+        return positive_count / total
+    
+    def _calculate_output_similarity(self, results: list[AgentResult]) -> float:
+        """
+        Calculate average pairwise similarity between outputs.
+        
+        Uses simple word overlap (Jaccard similarity) as a lightweight metric.
+        For production, consider using embeddings.
+        """
+        if len(results) < 2:
+            return 1.0
+        
+        def tokenize(text: str) -> set:
+            # Simple word tokenization
+            import re
+            words = re.findall(r'\b\w+\b', text.lower())
+            return set(words)
+        
+        def jaccard_similarity(set1: set, set2: set) -> float:
+            if not set1 and not set2:
+                return 1.0
+            intersection = len(set1 & set2)
+            union = len(set1 | set2)
+            return intersection / union if union > 0 else 0.0
+        
+        # Calculate pairwise similarities
+        similarities = []
+        token_sets = [tokenize(r.output) for r in results]
+        
+        for i in range(len(token_sets)):
+            for j in range(i + 1, len(token_sets)):
+                sim = jaccard_similarity(token_sets[i], token_sets[j])
+                similarities.append(sim)
+        
+        return sum(similarities) / len(similarities) if similarities else 0.0
+    
     async def run_peer_review(
         self,
         task: Task,
@@ -403,9 +614,9 @@ class Coordinator:
         """
         Run agents where each reviews others' work.
         
-        Phase 1: All agents produce initial output
-        Phase 2: Each agent reviews one other agent's work
-        Phase 3: Original authors respond to feedback
+        Phase 1: All agents produce initial output (parallel)
+        Phase 2: Each agent reviews one other agent's work (parallel)
+        Phase 3: Original authors respond to feedback (parallel)
         
         Best for: Code review, document review, quality assurance.
         
@@ -424,24 +635,42 @@ class Coordinator:
         if len(participating_agents) < 2:
             raise ValueError("Peer review requires at least 2 agents")
         
-        # Phase 1: Initial work
-        initial_results = []
-        for agent in participating_agents:
-            initial_task = Task(
+        n_agents = len(participating_agents)
+        
+        # Phase 1: Initial work (PARALLEL)
+        initial_tasks = [
+            (agent, Task(
                 task_id=f"{task.task_id}_initial_{agent.agent_id}",
                 description=task.description,
                 complexity=task.complexity,
                 context={**task.context, "phase": "initial_work"}
-            )
-            result = await agent.execute(initial_task)
+            ))
+            for agent in participating_agents
+        ]
+        
+        initial_results_raw = await asyncio.gather(*[
+            agent.execute(t) for agent, t in initial_tasks
+        ], return_exceptions=True)
+        
+        initial_results = []
+        for (agent, t), result in zip(initial_tasks, initial_results_raw):
+            if isinstance(result, Exception):
+                result = AgentResult(
+                    task_id=t.task_id,
+                    agent_id=agent.agent_id,
+                    agent_role=agent.role.value,
+                    output="",
+                    quality_score=0.0,
+                    latency_ms=0.0,
+                    success=False,
+                    error=str(result)
+                )
             initial_results.append(result)
         
         results.extend(initial_results)
         
-        # Phase 2: Peer review (circular: agent 0 reviews agent 1, 1 reviews 2, etc.)
-        review_results = []
-        n_agents = len(participating_agents)
-        
+        # Phase 2: Peer review (circular: agent i reviews agent (i+1) % n) (PARALLEL)
+        review_tasks = []
         for i, reviewer in enumerate(participating_agents):
             reviewee_idx = (i + 1) % n_agents
             reviewee_work = initial_results[reviewee_idx]
@@ -449,7 +678,7 @@ class Coordinator:
             
             review_task = Task(
                 task_id=f"{task.task_id}_review_{reviewer.agent_id}",
-                description=f"Review {reviewee_name}'s work and provide constructive feedback.\n\nOriginal task: {task.description}\n\n{reviewee_name}'s work:\n{reviewee_work.output}",
+                description=f"Review {reviewee_name}'s work and provide constructive feedback.\n\nOriginal task: {task.description}\n\n{reviewee_name}'s work:\n{reviewee_work.output[:self.output_truncation_limit]}",
                 complexity=task.complexity,
                 context={
                     **task.context,
@@ -457,21 +686,41 @@ class Coordinator:
                     "reviewing": reviewee_name,
                 }
             )
-            review = await reviewer.execute(review_task)
-            review_results.append(review)
+            review_tasks.append((reviewer, review_task))
+        
+        review_results_raw = await asyncio.gather(*[
+            agent.execute(t) for agent, t in review_tasks
+        ], return_exceptions=True)
+        
+        review_results = []
+        for (agent, t), result in zip(review_tasks, review_results_raw):
+            if isinstance(result, Exception):
+                result = AgentResult(
+                    task_id=t.task_id,
+                    agent_id=agent.agent_id,
+                    agent_role=agent.role.value,
+                    output="",
+                    quality_score=0.0,
+                    latency_ms=0.0,
+                    success=False,
+                    error=str(result)
+                )
+            review_results.append(result)
         
         results.extend(review_results)
         
-        # Phase 3: Authors respond to feedback
-        response_results = []
+        # Phase 3: Authors respond to feedback (PARALLEL)
+        # Agent (i-1) % n reviewed agent i, so review_results[(i-1) % n] is the feedback for agent i
+        response_tasks = []
         for i, author in enumerate(participating_agents):
+            # Find who reviewed this author: agent (i-1) % n reviewed agent i
             reviewer_idx = (i - 1) % n_agents
             feedback = review_results[reviewer_idx]
             reviewer_name = participating_agents[reviewer_idx].agent_id
             
             response_task = Task(
                 task_id=f"{task.task_id}_response_{author.agent_id}",
-                description=f"Consider {reviewer_name}'s feedback and provide your revised/final response.\n\nOriginal task: {task.description}\n\nYour original work:\n{initial_results[i].output[:500]}\n\nFeedback from {reviewer_name}:\n{feedback.output}",
+                description=f"Consider {reviewer_name}'s feedback and provide your revised/final response.\n\nOriginal task: {task.description}\n\nYour original work:\n{initial_results[i].output[:self.context_truncation_limit]}\n\nFeedback from {reviewer_name}:\n{feedback.output[:self.output_truncation_limit]}",
                 complexity=task.complexity,
                 context={
                     **task.context,
@@ -479,8 +728,26 @@ class Coordinator:
                     "feedback_from": reviewer_name,
                 }
             )
-            response = await author.execute(response_task)
-            response_results.append(response)
+            response_tasks.append((author, response_task))
+        
+        response_results_raw = await asyncio.gather(*[
+            agent.execute(t) for agent, t in response_tasks
+        ], return_exceptions=True)
+        
+        response_results = []
+        for (agent, t), result in zip(response_tasks, response_results_raw):
+            if isinstance(result, Exception):
+                result = AgentResult(
+                    task_id=t.task_id,
+                    agent_id=agent.agent_id,
+                    agent_role=agent.role.value,
+                    output="",
+                    quality_score=0.0,
+                    latency_ms=0.0,
+                    success=False,
+                    error=str(result)
+                )
+            response_results.append(result)
         
         results.extend(response_results)
         
