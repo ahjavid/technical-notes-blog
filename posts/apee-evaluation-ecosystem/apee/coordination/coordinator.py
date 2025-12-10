@@ -26,8 +26,8 @@ class Coordinator:
     def __init__(
         self, 
         agents: Sequence[Agent],
-        context_truncation_limit: int = 500,
-        output_truncation_limit: int = 1000
+        context_truncation_limit: int = 2048,
+        output_truncation_limit: int = 3072
     ):
         self.agents: dict[str, Agent] = {a.agent_id: a for a in agents}
         self.message_log: list[Message] = []

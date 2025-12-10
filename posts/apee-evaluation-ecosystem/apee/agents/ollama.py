@@ -176,7 +176,8 @@ class OllamaClient:
         prompt: str, 
         system: str = "",
         temperature: float = 0.7,
-        max_tokens: int = 500
+        max_tokens: int = 500,
+        num_ctx: int = 4096
     ) -> dict:
         """Generate a response from Ollama."""
         client = await self._get_client()
@@ -189,6 +190,7 @@ class OllamaClient:
             "options": {
                 "temperature": temperature,
                 "num_predict": max_tokens,
+                "num_ctx": num_ctx,
             }
         }
         
@@ -239,12 +241,14 @@ class OllamaAgent(Agent):
         model: str = DEFAULT_MODEL,
         base_url: str = OLLAMA_BASE_URL,
         temperature: float = 0.7,
-        max_tokens: int = 500,
+        max_tokens: int = 1024,
+        num_ctx: int = 4096,
         system_prompt: Optional[str] = None
     ):
         super().__init__(agent_id, role, system_prompt, model=model)
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.num_ctx = num_ctx
         self.client = OllamaClient(base_url=base_url, model=model)
     
     async def execute(self, task: Task) -> AgentResult:
@@ -260,7 +264,8 @@ class OllamaAgent(Agent):
                 prompt=prompt,
                 system=self.system_prompt,
                 temperature=self.temperature,
-                max_tokens=self.max_tokens
+                max_tokens=self.max_tokens,
+                num_ctx=self.num_ctx
             )
             
             latency_ms = (time.time() - start_time) * 1000
@@ -316,8 +321,8 @@ class OllamaAgent(Agent):
         if task.context:
             parts.append("\nContext:")
             for key, value in task.context.items():
-                if isinstance(value, str) and len(value) > 500:
-                    value = value[:500] + "..."
+                if isinstance(value, str) and len(value) > 2048:
+                    value = value[:2048] + "..."
                 parts.append(f"- {key}: {value}")
         
         # Include recent messages if available
@@ -325,7 +330,7 @@ class OllamaAgent(Agent):
         if recent_messages:
             parts.append("\nRelevant messages from other agents:")
             for msg in recent_messages:
-                parts.append(f"- [{msg.sender_id}]: {msg.content[:200]}")
+                parts.append(f"- [{msg.sender_id}]: {msg.content[:1024]}")
         
         parts.append("\nProvide your response:")
         return "\n".join(parts)

@@ -141,7 +141,10 @@ class BaseEvaluator(ABC):
                     "model": self.model,
                     "messages": messages,
                     "stream": False,
-                    "options": {"temperature": 0.1}  # Low temp for consistent evaluation
+                    "options": {
+                        "temperature": 0.1,  # Low temp for consistent evaluation
+                        "num_ctx": 8192,     # Large context for judge models
+                    }
                 }
             )
             response.raise_for_status()
@@ -190,7 +193,7 @@ Task Description: {trace.task_description}
 Expected Output: {trace.expected_output or "Not specified"}
 
 Agent's Final Output:
-{trace.final_output[:2000]}{"..." if len(trace.final_output) > 2000 else ""}
+{trace.final_output[:4096]}{"..." if len(trace.final_output) > 4096 else ""}
 
 Evaluate how well the agent's output aligns with the assigned task goal.
 """
@@ -258,7 +261,7 @@ Agent Role: {trace.agent_role}
 Task: {trace.task_description}
 
 Agent's Output:
-{trace.final_output[:2500]}{"..." if len(trace.final_output) > 2500 else ""}
+{trace.final_output[:4096]}{"..." if len(trace.final_output) > 4096 else ""}
 
 Evaluate the semantic quality and reasoning of this output.
 """
@@ -345,7 +348,7 @@ Messages Exchanged: {len(trace.coordination_messages)}
 Conflicts Detected: {len(trace.conflicts_detected)}
 
 Final Synthesized Output:
-{(trace.final_synthesized_output or "Not available")[:1500]}{"..." if trace.final_synthesized_output and len(trace.final_synthesized_output) > 1500 else ""}
+{(trace.final_synthesized_output or "Not available")[:4096]}{"..." if trace.final_synthesized_output and len(trace.final_synthesized_output) > 4096 else ""}
 
 Evaluate how effectively the agents collaborated on this task.
 """
@@ -389,7 +392,7 @@ class SynthesisQualityEvaluator(BaseEvaluator):
         individual_outputs = []
         for agent_trace in trace.agent_traces:
             individual_outputs.append(
-                f"[{agent_trace.agent_role}]:\n{agent_trace.final_output[:500]}..."
+                f"[{agent_trace.agent_role}]:\n{agent_trace.final_output[:2048]}..."
             )
         
         messages = [
@@ -427,7 +430,7 @@ Individual Agent Outputs (truncated):
 {chr(10).join(individual_outputs)}
 
 Final Synthesized Output:
-{(trace.final_synthesized_output or "Not available")[:2000]}
+{(trace.final_synthesized_output or "Not available")[:4096]}
 
 Evaluate how well the individual contributions were synthesized into the final output.
 """

@@ -217,7 +217,10 @@ class CalibrationLoop:
                     "model": model,
                     "messages": messages,
                     "stream": False,
-                    "options": {"temperature": 0.3}  # Moderate temp for creative but stable output
+                    "options": {
+                        "temperature": 0.3,  # Moderate temp for creative but stable output
+                        "num_ctx": 8192,     # Large context for judge models
+                    }
                 }
             )
             response.raise_for_status()
@@ -232,7 +235,10 @@ class CalibrationLoop:
                     "model": model,
                     "messages": messages,
                     "stream": False,
-                    "options": {"temperature": 0.3}
+                    "options": {
+                        "temperature": 0.3,
+                        "num_ctx": 8192,
+                    }
                 }
             )
             response.raise_for_status()
@@ -296,7 +302,7 @@ class CalibrationLoop:
             example_section = f"""
 
 Example Output to Consider:
-{example_output[:1000]}{"..." if len(example_output) > 1000 else ""}
+{example_output[:4096]}{"..." if len(example_output) > 4096 else ""}
 """
         
         for model in self.judge_models:
@@ -659,7 +665,10 @@ class JuryEvaluator:
                     "model": self.model,
                     "messages": messages,
                     "stream": False,
-                    "options": {"temperature": 0.2}  # Low temp for consistent evaluation
+                    "options": {
+                        "temperature": 0.2,  # Low temp for consistent evaluation
+                        "num_ctx": 8192,     # Large context for judge models
+                    }
                 }
             )
             response.raise_for_status()
@@ -737,11 +746,11 @@ Task: {trace.task_description}
 Expected Output: {trace.expected_output or "Not specified"}
 
 Agent's Output:
-{trace.final_output[:2000]}{"..." if len(trace.final_output) > 2000 else ""}
+{trace.final_output[:4096]}{"..." if len(trace.final_output) > 4096 else ""}
 """
         else:  # CollaborativeTrace
             agent_outputs = "\n".join([
-                f"- {at.agent_role}: {at.final_output[:300]}..."
+                f"- {at.agent_role}: {at.final_output[:1024]}..."
                 for at in trace.agent_traces
             ])
             trace_summary = f"""
@@ -753,7 +762,7 @@ Agent Outputs (truncated):
 {agent_outputs}
 
 Final Synthesized Output:
-{(trace.final_synthesized_output or "Not available")[:1500]}
+{(trace.final_synthesized_output or "Not available")[:4096]}
 """
         
         messages = [
@@ -1127,7 +1136,10 @@ class ProgressiveDeepening:
                     "model": self.model,
                     "messages": messages,
                     "stream": False,
-                    "options": {"temperature": 0.2}
+                    "options": {
+                        "temperature": 0.2,
+                        "num_ctx": 8192,
+                    }
                 }
             )
             response.raise_for_status()
