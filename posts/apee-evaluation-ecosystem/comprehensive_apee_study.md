@@ -355,13 +355,62 @@ Mean Score: 6.6/10
 5. **Hierarchical struggles**: 6.0/10 average - leader-worker delegation needs improvement
 6. **Score range 5.9-7.3**: Mean 6.6/10 across all 12 scenarios
 
+### 6.5 Advanced Evaluation Patterns (December 2025)
+
+APEE supports four evaluation modes, each implementing different evaluation patterns:
+
+| Mode | Pattern Type | Description |
+|------|-------------|-------------|
+| **Basic** | Standard | Direct LLM-as-a-Judge with ensemble median aggregation |
+| **Progressive** | Sequential | 4 depth levels (SURFACE → TECHNICAL → COLLABORATIVE → COMPREHENSIVE) with fail-fast |
+| **Jury** | Independent | 4 personas (SKEPTIC, LITERALIST, OPTIMIST, PRAGMATIST) with weighted voting |
+| **Calibrated** | Combined | Calibration loop + jury - judges negotiate rubric before scoring |
+
+#### 6.5.1 Mode Comparison Results
+
+| Mode | Avg Score | Min | Max | Std Dev | Characteristics |
+|------|-----------|-----|-----|---------|-----------------|
+| Basic | 6.55 | 5.9 | 7.3 | 0.48 | Fastest, baseline reference |
+| Progressive | 6.55 | 5.9 | 7.2 | 0.43 | Similar scores, early-exit efficiency |
+| Jury | 6.29 | 5.1 | 7.1 | 0.62 | More critical, higher variance |
+| Calibrated | 6.25 | 5.5 | 6.8 | 0.42 | Most conservative, narrower range |
+
+#### 6.5.2 Per-Scenario Mode Comparison
+
+| Scenario | Basic | Progressive | Jury | Calibrated |
+|----------|-------|-------------|------|------------|
+| collab_code_review | 6.2 | 6.2 | 6.4 | 6.5 |
+| research_synthesis | 7.3 | 6.8 | 7.1 | 6.8 |
+| constrained_problem | 7.1 | 5.9 | 6.1 | 5.5 |
+| emergent_behavior | 6.8 | 6.0 | 6.7 | 6.0 |
+| scalability_test | 6.0 | 6.4 | 6.2 | 5.8 |
+| conflict_resolution | 6.3 | 6.6 | 5.1 | 6.2 |
+| knowledge_transfer | 6.2 | 7.1 | 5.2 | 6.7 |
+| error_recovery | 5.9 | 6.2 | 6.5 | 6.3 |
+| creative_collab | 7.1 | 6.9 | 6.8 | 6.6 |
+| realtime_collab | 7.1 | 7.1 | 6.9 | 6.2 |
+| adversarial_review | 6.6 | 7.2 | 6.6 | 6.7 |
+| doc_sprint | 6.1 | 6.1 | 5.8 | 5.8 |
+
+#### 6.5.3 Mode Selection Guidelines
+
+1. **Basic**: Use for quick assessments and establishing baseline scores
+2. **Progressive**: Use for large-scale screening where fail-fast saves compute
+3. **Jury**: Use for subjective evaluations requiring multiple perspectives
+4. **Calibrated**: Use for novel tasks with ambiguous requirements
+
 ---
 
 ## 7. Discussion
 
 ### 7.1 Implications for Practitioners
 
-*To be developed based on experimental results...*
+The evaluation mode comparison reveals important patterns:
+
+1. **Basic and Progressive yield similar results**: Progressive mode's fail-fast mechanism doesn't significantly impact final scores but improves efficiency
+2. **Jury mode is more critical**: The 4-persona approach (Skeptic, Literalist, Optimist, Pragmatist) produces lower average scores with higher variance
+3. **Calibrated mode is most conservative**: The calibration loop narrows the score range, producing more consistent but lower scores
+4. **Mode disagreement highlights uncertainty**: Scenarios where modes disagree (e.g., constrained_problem: 7.1 basic vs 5.5 calibrated) indicate evaluation uncertainty
 
 ### 7.2 Limitations
 

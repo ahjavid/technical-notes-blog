@@ -142,9 +142,33 @@ pip install -e ".[dev]"
 ### Run the LLM-as-a-Judge Evaluation
 
 ```bash
-# Run proper APEE evaluation with ensemble judges
+# Run basic evaluation (default)
 python examples/proper_apee_evaluation.py
+
+# Run with advanced evaluation patterns
+python examples/proper_apee_evaluation.py --mode progressive  # Fail-fast with 4 depth levels
+python examples/proper_apee_evaluation.py --mode jury         # 4 persona judges (Skeptic, Literalist, Optimist, Pragmatist)
+python examples/proper_apee_evaluation.py --mode calibrated   # Calibration + jury combined
+python examples/proper_apee_evaluation.py --mode all          # Run all modes sequentially
 ```
+
+### Advanced Evaluation Modes
+
+| Mode | Pattern | Description | Best For |
+|------|---------|-------------|----------|
+| `basic` | Standard | Direct LLM-as-a-Judge evaluation | Quick assessment |
+| `progressive` | Sequential | 4 depth levels with fail-fast | Large-scale screening |
+| `jury` | Independent | 4 personas with distinct lenses | Subjective evaluations |
+| `calibrated` | Combined | Calibration loop + jury | Novel tasks, ambiguous requirements |
+
+### Evaluation Mode Comparison (December 2025)
+
+| Mode | Avg Score | Min | Max | Characteristics |
+|------|-----------|-----|-----|-----------------|
+| Basic | 6.55 | 5.9 | 7.3 | Fastest, baseline scores |
+| Progressive | 6.55 | 5.9 | 7.2 | Similar to basic, fail-fast efficiency |
+| Jury | 6.29 | 5.1 | 7.1 | More critical, persona diversity |
+| Calibrated | 6.25 | 5.5 | 6.8 | Most conservative, narrower range |
 
 ### Basic Usage
 
