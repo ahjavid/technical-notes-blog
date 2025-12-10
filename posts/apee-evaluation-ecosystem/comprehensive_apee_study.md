@@ -318,86 +318,148 @@ Overall = (L1_avg × 0.30) + (L2_avg × 0.45) + (L3_avg × 0.25)
 | Judge 1 | gpt-oss:20b | 20B | GPT-OSS |
 | Judge 2 | mistral-small3.2:24b | 24B | Mistral |
 
-### 6.2 Multi-Agent Collaboration Results (December 9, 2025)
+### 6.2 Basic Mode Results (December 9, 2025)
 
-| Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
-|----------|---------|---------------|------------------|--------------|----------|
-| research_synthesis | sequential | 6.2/10 | 6.8/10 | 8.6/10 | **7.3/10** |
-| constrained_problem | debate | 5.8/10 | 6.5/10 | 8.6/10 | **7.1/10** |
-| creative_collab | debate | 5.0/10 | 6.8/10 | 8.6/10 | **7.1/10** |
-| realtime_collab | parallel | 6.3/10 | 6.0/10 | 9.0/10 | **7.1/10** |
-| emergent_behavior | parallel | 7.0/10 | 5.2/10 | 8.8/10 | **6.8/10** |
-| adversarial_review | debate | 5.3/10 | 5.8/10 | 7.9/10 | **6.6/10** |
-| conflict_resolution | consensus | 6.5/10 | 4.8/10 | 8.0/10 | **6.3/10** |
-| collab_code_review | peer_review | 4.8/10 | 5.5/10 | 7.6/10 | **6.2/10** |
-| knowledge_transfer | sequential | 6.2/10 | 5.0/10 | 8.2/10 | **6.2/10** |
-| doc_sprint | peer_review | 5.3/10 | 5.2/10 | 7.7/10 | **6.1/10** |
-| scalability_test | hierarchical | 5.8/10 | 4.5/10 | 8.0/10 | **6.0/10** |
-| error_recovery | hierarchical | 4.2/10 | 5.0/10 | 8.0/10 | **5.9/10** |
+Standard LLM-as-a-Judge evaluation with ensemble median aggregation.
 
-### 6.3 Ensemble Judge Agreement
+| Scenario | Pattern | L1 | L2 | L3 | Overall |
+|----------|---------|-----|-----|-----|---------|
+| research_synthesis | sequential | 6.2 | 6.8 | 8.6 | **7.3** |
+| constrained_problem | debate | 5.8 | 6.5 | 8.6 | **7.1** |
+| creative_collab | debate | 5.0 | 6.8 | 8.6 | **7.1** |
+| realtime_collab | parallel | 6.3 | 6.0 | 9.0 | **7.1** |
+| emergent_behavior | parallel | 7.0 | 5.2 | 8.8 | **6.8** |
+| adversarial_review | debate | 5.3 | 5.8 | 7.9 | **6.6** |
+| conflict_resolution | consensus | 6.5 | 4.8 | 8.0 | **6.3** |
+| collab_code_review | peer_review | 4.8 | 5.5 | 7.6 | **6.2** |
+| knowledge_transfer | sequential | 6.2 | 5.0 | 8.2 | **6.2** |
+| doc_sprint | peer_review | 5.3 | 5.2 | 7.7 | **6.1** |
+| scalability_test | hierarchical | 5.8 | 4.5 | 8.0 | **6.0** |
+| error_recovery | hierarchical | 4.2 | 5.0 | 8.0 | **5.9** |
+
+**Summary:** Avg=6.55, Min=5.9, Max=7.3, L1=5.7, L2=5.6, L3=8.3
+
+### 6.3 Progressive Mode Results
+
+Sequential evaluation with 4 depth levels (SURFACE → TECHNICAL → COLLABORATIVE → COMPREHENSIVE) with fail-fast.
+
+| Scenario | Pattern | L1 | L2 | L3 | Overall |
+|----------|---------|-----|-----|-----|---------|
+| adversarial_review | debate | 7.0 | 6.2 | 8.4 | **7.2** |
+| knowledge_transfer | sequential | 5.8 | 6.8 | 8.5 | **7.1** |
+| realtime_collab | parallel | 5.8 | 6.2 | 9.1 | **7.1** |
+| creative_collab | debate | 4.8 | 6.8 | 7.9 | **6.9** |
+| research_synthesis | sequential | 6.7 | 5.8 | 8.3 | **6.8** |
+| conflict_resolution | consensus | 6.3 | 5.5 | 8.3 | **6.6** |
+| scalability_test | hierarchical | 5.9 | 5.2 | 8.2 | **6.4** |
+| error_recovery | hierarchical | 5.3 | 5.2 | 8.2 | **6.2** |
+| collab_code_review | peer_review | 4.8 | 5.2 | 7.5 | **6.2** |
+| doc_sprint | peer_review | 5.7 | 5.0 | 7.4 | **6.1** |
+| emergent_behavior | parallel | 6.3 | 4.0 | 8.5 | **6.0** |
+| constrained_problem | debate | 5.8 | 4.2 | 7.9 | **5.9** |
+
+**Summary:** Avg=6.55, Min=5.9, Max=7.2, L1=5.9, L2=5.5, L3=8.2
+
+### 6.4 Jury Mode Results
+
+4 persona judges (SKEPTIC, LITERALIST, OPTIMIST, PRAGMATIST) with weighted voting.
+
+| Scenario | Pattern | L1 | L2 | L3 | Overall |
+|----------|---------|-----|-----|-----|---------|
+| research_synthesis | sequential | 7.3 | 6.0 | 8.4 | **7.1** |
+| realtime_collab | parallel | 5.8 | 5.8 | 8.8 | **6.9** |
+| creative_collab | debate | 4.5 | 6.8 | 7.9 | **6.8** |
+| emergent_behavior | parallel | 5.2 | 5.8 | 8.9 | **6.7** |
+| adversarial_review | debate | 6.8 | 5.5 | 7.5 | **6.6** |
+| error_recovery | hierarchical | 4.3 | 6.0 | 8.6 | **6.5** |
+| collab_code_review | peer_review | 5.8 | 5.8 | 7.1 | **6.4** |
+| scalability_test | hierarchical | 6.3 | 4.8 | 8.1 | **6.2** |
+| constrained_problem | debate | 5.2 | 5.2 | 7.5 | **6.1** |
+| doc_sprint | peer_review | 5.0 | 5.0 | 7.0 | **5.8** |
+| knowledge_transfer | sequential | 6.0 | 3.0 | 7.5 | **5.2** |
+| conflict_resolution | consensus | 5.5 | 3.2 | 7.0 | **5.1** |
+
+**Summary:** Avg=6.29, Min=5.1, Max=7.1, L1=5.7, L2=5.2, L3=7.9
+
+### 6.5 Calibrated Mode Results
+
+Calibration loop + jury combined - judges negotiate rubric before scoring.
+
+| Scenario | Pattern | L1 | L2 | L3 | Overall |
+|----------|---------|-----|-----|-----|---------|
+| research_synthesis | sequential | 6.8 | 5.5 | 8.2 | **6.8** |
+| knowledge_transfer | sequential | 6.7 | 5.8 | 8.2 | **6.7** |
+| adversarial_review | debate | 6.2 | 6.0 | 7.6 | **6.7** |
+| creative_collab | debate | 5.7 | 6.0 | 7.8 | **6.6** |
+| collab_code_review | peer_review | 7.2 | 5.3 | 7.2 | **6.5** |
+| error_recovery | hierarchical | 6.0 | 5.0 | 8.1 | **6.3** |
+| conflict_resolution | consensus | 6.8 | 4.8 | 7.4 | **6.2** |
+| realtime_collab | parallel | 4.5 | 5.0 | 8.5 | **6.2** |
+| emergent_behavior | parallel | 5.5 | 4.2 | 8.6 | **6.0** |
+| scalability_test | hierarchical | 4.5 | 4.8 | 8.0 | **5.8** |
+| doc_sprint | peer_review | 4.3 | 5.0 | 7.0 | **5.8** |
+| constrained_problem | debate | 5.0 | 4.0 | 7.2 | **5.5** |
+
+**Summary:** Avg=6.25, Min=5.5, Max=6.8, L1=5.8, L2=5.1, L3=7.8
+
+### 6.6 Ensemble Judge Agreement
 
 ```
 Judge Models: gpt-oss:20b, mistral-small3.2:24b
 Aggregation: median
 
-Evaluation: 12 scenarios × 6 patterns = comprehensive coverage
-Score Range: 5.9 - 7.3 (meaningful differentiation)
-Mean Score: 6.6/10
+Evaluation: 12 scenarios × 4 modes = 48 evaluations
+Basic Score Range: 5.9 - 7.3
+All Modes Score Range: 5.1 - 7.3
 ```
 
-### 6.4 Key Observations
+### 6.7 Cross-Mode Analysis
 
-1. **Research synthesis leads**: 7.3/10 overall - sequential pattern excels at structured analysis
-2. **Debate and parallel tie for second**: 7.1/10 - constrained_problem, creative_collab, and realtime_collab
-3. **L2 Collaborative is the bottleneck**: Average 5.6/10 vs L1 (5.7/10) and L3 (8.3/10)
-4. **L3 Ecosystem strongest**: All scenarios score 7.6-9.0/10 - system-level metrics consistently high
-5. **Hierarchical struggles**: 6.0/10 average - leader-worker delegation needs improvement
-6. **Score range 5.9-7.3**: Mean 6.6/10 across all 12 scenarios
+#### Mode Comparison Summary
 
-### 6.5 Advanced Evaluation Patterns (December 2025)
+| Mode | Avg | Min | Max | L1 Avg | L2 Avg | L3 Avg |
+|------|-----|-----|-----|--------|--------|--------|
+| Basic | 6.55 | 5.9 | 7.3 | 5.7 | 5.6 | 8.3 |
+| Progressive | 6.55 | 5.9 | 7.2 | 5.9 | 5.5 | 8.2 |
+| Jury | 6.29 | 5.1 | 7.1 | 5.7 | 5.2 | 7.9 |
+| Calibrated | 6.25 | 5.5 | 6.8 | 5.8 | 5.1 | 7.8 |
+
+#### High-Variance Scenarios (Modes Disagree)
+
+| Scenario | Basic | Progressive | Jury | Calibrated | Range |
+|----------|-------|-------------|------|------------|-------|
+| knowledge_transfer | 6.2 | **7.1** | 5.2 | 6.7 | 1.9 |
+| constrained_problem | **7.1** | 5.9 | 6.1 | 5.5 | 1.6 |
+| conflict_resolution | 6.3 | 6.6 | **5.1** | 6.2 | 1.5 |
+
+#### Low-Variance Scenarios (Modes Agree)
+
+| Scenario | Basic | Progressive | Jury | Calibrated | Range |
+|----------|-------|-------------|------|------------|-------|
+| collab_code_review | 6.2 | 6.2 | 6.4 | 6.5 | 0.3 |
+| doc_sprint | 6.1 | 6.1 | 5.8 | 5.8 | 0.3 |
+| scalability_test | 6.0 | 6.4 | 6.2 | 5.8 | 0.6 |
+
+### 6.8 Key Observations
+
+1. **Research synthesis consistently strong**: 6.8-7.3 across all modes - sequential pattern reliable
+2. **Mode selection matters**: Up to 1.9 point difference between modes for same scenario
+3. **L2 Collaborative is the universal bottleneck**: 5.1-5.6 avg across all modes
+4. **L3 Ecosystem most stable**: 7.8-8.3 avg across modes
+5. **Jury mode most critical**: Lowest average (6.29), identifies weaknesses
+6. **Calibrated mode most conservative**: Narrowest range (5.5-6.8), consistent scoring
+7. **High-variance scenarios need multiple modes**: knowledge_transfer, conflict_resolution, constrained_problem
+
+### 6.9 Advanced Evaluation Patterns
 
 APEE supports four evaluation modes, each implementing different evaluation patterns:
 
-| Mode | Pattern Type | Description |
-|------|-------------|-------------|
-| **Basic** | Standard | Direct LLM-as-a-Judge with ensemble median aggregation |
-| **Progressive** | Sequential | 4 depth levels (SURFACE → TECHNICAL → COLLABORATIVE → COMPREHENSIVE) with fail-fast |
-| **Jury** | Independent | 4 personas (SKEPTIC, LITERALIST, OPTIMIST, PRAGMATIST) with weighted voting |
-| **Calibrated** | Combined | Calibration loop + jury - judges negotiate rubric before scoring |
-
-#### 6.5.1 Mode Comparison Results
-
-| Mode | Avg Score | Min | Max | Std Dev | Characteristics |
-|------|-----------|-----|-----|---------|-----------------|
-| Basic | 6.55 | 5.9 | 7.3 | 0.48 | Fastest, baseline reference |
-| Progressive | 6.55 | 5.9 | 7.2 | 0.43 | Similar scores, early-exit efficiency |
-| Jury | 6.29 | 5.1 | 7.1 | 0.62 | More critical, higher variance |
-| Calibrated | 6.25 | 5.5 | 6.8 | 0.42 | Most conservative, narrower range |
-
-#### 6.5.2 Per-Scenario Mode Comparison
-
-| Scenario | Basic | Progressive | Jury | Calibrated |
-|----------|-------|-------------|------|------------|
-| collab_code_review | 6.2 | 6.2 | 6.4 | 6.5 |
-| research_synthesis | 7.3 | 6.8 | 7.1 | 6.8 |
-| constrained_problem | 7.1 | 5.9 | 6.1 | 5.5 |
-| emergent_behavior | 6.8 | 6.0 | 6.7 | 6.0 |
-| scalability_test | 6.0 | 6.4 | 6.2 | 5.8 |
-| conflict_resolution | 6.3 | 6.6 | 5.1 | 6.2 |
-| knowledge_transfer | 6.2 | 7.1 | 5.2 | 6.7 |
-| error_recovery | 5.9 | 6.2 | 6.5 | 6.3 |
-| creative_collab | 7.1 | 6.9 | 6.8 | 6.6 |
-| realtime_collab | 7.1 | 7.1 | 6.9 | 6.2 |
-| adversarial_review | 6.6 | 7.2 | 6.6 | 6.7 |
-| doc_sprint | 6.1 | 6.1 | 5.8 | 5.8 |
-
-#### 6.5.3 Mode Selection Guidelines
-
-1. **Basic**: Use for quick assessments and establishing baseline scores
-2. **Progressive**: Use for large-scale screening where fail-fast saves compute
-3. **Jury**: Use for subjective evaluations requiring multiple perspectives
-4. **Calibrated**: Use for novel tasks with ambiguous requirements
+| Mode | Pattern Type | Description | Best For |
+|------|-------------|-------------|----------|
+| **Basic** | Standard | Direct LLM-as-a-Judge with ensemble median | Quick assessments |
+| **Progressive** | Sequential | 4 depth levels with fail-fast | Large-scale screening |
+| **Jury** | Independent | 4 personas with weighted voting | Subjective evaluations |
+| **Calibrated** | Combined | Calibration loop + jury | Novel/ambiguous tasks |
 
 ---
 

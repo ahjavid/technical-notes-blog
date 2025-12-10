@@ -744,6 +744,130 @@
             </p>
         </div>
 
+        <h3 id="advanced-modes"><i class="fas fa-layer-group"></i> Advanced Evaluation Modes</h3>
+        
+        <div class="card-grid" style="margin-bottom: 30px;">
+            <div class="card" style="border-left: 4px solid #3498db;">
+                <h4>🔵 Progressive Mode</h4>
+                <p><strong>Avg: 6.55</strong> | Range: 5.9-7.2</p>
+                <p style="font-size: 0.85em;">4 depth levels with fail-fast. Top: Adversarial Review (7.2)</p>
+            </div>
+            <div class="card" style="border-left: 4px solid #f1c40f;">
+                <h4>🟡 Jury Mode</h4>
+                <p><strong>Avg: 6.29</strong> | Range: 5.1-7.1</p>
+                <p style="font-size: 0.85em;">4 personas (Skeptic, Literalist, Optimist, Pragmatist). Most critical.</p>
+            </div>
+            <div class="card" style="border-left: 4px solid #e74c3c;">
+                <h4>🔴 Calibrated Mode</h4>
+                <p><strong>Avg: 6.25</strong> | Range: 5.5-6.8</p>
+                <p style="font-size: 0.85em;">Calibration + jury. Most conservative, narrowest range.</p>
+            </div>
+        </div>
+
+        <div class="performance-section">
+            <h4><i class="fas fa-exchange-alt"></i> Cross-Mode Comparison</h4>
+            <table class="performance-table">
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Basic</th>
+                        <th>Progressive</th>
+                        <th>Jury</th>
+                        <th>Calibrated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Research Synthesis</td>
+                        <td class="score-high">7.3</td>
+                        <td class="score-medium">6.8</td>
+                        <td class="score-high">7.1</td>
+                        <td class="score-medium">6.8</td>
+                    </tr>
+                    <tr>
+                        <td>Adversarial Review</td>
+                        <td class="score-medium">6.6</td>
+                        <td class="score-high">7.2</td>
+                        <td class="score-medium">6.6</td>
+                        <td class="score-medium">6.7</td>
+                    </tr>
+                    <tr>
+                        <td>Knowledge Transfer</td>
+                        <td class="score-medium">6.2</td>
+                        <td class="score-high">7.1</td>
+                        <td class="score-low">5.2</td>
+                        <td class="score-medium">6.7</td>
+                    </tr>
+                    <tr>
+                        <td>Constrained Problem</td>
+                        <td class="score-high">7.1</td>
+                        <td class="score-low">5.9</td>
+                        <td class="score-medium">6.1</td>
+                        <td class="score-low">5.5</td>
+                    </tr>
+                    <tr>
+                        <td>Conflict Resolution</td>
+                        <td class="score-medium">6.3</td>
+                        <td class="score-medium">6.6</td>
+                        <td class="score-low">5.1</td>
+                        <td class="score-medium">6.2</td>
+                    </tr>
+                    <tr>
+                        <td>Realtime Collab</td>
+                        <td class="score-high">7.1</td>
+                        <td class="score-high">7.1</td>
+                        <td class="score-medium">6.9</td>
+                        <td class="score-medium">6.2</td>
+                    </tr>
+                    <tr>
+                        <td>Creative Collab</td>
+                        <td class="score-high">7.1</td>
+                        <td class="score-medium">6.9</td>
+                        <td class="score-medium">6.8</td>
+                        <td class="score-medium">6.6</td>
+                    </tr>
+                    <tr>
+                        <td>Emergent Behavior</td>
+                        <td class="score-medium">6.8</td>
+                        <td class="score-medium">6.0</td>
+                        <td class="score-medium">6.7</td>
+                        <td class="score-medium">6.0</td>
+                    </tr>
+                    <tr>
+                        <td>Error Recovery</td>
+                        <td class="score-low">5.9</td>
+                        <td class="score-medium">6.2</td>
+                        <td class="score-medium">6.5</td>
+                        <td class="score-medium">6.3</td>
+                    </tr>
+                    <tr>
+                        <td>Collab Code Review</td>
+                        <td class="score-medium">6.2</td>
+                        <td class="score-medium">6.2</td>
+                        <td class="score-medium">6.4</td>
+                        <td class="score-medium">6.5</td>
+                    </tr>
+                    <tr>
+                        <td>Scalability Test</td>
+                        <td class="score-medium">6.0</td>
+                        <td class="score-medium">6.4</td>
+                        <td class="score-medium">6.2</td>
+                        <td class="score-low">5.8</td>
+                    </tr>
+                    <tr>
+                        <td>Doc Sprint</td>
+                        <td class="score-medium">6.1</td>
+                        <td class="score-medium">6.1</td>
+                        <td class="score-low">5.8</td>
+                        <td class="score-low">5.8</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="text-align: center; color: #7f8c8d; font-size: 0.9em; margin-top: 15px;">
+                <strong>High-Variance:</strong> knowledge_transfer (1.9), constrained_problem (1.6), conflict_resolution (1.5)
+            </p>
+        </div>
+
         <h2 id="architecture"><i class="fas fa-sitemap"></i> Architecture</h2>
         
         <div class="architecture-box">
