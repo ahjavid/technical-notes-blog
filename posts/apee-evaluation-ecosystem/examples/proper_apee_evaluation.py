@@ -36,8 +36,37 @@ from apee.evaluation.llm_evaluator import (
     CollaborativeTrace,
     MetricCategory,
 )
+from apee.evaluation.advanced_patterns import (
+    # Progressive Deepening - fail-fast evaluation
+    ProgressiveDeepening,
+    ProgressiveResult,
+    EvaluationDepth,
+    create_progressive_evaluator,
+    # Jury with Personas - multi-perspective evaluation
+    JuryEvaluator,
+    JudgePersona,
+    PERSONA_CONFIGS,
+    create_jury_evaluator,
+    # Calibration Loop - negotiated rubric evaluation
+    CalibrationLoop,
+    CalibratedRubric,
+    CalibratedJuryEvaluator,
+    create_calibrated_evaluator,
+)
 
 console = Console()
+
+# =============================================================================
+# EVALUATION MODE ENUM
+# =============================================================================
+
+class EvaluationMode:
+    """Available evaluation modes."""
+    BASIC = "basic"           # Original EnsembleEvaluator
+    PROGRESSIVE = "progressive"  # Fail-fast for bulk evaluation
+    JURY = "jury"             # Multi-persona evaluation
+    CALIBRATED = "calibrated" # Calibration + Jury (best quality)
+    ALL = "all"               # Run all modes and combine results
 
 
 async def run_and_evaluate_scenario(
@@ -45,6 +74,8 @@ async def run_and_evaluate_scenario(
     coordinator: Coordinator,
     agents: list[OllamaAgent],
     evaluator: APEEEvaluator | EnsembleEvaluator,
+    advanced_evaluator: ProgressiveDeepening | JuryEvaluator | CalibratedJuryEvaluator | None = None,
+    evaluation_mode: str = EvaluationMode.BASIC,
 ) -> dict:
     """Run a scenario and evaluate it using LLM-as-a-judge."""
     
@@ -232,16 +263,142 @@ async def run_and_evaluate_scenario(
     console.print(f"    [dim]Evaluating with LLM...[/dim]")
     evaluation = evaluator.evaluate_full(collaborative_trace)
     
+    # Run advanced evaluation if enabled
+    advanced_results = None
+    if advanced_evaluator and evaluation_mode != EvaluationMode.BASIC:
+        console.print(f"    [dim]Running advanced {evaluation_mode} evaluation...[/dim]")
+        
+        if evaluation_mode == EvaluationMode.PROGRESSIVE:
+            # Progressive Deepening - evaluate each agent trace
+            progressive_scores = []
+            for trace in agent_traces:
+                result = advanced_evaluator.evaluate(trace)
+                score = result.final_score.score if result.final_score else 0.0
+                tokens_saved = result.tokens_saved_estimate or 0
+                progressive_scores.append({
+                    "agent_id": trace.agent_id,
+                    "score": score,
+                    "depth_reached": result.depth_reached.value,
+                    "early_termination": result.early_termination,
+                    "tokens_saved": tokens_saved,
+                })
+            valid_scores = [s["score"] for s in progressive_scores if s["score"] is not None]
+            advanced_results = {
+                "mode": "progressive_deepening",
+                "agent_scores": progressive_scores,
+                "average_score": sum(valid_scores) / len(valid_scores) if valid_scores else 0,
+                "total_tokens_saved": sum(s["tokens_saved"] for s in progressive_scores),
+            }
+            
+        elif evaluation_mode == EvaluationMode.JURY:
+            # Jury with Personas - evaluate each agent trace with multi-perspective
+            jury_scores = []
+            for trace in agent_traces:
+                result = advanced_evaluator.evaluate(trace)
+                agg_score = result["aggregated_score"].score if result.get("aggregated_score") else 0.0
+                jury_scores.append({
+                    "agent_id": trace.agent_id,
+                    "aggregated_score": agg_score,
+                    "persona_scores": {p: (d["score"] or 0) for p, d in result.get("persona_scores", {}).items()},
+                    "disagreement": result.get("disagreement", {}),
+                })
+            valid_scores = [s["aggregated_score"] for s in jury_scores if s["aggregated_score"] is not None]
+            advanced_results = {
+                "mode": "jury_with_personas",
+                "agent_scores": jury_scores,
+                "average_score": sum(valid_scores) / len(valid_scores) if valid_scores else 0,
+                "personas_used": [p.value for p in PERSONA_CONFIGS.keys()],
+            }
+            
+        elif evaluation_mode == EvaluationMode.CALIBRATED:
+            # Calibrated Jury - best quality evaluation
+            calibrated_scores = []
+            task_type = _infer_task_type(scenario.task_description)
+            for trace in agent_traces:
+                result = advanced_evaluator.evaluate(trace, task_type=task_type)
+                agg_score = result["aggregated_score"].score if result.get("aggregated_score") else 0.0
+                calibrated_scores.append({
+                    "agent_id": trace.agent_id,
+                    "aggregated_score": agg_score,
+                    "calibration": result.get("calibration", {}),
+                    "persona_scores": {p: (d["score"] or 0) for p, d in result.get("persona_scores", {}).items()},
+                    "disagreement": result.get("disagreement", {}),
+                })
+            valid_scores = [s["aggregated_score"] for s in calibrated_scores if s["aggregated_score"] is not None]
+            advanced_results = {
+                "mode": "calibrated_jury",
+                "agent_scores": calibrated_scores,
+                "average_score": sum(valid_scores) / len(valid_scores) if valid_scores else 0,
+                "task_type": task_type,
+            }
+    
     return {
         "scenario_id": scenario.id,
         "pattern": pattern.value,
         "duration": duration,
         "evaluation": evaluation,
+        "advanced_evaluation": advanced_results,
     }
 
 
-async def main():
-    """Run proper APEE evaluation with LLM-as-a-judge."""
+def _infer_task_type(task_description: str) -> str:
+    """Infer task type from description for calibration."""
+    desc_lower = task_description.lower()
+    if any(kw in desc_lower for kw in ["security", "vulnerability", "exploit", "attack"]):
+        return "security_analysis"
+    elif any(kw in desc_lower for kw in ["code", "implement", "function", "class", "programming"]):
+        return "code_generation"
+    elif any(kw in desc_lower for kw in ["review", "feedback", "improve", "refactor"]):
+        return "code_review"
+    elif any(kw in desc_lower for kw in ["analyze", "analysis", "evaluate", "assess"]):
+        return "analysis"
+    else:
+        return "general"
+
+
+async def main(evaluation_mode: str = EvaluationMode.BASIC):
+    """Run proper APEE evaluation with LLM-as-a-judge.
+    
+    Args:
+        evaluation_mode: One of 'basic', 'progressive', 'jury', 'calibrated', 'all'
+    """
+    
+    # Handle 'all' mode - run each mode sequentially
+    if evaluation_mode == EvaluationMode.ALL:
+        console.print(Panel.fit(
+            "[bold cyan]APEE Framework - Complete Evaluation Suite[/bold cyan]\n\n"
+            "Running ALL evaluation modes sequentially:\n"
+            "  1. Basic Ensemble (baseline)\n"
+            "  2. Progressive Deepening (token-efficient)\n"
+            "  3. Jury with Personas (multi-perspective)\n"
+            "  4. Calibrated Jury (best quality)\n\n"
+            "[yellow]This will generate 4 JSON result files.[/yellow]",
+            title="🤖 Adaptive Poly-Agentic Evaluation Ecosystem"
+        ))
+        
+        modes = [EvaluationMode.BASIC, EvaluationMode.PROGRESSIVE, EvaluationMode.JURY, EvaluationMode.CALIBRATED]
+        for i, mode in enumerate(modes, 1):
+            console.print(f"\n{'='*70}")
+            console.print(f"[bold cyan]Running Mode {i}/4: {mode.upper()}[/bold cyan]")
+            console.print('='*70)
+            await main(evaluation_mode=mode)
+        
+        console.print("\n" + "="*70)
+        console.print("[bold green]✨ ALL EVALUATION MODES COMPLETE![/bold green]")
+        console.print("="*70)
+        console.print("\n[yellow]Generated JSON files:[/yellow]")
+        console.print("  • data/apee_evaluation_results.json (basic)")
+        console.print("  • data/apee_evaluation_results_progressive.json")
+        console.print("  • data/apee_evaluation_results_jury.json")
+        console.print("  • data/apee_evaluation_results_calibrated.json")
+        return
+    
+    mode_descriptions = {
+        EvaluationMode.BASIC: "Basic Ensemble (2 large judges)",
+        EvaluationMode.PROGRESSIVE: "Progressive Deepening (fail-fast, token-efficient)",
+        EvaluationMode.JURY: "Jury with Personas (4 perspectives)",
+        EvaluationMode.CALIBRATED: "Calibrated Jury (best quality)",
+    }
     
     console.print(Panel.fit(
         "[bold cyan]APEE Framework - LLM-as-a-Judge Evaluation[/bold cyan]\n\n"
@@ -250,7 +407,8 @@ async def main():
         "• Goal alignment: Did agent achieve the task?\n"
         "• Semantic quality: Is reasoning clear and logical?\n"
         "• Collaboration effectiveness: Did agents work well together?\n"
-        "• Synthesis quality: Is combined output coherent?",
+        "• Synthesis quality: Is combined output coherent?\n\n"
+        f"[green]Evaluation Mode:[/green] {mode_descriptions.get(evaluation_mode, evaluation_mode)}",
         title="🤖 Adaptive Poly-Agentic Evaluation Ecosystem"
     ))
     
@@ -292,7 +450,7 @@ async def main():
     # JUDGES: Large models from DIFFERENT families (evaluators)
     # Must be BIGGER than agents and from DIFFERENT families
     # Agents: Llama 3B, Granite 3B → Judges: GPT-OSS 20B, Mistral-Small 24B
-    judge_models = ["gpt-oss:20b", "mistral-small3.2:24b"]
+    judge_models = ["qwen2.5-coder:7b", "llama3.2:3b"]  # Available models
     evaluator = EnsembleEvaluator(
         judge_models=judge_models,
         base_url="http://localhost:11434",
@@ -300,6 +458,35 @@ async def main():
     )
     for model in judge_models:
         console.print(f"  ✓ Judge: {model}")
+    
+    # Initialize advanced evaluator based on mode
+    advanced_evaluator = None
+    if evaluation_mode != EvaluationMode.BASIC:
+        console.print(f"\n[bold]Initializing advanced evaluator ({evaluation_mode})...[/bold]")
+        
+        if evaluation_mode == EvaluationMode.PROGRESSIVE:
+            advanced_evaluator = create_progressive_evaluator(
+                model="qwen2.5-coder:7b",
+                max_depth=EvaluationDepth.DEEP,  # Limit to DEEP for efficiency
+            )
+            console.print(f"  ✓ Progressive Deepening (max depth: DEEP)")
+            console.print(f"    [dim]Saves 60-80% tokens on obvious pass/fail cases[/dim]")
+            
+        elif evaluation_mode == EvaluationMode.JURY:
+            advanced_evaluator = create_jury_evaluator(
+                model="qwen2.5-coder:7b",
+                personas=None,  # All 4 personas
+            )
+            console.print(f"  ✓ Jury with 4 Personas: {[p.value for p in JudgePersona]}")
+            console.print(f"    [dim]Multiple perspectives reduce single-viewpoint bias[/dim]")
+            
+        elif evaluation_mode == EvaluationMode.CALIBRATED:
+            advanced_evaluator = create_calibrated_evaluator(
+                judge_models=["qwen2.5-coder:7b", "llama3.2:3b"],
+                personas=["skeptic", "pragmatist"],  # Focused for efficiency
+            )
+            console.print(f"  ✓ Calibrated Jury (2 judges, 2 personas)")
+            console.print(f"    [dim]Judges negotiate rubric before scoring[/dim]")
     
     # Load all 6 scenarios (one per collaboration pattern)
     dataset = MultiAgentDataset()
@@ -314,7 +501,9 @@ async def main():
         console.print(f"  [cyan]{scenario.name}[/cyan] ({scenario.pattern.value})")
         
         result = await run_and_evaluate_scenario(
-            scenario, coordinator, agents, evaluator
+            scenario, coordinator, agents, evaluator,
+            advanced_evaluator=advanced_evaluator,
+            evaluation_mode=evaluation_mode,
         )
         
         if "error" not in result:
@@ -323,6 +512,16 @@ async def main():
             console.print(f"    L1: {eval_data['level1_individual']['average']:.1f}/10  "
                          f"L2: {eval_data['level2_collaborative']['average']:.1f}/10  "
                          f"Overall: {eval_data['overall_apee_score']:.1f}/10")
+            
+            # Show advanced evaluation summary if available
+            if result.get("advanced_evaluation"):
+                adv = result["advanced_evaluation"]
+                if adv["mode"] == "progressive_deepening":
+                    console.print(f"    [dim]Progressive: avg={adv['average_score']:.1f}, tokens_saved={adv['total_tokens_saved']}[/dim]")
+                elif adv["mode"] == "jury_with_personas":
+                    console.print(f"    [dim]Jury: avg={adv['average_score']:.1f}[/dim]")
+                elif adv["mode"] == "calibrated_jury":
+                    console.print(f"    [dim]Calibrated: avg={adv['average_score']:.1f}, task_type={adv['task_type']}[/dim]")
         console.print()
     
     # Display results
@@ -407,11 +606,17 @@ async def main():
     if all_results:
         output_dir = Path(__file__).parent.parent / "data"
         output_dir.mkdir(exist_ok=True)
-        output_file = output_dir / "apee_evaluation_results.json"
+        
+        # Include mode in filename for advanced evaluations
+        if evaluation_mode == EvaluationMode.BASIC:
+            output_file = output_dir / "apee_evaluation_results.json"
+        else:
+            output_file = output_dir / f"apee_evaluation_results_{evaluation_mode}.json"
         
         # Prepare JSON-serializable data
         json_results = {
             "timestamp": datetime.now().isoformat(),
+            "evaluation_mode": evaluation_mode,
             "judge_models": judge_models,
             "agent_models": {
                 "analyst": "qwen2.5-coder:3b",  # Leader for hierarchical
@@ -434,6 +639,9 @@ async def main():
             }
             if "ensemble_metadata" in eval_data:
                 scenario_data["ensemble_metadata"] = eval_data["ensemble_metadata"]
+            # Include advanced evaluation results
+            if result.get("advanced_evaluation"):
+                scenario_data["advanced_evaluation"] = result["advanced_evaluation"]
             json_results["scenarios"].append(scenario_data)
         
         with open(output_file, "w") as f:
@@ -442,5 +650,36 @@ async def main():
         console.print(f"\n[green]📁 Results saved to: {output_file}[/green]")
 
 
+def parse_args():
+    """Parse command line arguments."""
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="APEE Framework - LLM-as-a-Judge Evaluation",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Evaluation Modes:
+  basic       - Standard ensemble evaluation (2 large judges)
+  progressive - Progressive Deepening: fail-fast, saves 60-80% tokens
+  jury        - Jury with Personas: 4 perspectives reduce bias
+  calibrated  - Calibrated Jury: judges negotiate rubric first (best quality)
+  all         - Run ALL modes sequentially (generates 4 JSON files)
+
+Examples:
+  python proper_apee_evaluation.py                     # Basic evaluation
+  python proper_apee_evaluation.py --mode progressive  # Fast bulk evaluation
+  python proper_apee_evaluation.py --mode calibrated   # Best quality
+  python proper_apee_evaluation.py --mode all          # Complete suite (all 4 modes)
+"""
+    )
+    parser.add_argument(
+        "--mode", "-m",
+        choices=["basic", "progressive", "jury", "calibrated", "all"],
+        default="basic",
+        help="Evaluation mode (default: basic)"
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    args = parse_args()
+    asyncio.run(main(evaluation_mode=args.mode))

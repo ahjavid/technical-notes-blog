@@ -1,0 +1,191 @@
+{
+  "metadata": {
+    "timestamp": "2025-12-09T19:12:54.175420",
+    "version": "1.0",
+    "patterns_tested": [
+      "progressive_deepening",
+      "jury_with_personas",
+      "calibration_loop",
+      "calibrated_jury"
+    ]
+  },
+  "progressive_deepening": {
+    "pattern": "Progressive Deepening",
+    "description": "Fail-fast evaluation with escalating depth",
+    "good_trace": {
+      "score": 10.0,
+      "depth_reached": "quick",
+      "early_termination": true,
+      "termination_reason": "pass",
+      "depth_scores": {
+        "quick": 10.0
+      },
+      "time_seconds": 7.796287536621094e-05,
+      "tokens_saved_estimate": 3500
+    },
+    "bad_trace": {
+      "score": 3.0,
+      "depth_reached": "standard",
+      "early_termination": true,
+      "termination_reason": "fail",
+      "depth_scores": {
+        "quick": 6.0,
+        "standard": 3.0
+      },
+      "time_seconds": 0.43319034576416016
+    }
+  },
+  "jury_with_personas": {
+    "pattern": "Jury with Personas",
+    "description": "Multi-perspective evaluation with 4 personas",
+    "full_jury": {
+      "personas": [
+        "skeptic",
+        "literalist",
+        "optimist",
+        "pragmatist"
+      ],
+      "aggregated_score": 6.0,
+      "per_persona_scores": {
+        "skeptic": 8.0,
+        "literalist": 0.0,
+        "optimist": 8.0,
+        "pragmatist": 8.0
+      },
+      "disagreement": {
+        "stdev": 4.0,
+        "range": 8.0,
+        "high_disagreement": true,
+        "main_disagreement": "skeptic (8.0) vs pragmatist (8.0)"
+      }
+    },
+    "focused_jury": {
+      "personas": [
+        "skeptic",
+        "pragmatist"
+      ],
+      "aggregated_score": 7.0,
+      "per_persona_scores": {
+        "skeptic": 6.0,
+        "pragmatist": 8.0
+      }
+    }
+  },
+  "calibration_loop": {
+    "pattern": "Calibration Loop",
+    "description": "Judges negotiate rubric before scoring",
+    "rubric": {
+      "task_type": "security_analysis",
+      "calibration_rounds": 1,
+      "agreed_by": [
+        "qwen2.5-coder:3b",
+        "llama3.2:3b"
+      ],
+      "criteria": [
+        {
+          "name": "completeness",
+          "weight": 0.2,
+          "description": "The thoroughness and completeness of the vulnerability identification process.",
+          "score_anchors": {
+            "1": "Incomplete, missing critical vulnerabilities",
+            "3": "Partially complete, some vulnerabilities are missed",
+            "5": "Comprehensive, all relevant security vulnerabilities identified"
+          }
+        },
+        {
+          "name": "remediation_quality",
+          "weight": 0.3,
+          "description": "The effectiveness and feasibility of the suggested remediation measures for each identified vulnerability.",
+          "score_anchors": {
+            "2": "Poor, remediation suggestions are vague or unfeasible",
+            "4": "Adequate, remediation suggestions are clear but may not be fully effective",
+            "6": "Excellent, remediation suggestions are detailed and feasible"
+          }
+        },
+        {
+          "name": "severity_assessment_accuracy",
+          "weight": 0.25,
+          "description": "The accuracy and reliability of the severity assessments provided for each identified vulnerability.",
+          "score_anchors": {
+            "1": "Low, severity assessments are inaccurate or unreliable",
+            "3": "Moderate, severity assessments are generally accurate but may be imprecise",
+            "5": "High, severity assessments are precise and reliable"
+          }
+        },
+        {
+          "name": "clarity_of_explanation",
+          "weight": 0.2,
+          "description": "The clarity and comprehensiveness of the explanation provided for each identified vulnerability.",
+          "score_anchors": {
+            "1": "Poor, explanations are unclear or incomplete",
+            "3": "Moderate, explanations are clear but may be too detailed",
+            "5": "Excellent, explanations are comprehensive and easy to understand"
+          }
+        }
+      ],
+      "calibration_notes": "The completeness criteria were merged as they both focus on identifying all relevant security vulnerabilities. The remediation quality criteria were merged as they both evaluate the effectiveness of suggested remediation measures. The severity assessment accuracy criteria were merged as they both assess the reliability of provided severity assessments. The clarity of explanation criteria were merged as they both evaluate the comprehensiveness and clarity of explanations."
+    }
+  },
+  "calibrated_jury": {
+    "pattern": "Calibrated Jury",
+    "description": "Calibration + Personas for maximum quality",
+    "aggregated_score": 7.0,
+    "calibration": {
+      "task_type": "security_analysis",
+      "criteria": [
+        {
+          "name": "criterion_security_vulnerabilities",
+          "description": "The function should identify and mitigate security vulnerabilities in the code.",
+          "weight": 0.25
+        },
+        {
+          "name": "criterion_input_validation",
+          "description": "The function should validate user input to prevent injection attacks.",
+          "weight": 0.2
+        },
+        {
+          "name": "criterion_error_handling",
+          "description": "The function should handle errors gracefully to prevent crashes.",
+          "weight": 0.2
+        },
+        {
+          "name": "criterion_documentation",
+          "description": "The function should have clear documentation explaining its purpose, inputs, outputs, and security considerations.",
+          "weight": 0.1
+        },
+        {
+          "name": "criterion_file_access_control",
+          "description": "Ensures the file being accessed is properly secured and not accessible to unauthorized users.",
+          "weight": 0.1
+        },
+        {
+          "name": "criterion_code_quality",
+          "description": "The code should be clean, well-structured, and maintainable.",
+          "weight": 0.1
+        }
+      ],
+      "calibration_rounds": 0,
+      "agreed_by": [],
+      "notes": "Proposals were merged by identifying common themes and resolving conflicts. The weights sum to approximately 1.0.\nRefined based on: Add more detailed criteria for criterion_input_validation, such as checking for SQL injection attacks and cross-site scripting (XSS) vulnerabilities.; Include examples of thorough input validation in criterion_input_validation to help developers understand what is expected.; Consider adding a new criterion, criterion_data_encryption, to evaluate the encryption methods used to protect sensitive data.\nRefined based on: Clarify criteria; Specificity in input validation; Error handling"
+    },
+    "per_persona_scores": {
+      "skeptic": 6.0,
+      "pragmatist": 8.0
+    },
+    "disagreement": {
+      "stdev": 1.41,
+      "range": 2.0,
+      "high_disagreement": false,
+      "main_disagreement": "skeptic (6.0) vs pragmatist (8.0)"
+    }
+  },
+  "summary": {
+    "patterns_run": 4,
+    "average_score": 7.666666666666667,
+    "scores_collected": [
+      10.0,
+      6.0,
+      7.0
+    ]
+  }
+}
