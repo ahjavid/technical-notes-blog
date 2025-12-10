@@ -47,18 +47,18 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 | Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
 |----------|---------|---------------|------------------|--------------|---------|
-| Collab Code Review | Peer Review | 7.5/10 | 5.2/10 | 7.0/10 | **6.4/10** |
-| Research Synthesis | Sequential | 7.2/10 | 6.6/10 | 8.6/10 | **7.3/10** |
-| Constrained Problem | Debate | 6.4/10 | 5.0/10 | 7.3/10 | **6.0/10** |
-| Emergent Behavior | Parallel | 6.2/10 | 3.8/10 | 8.4/10 | **5.6/10** |
-| Scalability Test | Hierarchical | 7.1/10 | 6.2/10 | 8.8/10 | **7.1/10** |
-| Conflict Resolution | Consensus | 7.7/10 | 6.5/10 | 8.5/10 | **7.4/10** |
-| Knowledge Transfer | Sequential | 6.6/10 | 6.2/10 | 8.5/10 | **6.9/10** |
-| Error Recovery | Hierarchical | 5.9/10 | 5.0/10 | 8.5/10 | **6.2/10** |
-| Creative Collab | Debate | 6.0/10 | 5.9/10 | 7.6/10 | **6.3/10** |
-| Realtime Collab | Parallel | 6.8/10 | 6.5/10 | 9.1/10 | **7.3/10** |
-| Adversarial Review | Debate | 7.2/10 | 5.8/10 | 7.6/10 | **6.6/10** |
-| Doc Sprint | Peer Review | 6.3/10 | 5.2/10 | 7.0/10 | **6.0/10** |
+| Research Synthesis | Sequential | 6.2/10 | 6.8/10 | 8.6/10 | **7.3/10** |
+| Constrained Problem | Debate | 5.8/10 | 6.5/10 | 8.6/10 | **7.1/10** |
+| Creative Collab | Debate | 5.0/10 | 6.8/10 | 8.6/10 | **7.1/10** |
+| Realtime Collab | Parallel | 6.3/10 | 6.0/10 | 9.0/10 | **7.1/10** |
+| Emergent Behavior | Parallel | 7.0/10 | 5.2/10 | 8.8/10 | **6.8/10** |
+| Adversarial Review | Debate | 5.3/10 | 5.8/10 | 7.9/10 | **6.6/10** |
+| Conflict Resolution | Consensus | 6.5/10 | 4.8/10 | 8.0/10 | **6.3/10** |
+| Collab Code Review | Peer Review | 4.8/10 | 5.5/10 | 7.6/10 | **6.2/10** |
+| Knowledge Transfer | Sequential | 6.2/10 | 5.0/10 | 8.2/10 | **6.2/10** |
+| Doc Sprint | Peer Review | 5.3/10 | 5.2/10 | 7.7/10 | **6.1/10** |
+| Scalability Test | Hierarchical | 5.8/10 | 4.5/10 | 8.0/10 | **6.0/10** |
+| Error Recovery | Hierarchical | 4.2/10 | 5.0/10 | 8.0/10 | **5.9/10** |
 
 ### Ensemble Judge Agreement
 
@@ -97,14 +97,14 @@ Level 3 (Ecosystem):
 
 ### Key Insights
 
-1. **Consensus pattern leads**: 7.4/10 overall (highest) - agents iterating to agreement produces best results
-2. **Sequential/parallel tie for second**: 7.3/10 - both research_synthesis and realtime_collab excel
-3. **Hierarchical strong**: 7.1/10 (scalability_test) - leader-worker delegation works well
-4. **Emergent behavior struggles**: 5.6/10 (lowest) - parallel work without coordination hurts collaboration
-5. **L2 Collaborative is the bottleneck**: Average 5.6/10 vs L1 (6.7/10) and L3 (8.0/10)
-6. **L3 Ecosystem strongest**: All scenarios score 7.0-9.1/10 - system-level metrics consistently high
-7. **Parallel pattern shows L2 weakness**: emergent_behavior has lowest L2 (3.8/10)
-8. **Score range 5.6-7.4**: Mean 6.6/10 across all 12 scenarios
+1. **Research synthesis leads**: 7.3/10 overall (highest) - sequential pattern excels at structured analysis
+2. **Debate and parallel tie for second**: 7.1/10 - constrained_problem, creative_collab, and realtime_collab
+3. **Hierarchical struggles**: 6.0/10 average - leader-worker delegation needs improvement
+4. **Error recovery lowest**: 5.9/10 - hierarchical pattern underperforms on recovery scenarios
+5. **L2 Collaborative is the bottleneck**: Average 5.6/10 vs L1 (5.7/10) and L3 (8.3/10)
+6. **L3 Ecosystem strongest**: All scenarios score 7.6-9.0/10 - system-level metrics consistently high
+7. **Pattern ranking**: parallel/debate (6.9) > sequential (6.8) > consensus (6.3) > peer_review (6.2) > hierarchical (6.0)
+8. **Score range 5.9-7.3**: Mean 6.6/10 across all 12 scenarios
 
 ---
 

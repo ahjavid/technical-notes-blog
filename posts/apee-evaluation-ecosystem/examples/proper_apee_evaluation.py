@@ -450,7 +450,7 @@ async def main(evaluation_mode: str = EvaluationMode.BASIC):
     # JUDGES: Large models from DIFFERENT families (evaluators)
     # Must be BIGGER than agents and from DIFFERENT families
     # Agents: Llama 3B, Granite 3B → Judges: GPT-OSS 20B, Mistral-Small 24B
-    judge_models = ["qwen2.5-coder:7b", "llama3.2:3b"]  # Available models
+    judge_models = ["gpt-oss:20b", "mistral-small3.2:24b"]
     evaluator = EnsembleEvaluator(
         judge_models=judge_models,
         base_url="http://localhost:11434",
@@ -466,7 +466,7 @@ async def main(evaluation_mode: str = EvaluationMode.BASIC):
         
         if evaluation_mode == EvaluationMode.PROGRESSIVE:
             advanced_evaluator = create_progressive_evaluator(
-                model="qwen2.5-coder:7b",
+                model="gpt-oss:20b",  # Use same large judge model
                 max_depth=EvaluationDepth.DEEP,  # Limit to DEEP for efficiency
             )
             console.print(f"  ✓ Progressive Deepening (max depth: DEEP)")
@@ -474,7 +474,7 @@ async def main(evaluation_mode: str = EvaluationMode.BASIC):
             
         elif evaluation_mode == EvaluationMode.JURY:
             advanced_evaluator = create_jury_evaluator(
-                model="qwen2.5-coder:7b",
+                model="gpt-oss:20b",  # Use same large judge model
                 personas=None,  # All 4 personas
             )
             console.print(f"  ✓ Jury with 4 Personas: {[p.value for p in JudgePersona]}")
@@ -482,7 +482,7 @@ async def main(evaluation_mode: str = EvaluationMode.BASIC):
             
         elif evaluation_mode == EvaluationMode.CALIBRATED:
             advanced_evaluator = create_calibrated_evaluator(
-                judge_models=["qwen2.5-coder:7b", "llama3.2:3b"],
+                judge_models=["gpt-oss:20b", "mistral-small3.2:24b"],  # Use same large judges
                 personas=["skeptic", "pragmatist"],  # Focused for efficiency
             )
             console.print(f"  ✓ Calibrated Jury (2 judges, 2 personas)")
@@ -555,29 +555,43 @@ async def main(evaluation_mode: str = EvaluationMode.BASIC):
         # Show detailed breakdown for first result
         if all_results:
             first = all_results[0]
+            # Safely extract scores with fallback to 0
+            def safe_score(d, *keys):
+                """Safely get nested score value."""
+                val = d
+                for k in keys:
+                    if val is None or not isinstance(val, dict):
+                        return 0.0
+                    val = val.get(k)
+                return val if val is not None else 0.0
+            
+            l1_scores = first['evaluation']['level1_individual']['scores_by_agent']
+            l2_scores = first['evaluation']['level2_collaborative']['scores']
+            l3_scores = first['evaluation']['level3_ecosystem']
+            
             console.print(Panel(
                 f"[bold]Detailed Breakdown for: {first['scenario_id']}[/bold]\n\n"
                 f"[yellow]Level 1 (Individual - per agent):[/yellow]\n"
                 + "\n".join([
-                    f"  • {agent}: Goal={scores['goal_alignment']['score']:.1f}, Semantic={scores['semantic_quality']['score']:.1f}"
-                    for agent, scores in first['evaluation']['level1_individual']['scores_by_agent'].items()
+                    f"  • {agent}: Goal={safe_score(scores, 'goal_alignment', 'score'):.1f}, Semantic={safe_score(scores, 'semantic_quality', 'score'):.1f}"
+                    for agent, scores in l1_scores.items()
                 ]) + "\n\n"
                 f"[yellow]Level 2 (Collaborative):[/yellow]\n"
-                f"  • Collaboration: {first['evaluation']['level2_collaborative']['scores']['collaboration_effectiveness']['score']:.1f}/10\n"
-                f"  • Synthesis: {first['evaluation']['level2_collaborative']['scores']['synthesis_quality']['score']:.1f}/10\n\n"
+                f"  • Collaboration: {safe_score(l2_scores, 'collaboration_effectiveness', 'score'):.1f}/10\n"
+                f"  • Synthesis: {safe_score(l2_scores, 'synthesis_quality', 'score'):.1f}/10\n\n"
                 f"[yellow]Level 3 (Ecosystem):[/yellow]\n"
-                f"  • Efficiency: {first['evaluation']['level3_ecosystem']['efficiency']:.1f}/10\n"
-                f"  • Stability: {first['evaluation']['level3_ecosystem']['stability']:.1f}/10\n"
-                f"  • Throughput: {first['evaluation']['level3_ecosystem']['throughput']:.1f}/10\n"
-                f"  • Adaptability: {first['evaluation']['level3_ecosystem']['adaptability']:.1f}/10",
+                f"  • Efficiency: {safe_score(l3_scores, 'efficiency'):.1f}/10\n"
+                f"  • Stability: {safe_score(l3_scores, 'stability'):.1f}/10\n"
+                f"  • Throughput: {safe_score(l3_scores, 'throughput'):.1f}/10\n"
+                f"  • Adaptability: {safe_score(l3_scores, 'adaptability'):.1f}/10",
                 title="📊 Metric Breakdown",
             ))
     
     console.print(Panel.fit(
         "[bold green]✨ APEE Evaluation Complete![/bold green]\n\n"
         "This evaluation used [cyan]ensemble LLM-as-a-judge[/cyan] methodology:\n"
-        "• Agents: Small diverse models (Llama/Qwen/Granite 3B)\n"
-        "• Judges: Large models (Qwen 14B + Gemma 12B) - BIGGER than agents\n"
+        f"• Agents: Small diverse models (Qwen/Llama/Granite 3B)\n"
+        f"• Judges: Large models ({', '.join(judge_models)}) - BIGGER than agents\n"
         "• Different families avoid self-preference bias\n"
         "• Scores aggregated using median (robust to outliers)",
         title="Summary"

@@ -322,18 +322,18 @@ Overall = (L1_avg × 0.30) + (L2_avg × 0.45) + (L3_avg × 0.25)
 
 | Scenario | Pattern | L1 Individual | L2 Collaborative | L3 Ecosystem | Overall |
 |----------|---------|---------------|------------------|--------------|----------|
-| conflict_resolution | consensus | 7.7/10 | 6.5/10 | 8.5/10 | **7.4/10** |
-| research_synthesis | sequential | 7.2/10 | 6.6/10 | 8.6/10 | **7.3/10** |
-| realtime_collab | parallel | 6.8/10 | 6.5/10 | 9.1/10 | **7.3/10** |
-| scalability_test | hierarchical | 7.1/10 | 6.2/10 | 8.8/10 | **7.1/10** |
-| knowledge_transfer | sequential | 6.6/10 | 6.2/10 | 8.5/10 | **6.9/10** |
-| adversarial_review | debate | 7.2/10 | 5.8/10 | 7.6/10 | **6.6/10** |
-| collab_code_review | peer_review | 7.5/10 | 5.2/10 | 7.0/10 | **6.4/10** |
-| creative_collab | debate | 6.0/10 | 5.9/10 | 7.6/10 | **6.3/10** |
-| error_recovery | hierarchical | 5.9/10 | 5.0/10 | 8.5/10 | **6.2/10** |
-| constrained_problem | debate | 6.4/10 | 5.0/10 | 7.3/10 | **6.0/10** |
-| doc_sprint | peer_review | 6.3/10 | 5.2/10 | 7.0/10 | **6.0/10** |
-| emergent_behavior | parallel | 6.2/10 | 3.8/10 | 8.4/10 | **5.6/10** |
+| research_synthesis | sequential | 6.2/10 | 6.8/10 | 8.6/10 | **7.3/10** |
+| constrained_problem | debate | 5.8/10 | 6.5/10 | 8.6/10 | **7.1/10** |
+| creative_collab | debate | 5.0/10 | 6.8/10 | 8.6/10 | **7.1/10** |
+| realtime_collab | parallel | 6.3/10 | 6.0/10 | 9.0/10 | **7.1/10** |
+| emergent_behavior | parallel | 7.0/10 | 5.2/10 | 8.8/10 | **6.8/10** |
+| adversarial_review | debate | 5.3/10 | 5.8/10 | 7.9/10 | **6.6/10** |
+| conflict_resolution | consensus | 6.5/10 | 4.8/10 | 8.0/10 | **6.3/10** |
+| collab_code_review | peer_review | 4.8/10 | 5.5/10 | 7.6/10 | **6.2/10** |
+| knowledge_transfer | sequential | 6.2/10 | 5.0/10 | 8.2/10 | **6.2/10** |
+| doc_sprint | peer_review | 5.3/10 | 5.2/10 | 7.7/10 | **6.1/10** |
+| scalability_test | hierarchical | 5.8/10 | 4.5/10 | 8.0/10 | **6.0/10** |
+| error_recovery | hierarchical | 4.2/10 | 5.0/10 | 8.0/10 | **5.9/10** |
 
 ### 6.3 Ensemble Judge Agreement
 
@@ -342,18 +342,18 @@ Judge Models: gpt-oss:20b, mistral-small3.2:24b
 Aggregation: median
 
 Evaluation: 12 scenarios × 6 patterns = comprehensive coverage
-Score Range: 5.6 - 7.4 (meaningful differentiation)
+Score Range: 5.9 - 7.3 (meaningful differentiation)
 Mean Score: 6.6/10
 ```
 
 ### 6.4 Key Observations
 
-1. **Consensus pattern leads**: 7.4/10 overall - agents iterating to agreement produces best results
-2. **Sequential/parallel tie for second**: 7.3/10 - both research_synthesis and realtime_collab excel
-3. **L2 Collaborative is the bottleneck**: Average 5.6/10 vs L1 (6.7/10) and L3 (8.0/10)
-4. **L3 Ecosystem strongest**: All scenarios score 7.0-9.1/10 - system-level metrics consistently high
-5. **Parallel pattern shows L2 weakness**: emergent_behavior has lowest L2 (3.8/10)
-6. **Score range 5.6-7.4**: Mean 6.6/10 across all 12 scenarios
+1. **Research synthesis leads**: 7.3/10 overall - sequential pattern excels at structured analysis
+2. **Debate and parallel tie for second**: 7.1/10 - constrained_problem, creative_collab, and realtime_collab
+3. **L2 Collaborative is the bottleneck**: Average 5.6/10 vs L1 (5.7/10) and L3 (8.3/10)
+4. **L3 Ecosystem strongest**: All scenarios score 7.6-9.0/10 - system-level metrics consistently high
+5. **Hierarchical struggles**: 6.0/10 average - leader-worker delegation needs improvement
+6. **Score range 5.9-7.3**: Mean 6.6/10 across all 12 scenarios
 
 ---
 
