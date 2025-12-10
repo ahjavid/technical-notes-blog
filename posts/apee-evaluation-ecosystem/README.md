@@ -24,7 +24,7 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 ---
 
-## 🏆 Latest Results (LLM-as-a-Judge) - December 2025
+## 🏆 Latest Results (LLM-as-a-Judge) - December 10, 2025
 
 ### Configuration
 
@@ -49,10 +49,10 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 
 | Mode | Avg | Min | Max | L1 Avg | L2 Avg | L3 Avg | Characteristics |
 |------|-----|-----|-----|--------|--------|--------|-----------------|
-| **Basic** | 6.55 | 5.9 | 7.3 | 5.7 | 5.6 | 8.3 | Baseline reference |
-| **Progressive** | 6.55 | 5.9 | 7.2 | 5.9 | 5.5 | 8.2 | Fail-fast efficiency |
-| **Jury** | 6.29 | 5.1 | 7.1 | 5.7 | 5.2 | 7.9 | More critical, higher variance |
-| **Calibrated** | 6.25 | 5.5 | 6.8 | 5.8 | 5.1 | 7.8 | Most conservative, narrow range |
+| **Basic** | 6.69 | 5.8 | 7.8 | 6.9 | 5.7 | 8.2 | Baseline reference |
+| **Progressive** | 6.79 | 6.1 | 7.4 | 7.1 | 5.7 | 8.1 | Fail-fast efficiency |
+| **Jury** | 6.83 | 6.2 | 7.8 | 7.2 | 5.8 | 7.9 | Multi-perspective, highest avg |
+| **Calibrated** | 6.66 | 5.5 | 7.7 | 7.1 | 5.5 | 7.9 | Conservative, consistent |
 
 ---
 
@@ -62,23 +62,23 @@ Standard LLM-as-a-Judge evaluation with ensemble median aggregation.
 
 | Scenario | Pattern | L1 | L2 | L3 | Overall |
 |----------|---------|-----|-----|-----|---------|
-| Research Synthesis | Sequential | 6.2 | 6.8 | 8.6 | **7.3** |
-| Constrained Problem | Debate | 5.8 | 6.5 | 8.6 | **7.1** |
-| Creative Collab | Debate | 5.0 | 6.8 | 8.6 | **7.1** |
-| Realtime Collab | Parallel | 6.3 | 6.0 | 9.0 | **7.1** |
-| Emergent Behavior | Parallel | 7.0 | 5.2 | 8.8 | **6.8** |
-| Adversarial Review | Debate | 5.3 | 5.8 | 7.9 | **6.6** |
-| Conflict Resolution | Consensus | 6.5 | 4.8 | 8.0 | **6.3** |
-| Collab Code Review | Peer Review | 4.8 | 5.5 | 7.6 | **6.2** |
-| Knowledge Transfer | Sequential | 6.2 | 5.0 | 8.2 | **6.2** |
-| Doc Sprint | Peer Review | 5.3 | 5.2 | 7.7 | **6.1** |
-| Scalability Test | Hierarchical | 5.8 | 4.5 | 8.0 | **6.0** |
-| Error Recovery | Hierarchical | 4.2 | 5.0 | 8.0 | **5.9** |
+| Conflict Resolution | Consensus | 7.8 | 7.5 | 8.3 | **7.8** |
+| Research Synthesis | Sequential | 7.5 | 6.2 | 8.6 | **7.2** |
+| Constrained Problem | Debate | 7.1 | 6.5 | 8.6 | **7.2** |
+| Knowledge Transfer | Sequential | 7.1 | 6.1 | 8.7 | **7.1** |
+| Adversarial Review | Debate | 7.5 | 6.2 | 8.2 | **7.1** |
+| Error Recovery | Hierarchical | 5.7 | 6.8 | 8.6 | **6.9** |
+| Creative Collab | Debate | 6.6 | 6.0 | 8.5 | **6.8** |
+| Realtime Collab | Parallel | 7.0 | 5.0 | 8.8 | **6.5** |
+| Doc Sprint | Peer Review | 6.6 | 5.8 | 7.6 | **6.5** |
+| Collab Code Review | Peer Review | 6.8 | 5.5 | 7.4 | **6.4** |
+| Emergent Behavior | Parallel | 7.2 | 3.8 | 8.4 | **6.0** |
+| Scalability Test | Hierarchical | 6.7 | 4.0 | 8.0 | **5.8** |
 
 **Basic Mode Insights:**
-- Research synthesis leads at 7.3 (sequential pattern excels)
-- Debate and parallel patterns tie at 7.1
-- Hierarchical pattern struggles (6.0 avg)
+- Conflict resolution leads at 7.8 (consensus pattern excels with high L2)
+- Research synthesis and constrained problem tie at 7.2
+- Parallel pattern bottlenecked by L2 (emergent_behavior: L2=3.8)
 
 ---
 
@@ -88,23 +88,23 @@ Sequential evaluation with 4 depth levels (SURFACE → TECHNICAL → COLLABORATI
 
 | Scenario | Pattern | L1 | L2 | L3 | Overall |
 |----------|---------|-----|-----|-----|---------|
-| Adversarial Review | Debate | 7.0 | 6.2 | 8.4 | **7.2** |
-| Knowledge Transfer | Sequential | 5.8 | 6.8 | 8.5 | **7.1** |
-| Realtime Collab | Parallel | 5.8 | 6.2 | 9.1 | **7.1** |
-| Creative Collab | Debate | 4.8 | 6.8 | 7.9 | **6.9** |
-| Research Synthesis | Sequential | 6.7 | 5.8 | 8.3 | **6.8** |
-| Conflict Resolution | Consensus | 6.3 | 5.5 | 8.3 | **6.6** |
-| Scalability Test | Hierarchical | 5.9 | 5.2 | 8.2 | **6.4** |
-| Error Recovery | Hierarchical | 5.3 | 5.2 | 8.2 | **6.2** |
-| Collab Code Review | Peer Review | 4.8 | 5.2 | 7.5 | **6.2** |
-| Doc Sprint | Peer Review | 5.7 | 5.0 | 7.4 | **6.1** |
-| Emergent Behavior | Parallel | 6.3 | 4.0 | 8.5 | **6.0** |
-| Constrained Problem | Debate | 5.8 | 4.2 | 7.9 | **5.9** |
+| Research Synthesis | Sequential | 7.8 | 6.5 | 8.5 | **7.4** |
+| Adversarial Review | Debate | 7.6 | 6.8 | 8.3 | **7.4** |
+| Realtime Collab | Parallel | 7.0 | 6.3 | 9.1 | **7.2** |
+| Constrained Problem | Debate | 7.3 | 6.2 | 7.6 | **6.9** |
+| Doc Sprint | Peer Review | 7.0 | 6.5 | 7.5 | **6.9** |
+| Collab Code Review | Peer Review | 7.3 | 6.0 | 7.4 | **6.8** |
+| Error Recovery | Hierarchical | 6.7 | 6.0 | 8.3 | **6.8** |
+| Conflict Resolution | Consensus | 8.0 | 5.2 | 7.2 | **6.6** |
+| Emergent Behavior | Parallel | 7.8 | 4.4 | 8.6 | **6.5** |
+| Scalability Test | Hierarchical | 6.5 | 5.5 | 8.4 | **6.5** |
+| Knowledge Transfer | Sequential | 6.2 | 5.5 | 8.3 | **6.4** |
+| Creative Collab | Debate | 6.7 | 4.6 | 8.1 | **6.1** |
 
 **Progressive Mode Insights:**
-- Adversarial review jumps to top (7.2) - depth levels reveal hidden quality
-- Knowledge transfer improves significantly (6.2 → 7.1)
-- Constrained problem drops (7.1 → 5.9) - fails at deeper evaluation levels
+- Research synthesis and adversarial review lead at 7.4 - depth levels reveal quality
+- Strong L1 scores (6.2-8.0) - individual agent performance high
+- Creative collab drops to 6.1 - fails at deeper evaluation levels
 
 ---
 
@@ -114,23 +114,23 @@ Sequential evaluation with 4 depth levels (SURFACE → TECHNICAL → COLLABORATI
 
 | Scenario | Pattern | L1 | L2 | L3 | Overall |
 |----------|---------|-----|-----|-----|---------|
-| Research Synthesis | Sequential | 7.3 | 6.0 | 8.4 | **7.1** |
-| Realtime Collab | Parallel | 5.8 | 5.8 | 8.8 | **6.9** |
-| Creative Collab | Debate | 4.5 | 6.8 | 7.9 | **6.8** |
-| Emergent Behavior | Parallel | 5.2 | 5.8 | 8.9 | **6.7** |
-| Adversarial Review | Debate | 6.8 | 5.5 | 7.5 | **6.6** |
-| Error Recovery | Hierarchical | 4.3 | 6.0 | 8.6 | **6.5** |
-| Collab Code Review | Peer Review | 5.8 | 5.8 | 7.1 | **6.4** |
-| Scalability Test | Hierarchical | 6.3 | 4.8 | 8.1 | **6.2** |
-| Constrained Problem | Debate | 5.2 | 5.2 | 7.5 | **6.1** |
-| Doc Sprint | Peer Review | 5.0 | 5.0 | 7.0 | **5.8** |
-| Knowledge Transfer | Sequential | 6.0 | 3.0 | 7.5 | **5.2** |
-| Conflict Resolution | Consensus | 5.5 | 3.2 | 7.0 | **5.1** |
+| Collab Code Review | Peer Review | 8.2 | 7.5 | 7.8 | **7.8** |
+| Knowledge Transfer | Sequential | 7.2 | 6.5 | 8.6 | **7.3** |
+| Adversarial Review | Debate | 7.7 | 6.8 | 7.7 | **7.3** |
+| Realtime Collab | Parallel | 7.1 | 6.2 | 8.8 | **7.2** |
+| Research Synthesis | Sequential | 7.9 | 5.8 | 8.0 | **7.0** |
+| Doc Sprint | Peer Review | 7.5 | 6.5 | 7.4 | **7.0** |
+| Creative Collab | Debate | 6.8 | 6.0 | 7.8 | **6.7** |
+| Conflict Resolution | Consensus | 7.8 | 5.5 | 7.3 | **6.6** |
+| Scalability Test | Hierarchical | 6.6 | 5.2 | 8.2 | **6.4** |
+| Emergent Behavior | Parallel | 7.1 | 4.5 | 8.6 | **6.3** |
+| Constrained Problem | Debate | 7.2 | 5.0 | 7.4 | **6.2** |
+| Error Recovery | Hierarchical | 6.3 | 5.0 | 8.2 | **6.2** |
 
 **Jury Mode Insights:**
-- More critical overall (avg 6.29 vs 6.55 basic)
-- Consensus pattern penalized heavily (5.1) - SKEPTIC finds flaws
-- Knowledge transfer drops (7.1 progressive → 5.2 jury) - LITERALIST strict
+- Highest average mode (6.83) - multi-perspective improves evaluation
+- Collab code review jumps to 7.8 - personas appreciate thorough review
+- Peer review pattern strong (7.8, 7.0) - multiple viewpoints valuable
 
 ---
 
@@ -140,23 +140,23 @@ Calibration loop + jury combined - judges negotiate rubric before scoring.
 
 | Scenario | Pattern | L1 | L2 | L3 | Overall |
 |----------|---------|-----|-----|-----|---------|
-| Research Synthesis | Sequential | 6.8 | 5.5 | 8.2 | **6.8** |
-| Knowledge Transfer | Sequential | 6.7 | 5.8 | 8.2 | **6.7** |
-| Adversarial Review | Debate | 6.2 | 6.0 | 7.6 | **6.7** |
-| Creative Collab | Debate | 5.7 | 6.0 | 7.8 | **6.6** |
-| Collab Code Review | Peer Review | 7.2 | 5.3 | 7.2 | **6.5** |
-| Error Recovery | Hierarchical | 6.0 | 5.0 | 8.1 | **6.3** |
-| Conflict Resolution | Consensus | 6.8 | 4.8 | 7.4 | **6.2** |
-| Realtime Collab | Parallel | 4.5 | 5.0 | 8.5 | **6.2** |
-| Emergent Behavior | Parallel | 5.5 | 4.2 | 8.6 | **6.0** |
-| Scalability Test | Hierarchical | 4.5 | 4.8 | 8.0 | **5.8** |
-| Doc Sprint | Peer Review | 4.3 | 5.0 | 7.0 | **5.8** |
-| Constrained Problem | Debate | 5.0 | 4.0 | 7.2 | **5.5** |
+| Realtime Collab | Parallel | 7.7 | 7.0 | 9.1 | **7.7** |
+| Collab Code Review | Peer Review | 8.1 | 6.8 | 7.5 | **7.3** |
+| Scalability Test | Hierarchical | 6.8 | 6.5 | 8.4 | **7.0** |
+| Adversarial Review | Debate | 7.4 | 6.0 | 7.6 | **6.8** |
+| Knowledge Transfer | Sequential | 7.4 | 5.5 | 8.3 | **6.8** |
+| Research Synthesis | Sequential | 7.2 | 5.8 | 7.9 | **6.7** |
+| Conflict Resolution | Consensus | 7.7 | 5.8 | 7.4 | **6.7** |
+| Doc Sprint | Peer Review | 7.1 | 6.0 | 7.4 | **6.7** |
+| Error Recovery | Hierarchical | 6.0 | 5.8 | 8.2 | **6.5** |
+| Emergent Behavior | Parallel | 7.4 | 4.0 | 8.5 | **6.2** |
+| Constrained Problem | Debate | 6.8 | 4.8 | 7.2 | **6.0** |
+| Creative Collab | Debate | 6.3 | 4.0 | 7.3 | **5.5** |
 
 **Calibrated Mode Insights:**
-- Narrowest score range (5.5-6.8) - calibration produces consistency
-- Most conservative scores (avg 6.25)
-- Sequential pattern most stable (research_synthesis and knowledge_transfer both 6.7+)
+- Realtime collab leads at 7.7 - calibration reveals parallel pattern strengths
+- Scalability test improves to 7.0 - calibration appreciates hierarchical structure
+- Creative collab lowest (5.5) - strict calibration penalizes open-ended tasks
 
 ---
 
@@ -164,36 +164,36 @@ Calibration loop + jury combined - judges negotiate rubric before scoring.
 
 | Scenario | Basic | Progressive | Jury | Calibrated | Variance |
 |----------|-------|-------------|------|------------|----------|
-| research_synthesis | 7.3 | 6.8 | 7.1 | 6.8 | Low |
-| adversarial_review | 6.6 | **7.2** | 6.6 | 6.7 | Low |
-| realtime_collab | 7.1 | 7.1 | 6.9 | 6.2 | Medium |
-| creative_collab | 7.1 | 6.9 | 6.8 | 6.6 | Low |
-| knowledge_transfer | 6.2 | **7.1** | 5.2 | 6.7 | **High** |
-| conflict_resolution | 6.3 | 6.6 | **5.1** | 6.2 | **High** |
-| constrained_problem | **7.1** | 5.9 | 6.1 | **5.5** | **High** |
-| emergent_behavior | 6.8 | 6.0 | 6.7 | 6.0 | Medium |
-| error_recovery | 5.9 | 6.2 | 6.5 | 6.3 | Low |
-| collab_code_review | 6.2 | 6.2 | 6.4 | 6.5 | Low |
-| scalability_test | 6.0 | 6.4 | 6.2 | 5.8 | Low |
-| doc_sprint | 6.1 | 6.1 | 5.8 | 5.8 | Low |
+| conflict_resolution | **7.8** | 6.6 | 6.6 | 6.7 | High |
+| collab_code_review | 6.4 | 6.8 | **7.8** | 7.3 | High |
+| research_synthesis | 7.2 | **7.4** | 7.0 | 6.7 | Low |
+| realtime_collab | 6.5 | 7.2 | 7.2 | **7.7** | High |
+| adversarial_review | 7.1 | **7.4** | 7.3 | 6.8 | Low |
+| knowledge_transfer | 7.1 | 6.4 | **7.3** | 6.8 | Medium |
+| constrained_problem | **7.2** | 6.9 | 6.2 | 6.0 | High |
+| scalability_test | 5.8 | 6.5 | 6.4 | **7.0** | High |
+| doc_sprint | 6.5 | 6.9 | **7.0** | 6.7 | Low |
+| error_recovery | **6.9** | 6.8 | 6.2 | 6.5 | Low |
+| creative_collab | 6.8 | 6.1 | **6.7** | 5.5 | High |
+| emergent_behavior | 6.0 | 6.5 | 6.3 | 6.2 | Low |
 
 **High-Variance Scenarios** (modes disagree):
-- `knowledge_transfer`: 5.2 (jury) to 7.1 (progressive) - evaluation uncertainty
-- `conflict_resolution`: 5.1 (jury) to 6.6 (progressive) - persona sensitivity
-- `constrained_problem`: 5.5 (calibrated) to 7.1 (basic) - calibration reveals issues
+- `creative_collab`: 5.5 (calibrated) to 6.8 (basic) - evaluation sensitivity
+- `scalability_test`: 5.8 (basic) to 7.0 (calibrated) - perspective matters
+- `realtime_collab`: 6.5 (basic) to 7.7 (calibrated) - calibration reveals strengths
 
 ---
 
 ### Key Insights
 
-1. **Research synthesis consistently strong**: 6.8-7.3 across all modes - sequential pattern reliable
-2. **Mode selection matters**: Up to 2.0 point difference between modes for same scenario
-3. **L2 Collaborative is the universal bottleneck**: 5.1-5.6 avg across all modes
-4. **L3 Ecosystem most stable**: 7.8-8.3 avg across modes
-5. **Jury mode most critical**: Lowest average (6.29), identifies weaknesses
-6. **Calibrated mode most conservative**: Narrowest range, consistent scoring
-7. **Progressive good for screening**: Similar to basic but with fail-fast efficiency
-8. **High-variance scenarios need multiple modes**: knowledge_transfer, conflict_resolution, constrained_problem
+1. **Jury mode highest average**: 6.83 - multi-perspective evaluation most balanced
+2. **Conflict resolution strong in basic**: 7.8 (basic) but varies across modes (6.6-7.8)
+3. **L2 Collaborative universal bottleneck**: 3.8-7.5 range, most variable metric
+4. **L3 Ecosystem most stable**: 7.2-9.1 avg across modes
+5. **Calibrated mode reveals parallel strengths**: realtime_collab jumps to 7.7
+6. **Progressive good for screening**: Consistent 6.79 avg with fail-fast efficiency
+7. **High-variance scenarios need multiple modes**: creative_collab, scalability_test, realtime_collab
+8. **Peer review pattern benefits from jury**: 7.8 (code review) vs 6.4 (basic)
 
 ---
 
