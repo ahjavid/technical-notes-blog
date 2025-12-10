@@ -318,7 +318,7 @@ Overall = (L1_avg × 0.30) + (L2_avg × 0.45) + (L3_avg × 0.25)
 | Judge 1 | gpt-oss:20b | 20B | GPT-OSS |
 | Judge 2 | mistral-small3.2:24b | 24B | Mistral |
 
-### 6.2 Basic Mode Results (December 9, 2025)
+### 6.2 Basic Mode Results
 
 Standard LLM-as-a-Judge evaluation with ensemble median aggregation.
 

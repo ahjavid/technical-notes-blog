@@ -11,15 +11,15 @@ Welcome to my technical research blog! This is where I share in-depth analysis, 
 ## 📚 Featured Research Posts
 
 ### 🔥 NEW: Adaptive Poly-Agentic Evaluation Ecosystem (APEE)
-**December 9, 2025** | [Read Full Post →](posts/apee-evaluation-ecosystem/README.md) | ✅ Phase 6 Complete
+**December 9, 2025** | [Read Full Post →](posts/apee-evaluation-ecosystem/README.md) | ✅ Phase 7 Complete
 
 A comprehensive framework for evaluating and benchmarking multi-agent AI systems using **LLM-as-a-Judge** methodology. APEE uses large language models (20-24B parameters) to evaluate smaller agent outputs, providing meaningful, nuanced scores across 12 collaborative scenarios and 6 collaboration patterns.
 
 **Key Findings:**
 - 🏆 Research synthesis leads: 7.3/10 overall - sequential pattern excels at structured analysis
-- 📊 L2 Collaborative bottleneck: Average 5.6/10 vs L1 (5.7) and L3 (8.3)
+- 📊 4 evaluation modes: Basic, Progressive (fail-fast), Jury (4 personas), Calibrated
 - 🤖 Ensemble judges: gpt-oss:20b + mistral-small3.2:24b evaluate 3B agent outputs
-- 📈 Phase 6 complete: Visualization, anomaly detection, pattern analysis, dashboard
+- 📈 107 unit tests, complete visualization, anomaly detection, web dashboard
 
 **Topics Covered:** Multi-Agent AI, LLM-as-a-Judge, Collaboration Patterns, Ollama, Benchmarking
 
@@ -126,8 +126,8 @@ Real-world problem-solving scenarios with detailed analysis and solutions.
 ### 2025
 - **[APEE: Adaptive Poly-Agentic Evaluation Ecosystem](posts/apee-evaluation-ecosystem/)** - December 2025 ✅
   - LLM-as-a-Judge evaluation with ensemble judges (gpt-oss:20b, mistral-small3.2:24b)
-  - 12 collaborative scenarios across 6 patterns (research synthesis leads at 7.3/10)
-  - Phase 6 complete: Visualization, anomaly detection, pattern analysis
+  - 4 evaluation modes: Basic, Progressive, Jury (4 personas), Calibrated
+  - 12 scenarios × 6 patterns × 4 modes = comprehensive coverage
 - **[Vision Model Quantization Study](posts/vision-model-quantization-study/)** - June 2025
   - Comprehensive quantization analysis across 16 vision models
   - Production deployment strategies and economic impact assessment

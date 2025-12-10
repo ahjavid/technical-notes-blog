@@ -308,48 +308,69 @@ apee/
 ├── models.py                # Pydantic data models
 ├── cli.py                   # Command-line interface
 ├── agents/
+│   ├── __init__.py
 │   ├── base.py              # Abstract Agent class
 │   └── ollama.py            # Ollama LLM implementation
 ├── coordination/
-│   ├── coordinator.py       # Task distribution & execution modes
+│   ├── __init__.py
+│   ├── coordinator.py       # Task distribution & 6 execution patterns
 │   └── PATTERNS.md          # 📚 Detailed pattern documentation
 ├── evaluation/
+│   ├── __init__.py
 │   ├── evaluator.py         # Heuristic evaluation engine
-│   ├── llm_evaluator.py     # LLM-as-a-Judge evaluators
+│   ├── llm_evaluator.py     # LLM-as-a-Judge evaluators (EnsembleEvaluator)
+│   ├── advanced_patterns.py # 🆕 Progressive, Jury, Calibrated modes
 │   ├── quality.py           # Quality scoring strategies
 │   ├── adaptive.py          # Adaptive pattern detection
 │   └── report.py            # Report data models
 ├── benchmarks/
+│   ├── __init__.py
 │   ├── datasets.py          # 19 scenarios, 11 categories
 │   ├── runner.py            # Statistical benchmark runner
 │   ├── analyzer.py          # Analysis with confidence intervals
 │   └── collaborative.py     # 12 multi-agent scenarios
-├── visualization/           # 🆕 Phase 6
+├── visualization/
+│   ├── __init__.py
 │   ├── charts.py            # Plotly/text chart generation
 │   └── export.py            # HTML/PNG export utilities
-├── anomaly/                 # 🆕 Phase 6
+├── anomaly/
+│   ├── __init__.py
 │   ├── detector.py          # Statistical anomaly detection
 │   ├── patterns.py          # Pattern analyzers
 │   └── alerts.py            # Alert handling system
-├── dashboard/               # 🆕 Phase 6
+├── dashboard/
+│   ├── __init__.py
 │   ├── server.py            # Web dashboard server
 │   └── api.py               # Dashboard API client
 └── utils/
+    ├── __init__.py
     ├── logging.py           # Logging utilities
     └── helpers.py           # Helper functions
 
 examples/
+├── __init__.py
+├── proper_apee_evaluation.py    # 🔥 Main evaluation (--mode basic|progressive|jury|calibrated|all)
+├── advanced_evaluation_demo.py  # 🆕 Advanced patterns demo
 ├── full_evaluation.py           # Basic evaluation demo
 ├── comprehensive_benchmark.py   # Single-model benchmarks
 ├── multi_agent_evaluation.py    # Multi-agent with heuristics
-├── proper_apee_evaluation.py    # LLM-as-a-Judge evaluation
-└── phase6_demo.py               # 🆕 Visualization & anomaly demo
+├── multi_model_evaluation.py    # Multi-model comparison
+└── phase6_demo.py               # Visualization & anomaly demo
 
 tests/
+├── __init__.py
+├── test_advanced_patterns.py    # 🆕 Advanced patterns tests (38 tests)
+├── test_coordinator.py          # Coordinator pattern tests (35 tests)
 ├── test_benchmarks.py           # Benchmark tests
 ├── test_models.py               # Model tests
-├── test_quality.py              # Quality scoring tests
-└── test_coordinator.py          # 📋 Coordinator pattern tests (35 tests)
+└── test_quality.py              # Quality scoring tests
+
+data/
+├── apee_evaluation_results.json           # Basic mode results
+├── apee_evaluation_results_progressive.json # Progressive mode results
+├── apee_evaluation_results_jury.json      # Jury mode results
+├── apee_evaluation_results_calibrated.json # Calibrated mode results
+└── evaluation_report.html                 # HTML report
 ```
 
 ---
@@ -661,11 +682,20 @@ print(result.quality_ranking)
 - [x] Proper judge/agent family separation (no bias)
 - [x] Judge size hierarchy (12-14B judges for 3B agents)
 
-### Phase 6: Future Enhancements ✅
+### Phase 6: Visualization & Dashboard ✅
 - [x] Create visualization utilities (charts, reports, exports)
 - [x] Add more collaboration scenarios (12 scenarios total)
 - [x] Implement advanced anomaly detection
 - [x] Web dashboard for results
+
+### Phase 7: Advanced Evaluation Patterns ✅
+- [x] Implement Progressive Deepening (4 depth levels with fail-fast)
+- [x] Implement Jury with Personas (SKEPTIC, LITERALIST, OPTIMIST, PRAGMATIST)
+- [x] Implement Calibration Loop (judges negotiate rubric)
+- [x] Implement Calibrated Jury (combined pattern)
+- [x] Add `--mode` CLI argument (basic, progressive, jury, calibrated, all)
+- [x] Generate JSON results for all 4 evaluation modes
+- [x] Write unit tests for advanced patterns (38 tests)
 - [ ] Publish to PyPI (optional)
 
 ---
@@ -779,8 +809,15 @@ dashboard.add_evaluation({
 # Install dev dependencies
 pip install -e ".[dev]"
 
-# Run tests
+# Run all tests (107 total)
 pytest tests/ -v
+
+# Run specific test modules
+pytest tests/test_advanced_patterns.py -v  # 38 tests - advanced evaluation patterns
+pytest tests/test_coordinator.py -v        # 35 tests - coordination patterns
+pytest tests/test_quality.py -v            # Quality scoring tests
+pytest tests/test_benchmarks.py -v         # Benchmark tests
+pytest tests/test_models.py -v             # Model tests
 
 # Run with coverage
 pytest tests/ --cov=apee
