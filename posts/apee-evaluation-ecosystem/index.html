@@ -500,69 +500,61 @@
                 <h4>6 Collaboration Patterns</h4>
                 <p>Parallel, sequential, debate, hierarchical, consensus, peer review.</p>
             </div>
-            <div class="card">
-                <div class="card-icon">⚖️</div>
-                <h4>4 Evaluation Modes</h4>
-                <p>Basic, Progressive (fail-fast), Jury (4 personas), Calibrated (negotiated rubric).</p>
-            </div>
         </div>
 
-        <h2 id="results"><i class="fas fa-chart-bar"></i> Latest Results</h2>
+        <h2 id="quickstart"><i class="fas fa-rocket"></i> Quick Start</h2>
         
-        <div class="insight-box">
-            <h3><i class="fas fa-lightbulb"></i> Key Findings (Basic Mode)</h3>
-            <ul>
-                <li><strong>Research synthesis leads:</strong> 7.3/10 overall - sequential pattern excels at structured analysis</li>
-                <li><strong>Debate and parallel tie for second:</strong> 7.1/10 - constrained_problem, creative_collab, and realtime_collab</li>
-                <li><strong>L2 Collaborative is the bottleneck:</strong> Average 5.6/10 vs L1 (5.7/10) and L3 (8.3/10)</li>
-                <li><strong>L3 Ecosystem strongest:</strong> All scenarios score 7.6-9.0/10 - system-level metrics consistently high</li>
-                <li><strong>Score range:</strong> 5.9-7.3 with mean 6.6/10 across all 12 scenarios</li>
-            </ul>
+        <div class="code-section">
+            <pre><code># Clone and install
+git clone https://github.com/ahjavid/technical-notes-blog.git
+cd technical-notes-blog/posts/apee-evaluation-ecosystem
+pip install -e .
+
+# Pull required models
+ollama pull llama3.2:3b qwen2.5-coder:3b granite4:3b
+ollama pull gpt-oss:20b mistral-small3.2:24b
+
+# Run LLM-as-a-Judge evaluation
+python examples/proper_apee_evaluation.py
+
+# Run Phase 6 visualization demo
+python examples/phase6_demo.py
+
+# Run advanced evaluation modes (Phase 7)
+python examples/advanced_evaluation_demo.py --mode all</code></pre>
         </div>
 
-        <div class="insight-box" style="background: linear-gradient(135deg, #2d3436 0%, #636e72 100%); margin-top: 20px;">
-            <h3><i class="fas fa-balance-scale"></i> Evaluation Mode Comparison</h3>
-            <table class="performance-table" style="margin-top: 15px;">
-                <thead>
-                    <tr>
-                        <th>Mode</th>
-                        <th>Pattern</th>
-                        <th>Avg</th>
-                        <th>Range</th>
-                        <th>Best For</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Basic</td>
-                        <td>Standard</td>
-                        <td>6.55</td>
-                        <td>5.9-7.3</td>
-                        <td>Quick assessment</td>
-                    </tr>
-                    <tr>
-                        <td>Progressive</td>
-                        <td>Sequential</td>
-                        <td>6.55</td>
-                        <td>5.9-7.2</td>
-                        <td>Large-scale screening</td>
-                    </tr>
-                    <tr>
-                        <td>Jury</td>
-                        <td>Independent</td>
-                        <td>6.29</td>
-                        <td>5.1-7.1</td>
-                        <td>Subjective evaluations</td>
-                    </tr>
-                    <tr>
-                        <td>Calibrated</td>
-                        <td>Combined</td>
-                        <td>6.25</td>
-                        <td>5.5-6.8</td>
-                        <td>Novel/ambiguous tasks</td>
-                    </tr>
-                </tbody>
-            </table>
+        <h2 id="architecture"><i class="fas fa-sitemap"></i> Architecture</h2>
+        
+        <div class="architecture-box">
+            <pre>
+┌─────────────────────────────────────────────────────────────────────┐
+│                        APEE Framework                               │
+├─────────────────────────────────────────────────────────────────────┤
+│  AGENTS (Small 3B models - diverse families)                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
+│  │    Coder     │  │   Analyst    │  │   Reviewer   │               │
+│  │  (Executor)  │  │  (Analyzer)  │  │  (Reviewer)  │               │
+│  │ llama3.2:3b  │  │qwen2.5-coder │  │ granite4:3b  │               │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
+│         │                 │                 │                       │
+│         └────────────┬────┴─────────────────┘                       │
+│                      │                                              │
+│         ┌────────────▼─────────────┐                                │
+│         │      Coordinator         │  6 Collaboration Patterns      │
+│         │  • run_parallel()        │  • parallel, sequential        │
+│         │  • run_pipeline()        │  • debate, hierarchical        │
+│         │  • run_consensus()       │  • consensus, peer_review      │
+│         └────────────┬─────────────┘                                │
+│                      │                                              │
+│         ┌────────────▼─────────────┐                                │
+│         │   Ensemble Evaluator     │  LLM-as-a-Judge                │
+│         │  • gpt-oss:20b (Judge 1) │  L1: Individual                │
+│         │  • mistral-small3.2:24b  │  L2: Collaborative             │
+│         │  • Aggregation: median   │  L3: Ecosystem                 │
+│         └──────────────────────────┘                                │
+└─────────────────────────────────────────────────────────────────────┘
+            </pre>
         </div>
 
         <h3>Configuration</h3>
@@ -624,8 +616,22 @@
             </tbody>
         </table>
 
+        <!-- Phase 5: LLM-as-a-Judge Results -->
+        <h2 id="phase5-results"><i class="fas fa-gavel"></i> Phase 5: LLM-as-a-Judge Results</h2>
+        
+        <div class="insight-box">
+            <h3><i class="fas fa-lightbulb"></i> Key Findings</h3>
+            <ul>
+                <li><strong>Research synthesis leads:</strong> 7.3/10 overall - sequential pattern excels at structured analysis</li>
+                <li><strong>Debate and parallel tie for second:</strong> 7.1/10 - constrained_problem, creative_collab, and realtime_collab</li>
+                <li><strong>L2 Collaborative is the bottleneck:</strong> Average 5.6/10 vs L1 (5.7/10) and L3 (8.3/10)</li>
+                <li><strong>L3 Ecosystem strongest:</strong> All scenarios score 7.6-9.0/10 - system-level metrics consistently high</li>
+                <li><strong>Score range:</strong> 5.9-7.3 with mean 6.6/10 across all 12 scenarios</li>
+            </ul>
+        </div>
+
         <div class="performance-section">
-            <h3><i class="fas fa-table"></i> Multi-Agent Collaborative Evaluation</h3>
+            <h3><i class="fas fa-table"></i> Multi-Agent Collaborative Evaluation (12 Scenarios)</h3>
             <table class="performance-table">
                 <thead>
                     <tr>
@@ -744,7 +750,36 @@
             </p>
         </div>
 
-        <h3 id="advanced-modes"><i class="fas fa-layer-group"></i> Evaluation Modes</h3>
+        <!-- Phase 6: Visualization & Dashboard -->
+        <h2 id="phase6-features"><i class="fas fa-chart-line"></i> Phase 6: Visualization & Dashboard</h2>
+        
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">📈</div>
+                <h4>Interactive Visualization</h4>
+                <p>Plotly charts for performance analysis, pattern comparison, and metric breakdown.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🔍</div>
+                <h4>Anomaly Detection</h4>
+                <p>Statistical methods (Z-score, IQR, MAD) to identify performance outliers.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">📊</div>
+                <h4>Pattern Analysis</h4>
+                <p>Trend detection, distribution analysis, and collaboration pattern insights.</p>
+            </div>
+            <div class="card">
+                <div class="card-icon">🖥️</div>
+                <h4>Dashboard Server</h4>
+                <p>Real-time monitoring with WebSocket updates and interactive API.</p>
+            </div>
+        </div>
+
+        <!-- Phase 7: Advanced Evaluation Patterns -->
+        <h2 id="phase7-modes"><i class="fas fa-layer-group"></i> Phase 7: Advanced Evaluation Patterns</h2>
+        
+        <p>Phase 7 introduces four evaluation modes with different characteristics:</p>
         
         <div class="card-grid" style="margin-bottom: 30px;">
             <div class="card" style="border-left: 4px solid #10b981;">
@@ -769,8 +804,53 @@
             </div>
         </div>
 
+        <div class="insight-box" style="background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);">
+            <h3 style="color: white;"><i class="fas fa-balance-scale"></i> Evaluation Mode Summary</h3>
+            <table class="performance-table" style="margin-top: 15px;">
+                <thead>
+                    <tr>
+                        <th>Mode</th>
+                        <th>Pattern</th>
+                        <th>Avg</th>
+                        <th>Range</th>
+                        <th>Best For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Basic</td>
+                        <td>Standard</td>
+                        <td>6.55</td>
+                        <td>5.9-7.3</td>
+                        <td>Quick assessment</td>
+                    </tr>
+                    <tr>
+                        <td>Progressive</td>
+                        <td>Sequential</td>
+                        <td>6.55</td>
+                        <td>5.9-7.2</td>
+                        <td>Large-scale screening</td>
+                    </tr>
+                    <tr>
+                        <td>Jury</td>
+                        <td>Independent</td>
+                        <td>6.29</td>
+                        <td>5.1-7.1</td>
+                        <td>Subjective evaluations</td>
+                    </tr>
+                    <tr>
+                        <td>Calibrated</td>
+                        <td>Combined</td>
+                        <td>6.25</td>
+                        <td>5.5-6.8</td>
+                        <td>Novel/ambiguous tasks</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <div class="performance-section">
-            <h4><i class="fas fa-exchange-alt"></i> Cross-Mode Comparison</h4>
+            <h3><i class="fas fa-exchange-alt"></i> Cross-Mode Comparison (All 12 Scenarios)</h3>
             <table class="performance-table">
                 <thead>
                     <tr>
@@ -869,87 +949,11 @@
                 </tbody>
             </table>
             <p style="text-align: center; color: #7f8c8d; font-size: 0.9em; margin-top: 15px;">
-                <strong>High-Variance:</strong> knowledge_transfer (1.9), constrained_problem (1.6), conflict_resolution (1.5)
+                <strong>High-Variance Scenarios:</strong> knowledge_transfer (1.9), constrained_problem (1.6), conflict_resolution (1.5)
             </p>
         </div>
 
-        <h2 id="architecture"><i class="fas fa-sitemap"></i> Architecture</h2>
-        
-        <div class="architecture-box">
-            <pre>
-┌─────────────────────────────────────────────────────────────────────┐
-│                        APEE Framework                               │
-├─────────────────────────────────────────────────────────────────────┤
-│  AGENTS (Small 3B models - diverse families)                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │    Coder     │  │   Analyst    │  │   Reviewer   │               │
-│  │  (Executor)  │  │  (Analyzer)  │  │  (Reviewer)  │               │
-│  │ llama3.2:3b  │  │qwen2.5-coder │  │ granite4:3b  │               │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
-│         │                 │                 │                       │
-│         └────────────┬────┴─────────────────┘                       │
-│                      │                                              │
-│         ┌────────────▼─────────────┐                                │
-│         │      Coordinator         │  6 Collaboration Patterns      │
-│         │  • run_parallel()        │  • parallel, sequential        │
-│         │  • run_pipeline()        │  • debate, hierarchical        │
-│         │  • run_consensus()       │  • consensus, peer_review      │
-│         └────────────┬─────────────┘                                │
-│                      │                                              │
-│         ┌────────────▼─────────────┐                                │
-│         │   Ensemble Evaluator     │  LLM-as-a-Judge                │
-│         │  • gpt-oss:20b (Judge 1) │  L1: Individual                │
-│         │  • mistral-small3.2:24b  │  L2: Collaborative             │
-│         │  • Aggregation: median   │  L3: Ecosystem                 │
-│         └──────────────────────────┘                                │
-└─────────────────────────────────────────────────────────────────────┘
-            </pre>
-        </div>
-
-        <h2 id="features"><i class="fas fa-star"></i> Phase 6 Features</h2>
-        
-        <div class="card-grid">
-            <div class="card">
-                <div class="card-icon">📈</div>
-                <h4>Interactive Visualization</h4>
-                <p>Plotly charts for performance analysis, pattern comparison, and metric breakdown.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">🔍</div>
-                <h4>Anomaly Detection</h4>
-                <p>Statistical methods (Z-score, IQR, MAD) to identify performance outliers.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">📊</div>
-                <h4>Pattern Analysis</h4>
-                <p>Trend detection, distribution analysis, and collaboration pattern insights.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">🖥️</div>
-                <h4>Dashboard Server</h4>
-                <p>Real-time monitoring with WebSocket updates and interactive API.</p>
-            </div>
-        </div>
-
-        <h2 id="quickstart"><i class="fas fa-rocket"></i> Quick Start</h2>
-        
-        <div class="code-section">
-            <pre><code># Clone and install
-git clone https://github.com/ahjavid/technical-notes-blog.git
-cd technical-notes-blog/posts/apee-evaluation-ecosystem
-pip install -e .
-
-# Pull required models
-ollama pull llama3.2:3b qwen2.5-coder:3b granite4:3b
-ollama pull gpt-oss:20b mistral-small3.2:24b
-
-# Run LLM-as-a-Judge evaluation
-python examples/proper_apee_evaluation.py
-
-# Run Phase 6 visualization demo
-python examples/phase6_demo.py</code></pre>
-        </div>
-
+        <!-- Roadmap -->
         <h2 id="roadmap"><i class="fas fa-road"></i> Development Roadmap</h2>
         
         <div class="roadmap">
