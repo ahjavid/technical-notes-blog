@@ -5,11 +5,23 @@ Phase 2 implementation with multiple scoring strategies:
 - Heuristic scoring (fast, no LLM needed)
 - LLM-based scoring (accurate, requires Ollama)
 - Composite scoring (combines multiple methods)
+
+Phase 3 heuristic enhancements:
+- ROUGE scoring for reference-based evaluation
+- Exact keyword matching from expected_keywords
+- Constraint validation from constraints field
+- Code execution (pass@k) for code generation tasks
+- JSON/structure validation
 """
 
 import re
+import json
+import subprocess
+import tempfile
+import textwrap
 from abc import ABC, abstractmethod
-from typing import Optional
+from collections import Counter
+from typing import Optional, Any
 from pydantic import BaseModel, Field
 
 from apee.models import Task, AgentResult
@@ -46,16 +58,26 @@ class HeuristicScorer(QualityScorer):
     
     Uses text analysis patterns without LLM calls.
     Good for quick evaluations and baseline comparisons.
+    
+    Phase 3 Enhancements:
+    - ROUGE scoring when reference_answer exists
+    - Exact keyword matching from expected_keywords
+    - Constraint validation from constraints field
+    - Code execution (pass@k) for code tasks (optional)
+    - JSON/structure validation
     """
     
     def __init__(
         self,
         min_words: int = 20,
         max_words: int = 500,
-        structure_weight: float = 0.2,
-        relevance_weight: float = 0.3,
-        completeness_weight: float = 0.3,
-        clarity_weight: float = 0.2
+        structure_weight: float = 0.15,
+        relevance_weight: float = 0.25,
+        completeness_weight: float = 0.25,
+        clarity_weight: float = 0.15,
+        accuracy_weight: float = 0.20,  # New: for reference-based scoring
+        enable_code_execution: bool = False,  # Safety: disabled by default
+        code_execution_timeout: float = 5.0,
     ):
         self.min_words = min_words
         self.max_words = max_words
@@ -63,13 +85,16 @@ class HeuristicScorer(QualityScorer):
         self.relevance_weight = relevance_weight
         self.completeness_weight = completeness_weight
         self.clarity_weight = clarity_weight
+        self.accuracy_weight = accuracy_weight
+        self.enable_code_execution = enable_code_execution
+        self.code_execution_timeout = code_execution_timeout
     
     async def score(self, result: AgentResult, task: Task) -> QualityScore:
         """Async scoring (delegates to sync for heuristics)."""
         return self.score_sync(result, task)
     
     def score_sync(self, result: AgentResult, task: Task) -> QualityScore:
-        """Compute heuristic quality score."""
+        """Compute heuristic quality score with enhanced metrics."""
         output = result.output
         
         if not output or not output.strip():
@@ -81,25 +106,59 @@ class HeuristicScorer(QualityScorer):
         # Calculate component scores
         relevance = self._score_relevance(output, task)
         completeness = self._score_completeness(output, task)
-        structure = self._score_structure(output)
+        structure = self._score_structure(output, task)  # Enhanced with expected_structure
         clarity = self._score_clarity(output)
         
-        # Weighted average
-        overall = (
-            relevance * self.relevance_weight +
-            completeness * self.completeness_weight +
-            structure * self.structure_weight +
-            clarity * self.clarity_weight
+        # Phase 3: Enhanced accuracy scoring
+        accuracy = self._score_accuracy(output, task)
+        
+        # Phase 3: Keyword exact match bonus
+        keyword_score = self._score_expected_keywords(output, task)
+        
+        # Phase 3: Constraint validation
+        constraint_score = self._score_constraints(output, task)
+        
+        # Blend keyword and constraint scores into relevance
+        enhanced_relevance = (
+            relevance * 0.5 + 
+            keyword_score * 0.3 + 
+            constraint_score * 0.2
         )
         
+        # Weighted average with accuracy
+        if accuracy > 0:
+            # Reference-based evaluation available
+            overall = (
+                enhanced_relevance * self.relevance_weight +
+                completeness * self.completeness_weight +
+                structure * self.structure_weight +
+                clarity * self.clarity_weight +
+                accuracy * self.accuracy_weight
+            )
+        else:
+            # No reference, redistribute accuracy weight
+            total_weight = (
+                self.relevance_weight + self.completeness_weight + 
+                self.structure_weight + self.clarity_weight
+            )
+            overall = (
+                enhanced_relevance * (self.relevance_weight / total_weight) +
+                completeness * (self.completeness_weight / total_weight) +
+                structure * (self.structure_weight / total_weight) +
+                clarity * (self.clarity_weight / total_weight)
+            )
+        
         return QualityScore(
-            overall=overall,
-            relevance=relevance,
+            overall=min(1.0, overall),
+            relevance=enhanced_relevance,
             completeness=completeness,
             structure=structure,
-            accuracy=0.0,  # Cannot assess without ground truth
+            accuracy=accuracy,
             clarity=clarity,
-            reasoning=self._generate_reasoning(relevance, completeness, structure, clarity)
+            reasoning=self._generate_reasoning(
+                enhanced_relevance, completeness, structure, clarity, accuracy,
+                keyword_score, constraint_score
+            )
         )
     
     def _score_relevance(self, output: str, task: Task) -> float:
@@ -126,6 +185,364 @@ class HeuristicScorer(QualityScorer):
         
         return min(1.0, found / len(task_words) * 1.5)  # Scale up slightly
     
+    def _score_expected_keywords(self, output: str, task: Task) -> float:
+        """
+        Phase 3: Score based on exact expected keyword matching.
+        
+        Uses expected_keywords from task context for precise evaluation.
+        """
+        expected_keywords = task.context.get("expected_keywords", [])
+        if not expected_keywords:
+            return 0.5  # Neutral if no expected keywords
+        
+        output_lower = output.lower()
+        found = sum(1 for kw in expected_keywords if kw.lower() in output_lower)
+        
+        return found / len(expected_keywords)
+    
+    def _score_constraints(self, output: str, task: Task) -> float:
+        """
+        Phase 3: Score based on constraint satisfaction.
+        
+        Validates that output meets specified constraints.
+        """
+        constraints = task.context.get("constraints", [])
+        if not constraints:
+            return 0.5  # Neutral if no constraints
+        
+        output_lower = output.lower()
+        satisfied = 0
+        
+        for constraint in constraints:
+            constraint_lower = constraint.lower()
+            
+            # Extract key terms from constraint
+            key_terms = re.findall(r'\b[a-z]{3,}\b', constraint_lower)
+            key_terms = [t for t in key_terms if t not in {
+                'must', 'should', 'use', 'have', 'with', 'the', 'and', 'for'
+            }]
+            
+            if key_terms:
+                # Check if majority of key terms are present
+                found = sum(1 for term in key_terms if term in output_lower)
+                if found >= len(key_terms) * 0.5:
+                    satisfied += 1
+            else:
+                satisfied += 0.5  # Partial credit if can't parse constraint
+        
+        return satisfied / len(constraints)
+    
+    def _score_accuracy(self, output: str, task: Task) -> float:
+        """
+        Phase 3: Score accuracy using reference answer when available.
+        
+        Implements:
+        - ROUGE-L scoring for text overlap
+        - Code execution (pass@k) for code tasks (if enabled)
+        - JSON validation for structured outputs
+        """
+        reference = task.context.get("reference_answer")
+        if not reference:
+            return 0.0  # No reference available
+        
+        # Detect task type
+        is_code_task = self._is_code_task(task)
+        
+        if is_code_task and self.enable_code_execution:
+            # Try code execution first
+            exec_score = self._execute_code(output, task)
+            if exec_score is not None:
+                return exec_score
+        
+        # Check for JSON output
+        json_score = self._validate_json(output, reference)
+        if json_score is not None:
+            return json_score
+        
+        # Default to ROUGE-L scoring
+        return self._rouge_l_score(output, reference)
+    
+    def _rouge_l_score(self, candidate: str, reference: str) -> float:
+        """
+        Compute ROUGE-L (Longest Common Subsequence) score.
+        
+        Measures the longest matching sequence of words.
+        """
+        # Tokenize
+        cand_tokens = self._tokenize(candidate)
+        ref_tokens = self._tokenize(reference)
+        
+        if not cand_tokens or not ref_tokens:
+            return 0.0
+        
+        # Compute LCS length
+        lcs_length = self._lcs_length(cand_tokens, ref_tokens)
+        
+        # Compute precision and recall
+        precision = lcs_length / len(cand_tokens) if cand_tokens else 0
+        recall = lcs_length / len(ref_tokens) if ref_tokens else 0
+        
+        # F1 score
+        if precision + recall == 0:
+            return 0.0
+        
+        f1 = 2 * precision * recall / (precision + recall)
+        return f1
+    
+    def _tokenize(self, text: str) -> list[str]:
+        """Tokenize text for ROUGE scoring."""
+        # Remove code block markers for fair comparison
+        text = re.sub(r'```[a-z]*\n?', '', text)
+        # Lowercase and extract words/tokens
+        return re.findall(r'\b[a-z0-9_]+\b', text.lower())
+    
+    def _lcs_length(self, x: list[str], y: list[str]) -> int:
+        """Compute length of Longest Common Subsequence."""
+        m, n = len(x), len(y)
+        
+        # Optimize for memory: only keep two rows
+        prev = [0] * (n + 1)
+        curr = [0] * (n + 1)
+        
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if x[i-1] == y[j-1]:
+                    curr[j] = prev[j-1] + 1
+                else:
+                    curr[j] = max(prev[j], curr[j-1])
+            prev, curr = curr, prev
+        
+        return prev[n]
+    
+    def _rouge_1_score(self, candidate: str, reference: str) -> float:
+        """
+        Compute ROUGE-1 (unigram overlap) F1 score.
+        """
+        cand_tokens = self._tokenize(candidate)
+        ref_tokens = self._tokenize(reference)
+        
+        if not cand_tokens or not ref_tokens:
+            return 0.0
+        
+        cand_counter = Counter(cand_tokens)
+        ref_counter = Counter(ref_tokens)
+        
+        # Count overlapping tokens
+        overlap = sum((cand_counter & ref_counter).values())
+        
+        precision = overlap / len(cand_tokens) if cand_tokens else 0
+        recall = overlap / len(ref_tokens) if ref_tokens else 0
+        
+        if precision + recall == 0:
+            return 0.0
+        
+        return 2 * precision * recall / (precision + recall)
+    
+    def _is_code_task(self, task: Task) -> bool:
+        """Detect if task is a code generation task."""
+        category = task.context.get("category", "")
+        if category == "code_generation":
+            return True
+        
+        code_keywords = ["implement", "write a function", "code", "def ", "class "]
+        return any(kw in task.description.lower() for kw in code_keywords)
+    
+    def _execute_code(self, output: str, task: Task) -> Optional[float]:
+        """
+        Phase 3: Execute code and validate against test cases (pass@k).
+        
+        Safety: Runs in isolated subprocess with timeout.
+        Returns None if execution is not applicable.
+        """
+        if not self.enable_code_execution:
+            return None
+        
+        # Extract code block from output
+        code = self._extract_code(output)
+        if not code:
+            return None
+        
+        # Get test cases from task context
+        test_cases = task.context.get("test_cases", [])
+        reference = task.context.get("reference_answer", "")
+        
+        # Build test script
+        test_script = self._build_test_script(code, test_cases, reference)
+        if not test_script:
+            return None
+        
+        try:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=True) as f:
+                f.write(test_script)
+                f.flush()
+                
+                result = subprocess.run(
+                    ['python', f.name],
+                    capture_output=True,
+                    text=True,
+                    timeout=self.code_execution_timeout
+                )
+                
+                if result.returncode == 0:
+                    # Parse test results from output
+                    return self._parse_test_results(result.stdout)
+                else:
+                    return 0.0  # Execution failed
+                    
+        except subprocess.TimeoutExpired:
+            return 0.0
+        except Exception:
+            return None  # Fall back to text comparison
+    
+    def _extract_code(self, output: str) -> Optional[str]:
+        """Extract code block from output."""
+        # Try to find fenced code block
+        match = re.search(r'```(?:python)?\n?(.*?)```', output, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        
+        # Try to find indented code block
+        lines = output.split('\n')
+        code_lines = []
+        in_code = False
+        
+        for line in lines:
+            if line.startswith('def ') or line.startswith('class '):
+                in_code = True
+            if in_code:
+                code_lines.append(line)
+                if line and not line[0].isspace() and not line.startswith('def ') and not line.startswith('class '):
+                    if code_lines:
+                        break
+        
+        if code_lines:
+            return '\n'.join(code_lines)
+        
+        return None
+    
+    def _build_test_script(self, code: str, test_cases: list, reference: str) -> Optional[str]:
+        """Build a test script for code execution."""
+        if not test_cases and not reference:
+            return None
+        
+        script_parts = [
+            "import sys",
+            "passed = 0",
+            "total = 0",
+            "",
+            "# Code under test",
+            code,
+            "",
+            "# Tests",
+        ]
+        
+        for i, test in enumerate(test_cases):
+            if isinstance(test, dict):
+                test_code = f"""
+total += 1
+try:
+    result = {test.get('call', 'None')}
+    expected = {test.get('expected', 'None')}
+    if result == expected:
+        passed += 1
+except Exception:
+    pass
+"""
+                script_parts.append(test_code)
+        
+        script_parts.append("""
+if total > 0:
+    print(f"PASS_RATE:{passed}/{total}")
+else:
+    print("NO_TESTS")
+""")
+        
+        return '\n'.join(script_parts)
+    
+    def _parse_test_results(self, stdout: str) -> float:
+        """Parse test results from execution output."""
+        match = re.search(r'PASS_RATE:(\d+)/(\d+)', stdout)
+        if match:
+            passed = int(match.group(1))
+            total = int(match.group(2))
+            return passed / total if total > 0 else 0.0
+        return 0.5  # Unknown result
+    
+    def _validate_json(self, output: str, reference: str) -> Optional[float]:
+        """
+        Validate JSON structure and content.
+        
+        Returns None if neither output nor reference is valid JSON.
+        """
+        try:
+            out_json = self._extract_json(output)
+            ref_json = self._extract_json(reference)
+            
+            if out_json is None or ref_json is None:
+                return None
+            
+            return self._compare_json(out_json, ref_json)
+            
+        except Exception:
+            return None
+    
+    def _extract_json(self, text: str) -> Optional[Any]:
+        """Extract and parse JSON from text."""
+        # Try to find JSON block
+        match = re.search(r'```json\n?(.*?)```', text, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group(1))
+            except json.JSONDecodeError:
+                pass
+        
+        # Try to find raw JSON
+        for pattern in [r'\{.*\}', r'\[.*\]']:
+            match = re.search(pattern, text, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group(0))
+                except json.JSONDecodeError:
+                    continue
+        
+        return None
+    
+    def _compare_json(self, output: Any, reference: Any) -> float:
+        """Compare JSON structures recursively."""
+        if type(output) != type(reference):
+            return 0.0
+        
+        if isinstance(reference, dict):
+            if not reference:
+                return 1.0 if not output else 0.0
+            
+            scores = []
+            for key in reference:
+                if key in output:
+                    scores.append(self._compare_json(output[key], reference[key]))
+                else:
+                    scores.append(0.0)
+            
+            # Penalize extra keys slightly
+            extra_keys = len(set(output.keys()) - set(reference.keys()))
+            penalty = extra_keys * 0.05
+            
+            return max(0.0, sum(scores) / len(scores) - penalty) if scores else 0.0
+            
+        elif isinstance(reference, list):
+            if not reference:
+                return 1.0 if not output else 0.0
+            
+            if len(output) != len(reference):
+                return 0.5  # Partial credit for wrong length
+            
+            scores = [self._compare_json(o, r) for o, r in zip(output, reference)]
+            return sum(scores) / len(scores) if scores else 0.0
+        
+        else:
+            # Primitive comparison
+            return 1.0 if output == reference else 0.0
+    
     def _score_completeness(self, output: str, task: Task) -> float:
         """Score based on response length and coverage."""
         words = output.split()
@@ -150,22 +567,27 @@ class HeuristicScorer(QualityScorer):
         
         return min(1.0, length_score)
     
-    def _score_structure(self, output: str) -> float:
-        """Score based on formatting and organization."""
+    def _score_structure(self, output: str, task: Optional[Task] = None) -> float:
+        """
+        Score based on formatting and organization.
+        
+        Phase 3: Enhanced with expected_structure validation.
+        """
         score = 0.4  # Base score
         
         # Check for bullet points or numbered lists
-        if re.search(r'^[\s]*[-*•]\s', output, re.MULTILINE):
+        has_bullets = bool(re.search(r'^[\s]*[-*•]\s', output, re.MULTILINE))
+        has_numbered = bool(re.search(r'^[\s]*\d+[.)]\s', output, re.MULTILINE))
+        has_code = '```' in output or bool(re.search(r'^    [a-z]', output, re.MULTILINE))
+        has_headers = bool(re.search(r'^#+\s|^[A-Z][^.!?]*:$', output, re.MULTILINE))
+        
+        if has_bullets:
             score += 0.2
-        if re.search(r'^[\s]*\d+[.)]\s', output, re.MULTILINE):
+        if has_numbered:
             score += 0.15
-        
-        # Check for code blocks
-        if '```' in output:
+        if has_code:
             score += 0.15
-        
-        # Check for headers/sections
-        if re.search(r'^#+\s|^[A-Z][^.!?]*:$', output, re.MULTILINE):
+        if has_headers:
             score += 0.1
         
         # Check for paragraphs (multiple line breaks)
@@ -177,7 +599,52 @@ class HeuristicScorer(QualityScorer):
         if len(output) > 500 and '\n' not in output:
             score -= 0.2
         
+        # Phase 3: Validate expected structure
+        if task:
+            expected_structure = task.context.get("expected_structure")
+            if expected_structure:
+                structure_score = self._validate_expected_structure(
+                    output, expected_structure,
+                    has_code=has_code,
+                    has_bullets=has_bullets,
+                    has_numbered=has_numbered,
+                    has_headers=has_headers
+                )
+                # Blend with base structure score
+                score = score * 0.5 + structure_score * 0.5
+        
         return min(1.0, max(0.0, score))
+    
+    def _validate_expected_structure(
+        self, 
+        output: str, 
+        expected: str,
+        has_code: bool = False,
+        has_bullets: bool = False,
+        has_numbered: bool = False,
+        has_headers: bool = False
+    ) -> float:
+        """
+        Phase 3: Validate output matches expected structure type.
+        """
+        expected_lower = expected.lower()
+        
+        structure_checks = {
+            "code_block": has_code,
+            "code": has_code,
+            "list": has_bullets or has_numbered,
+            "bullet": has_bullets,
+            "numbered": has_numbered,
+            "steps": has_numbered,
+            "headers": has_headers,
+            "sections": has_headers,
+        }
+        
+        for struct_type, has_struct in structure_checks.items():
+            if struct_type in expected_lower:
+                return 1.0 if has_struct else 0.3
+        
+        return 0.5  # Unknown structure type
     
     def _score_clarity(self, output: str) -> float:
         """Score based on readability indicators."""
@@ -215,9 +682,16 @@ class HeuristicScorer(QualityScorer):
         relevance: float, 
         completeness: float, 
         structure: float, 
-        clarity: float
+        clarity: float,
+        accuracy: float = 0.0,
+        keyword_score: float = 0.0,
+        constraint_score: float = 0.0
     ) -> str:
-        """Generate human-readable scoring explanation."""
+        """
+        Generate human-readable scoring explanation.
+        
+        Phase 3: Enhanced with accuracy, keyword, and constraint feedback.
+        """
         parts = []
         
         if relevance >= 0.8:
@@ -241,6 +715,27 @@ class HeuristicScorer(QualityScorer):
             parts.append("clear writing")
         elif clarity < 0.4:
             parts.append("unclear writing")
+        
+        # Phase 3: Enhanced feedback
+        if accuracy > 0:
+            if accuracy >= 0.8:
+                parts.append("high accuracy (ROUGE)")
+            elif accuracy >= 0.5:
+                parts.append("moderate accuracy")
+            else:
+                parts.append("low accuracy vs reference")
+        
+        if keyword_score > 0 and keyword_score != 0.5:
+            if keyword_score >= 0.8:
+                parts.append(f"keywords: {keyword_score:.0%} matched")
+            elif keyword_score < 0.5:
+                parts.append(f"keywords: {keyword_score:.0%} missed")
+        
+        if constraint_score > 0 and constraint_score != 0.5:
+            if constraint_score >= 0.8:
+                parts.append("constraints satisfied")
+            elif constraint_score < 0.5:
+                parts.append("constraints violated")
         
         return "; ".join(parts) if parts else "average quality"
 
