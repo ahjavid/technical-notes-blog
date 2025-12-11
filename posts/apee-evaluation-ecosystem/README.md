@@ -31,9 +31,9 @@ The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systema
 **Agents** (small, diverse families - ordered for optimal pattern execution):
 | Role | Model | Family | Position | Benchmark Strength |
 |------|-------|--------|----------|-------------------|
-| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | 1st (Leader) | analysis: 0.964, reasoning: 0.950 |
-| Coder (Executor) | llama3.2:3b | Llama | 2nd (Worker) | code_generation: 0.950 |
-| Reviewer | granite4:3b | Granite | 3rd (Final) | code_review: 0.935 |
+| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | 1st (Leader) | analysis: 0.939, qa_reasoning: 0.957 |
+| Coder (Executor) | llama3.2:3b | Llama | 2nd (Worker) | code_generation: 0.983 |
+| Reviewer | granite4:3b | Granite | 3rd (Final) | code_review: 0.928 |
 
 > **Note**: Agent order matters! Analyst is first for hierarchical (planning/synthesis), then coder, then reviewer for logical pipeline flow: analyze → code → review.
 
@@ -539,9 +539,9 @@ Following LLM-as-a-Judge best practices, models are designated as either **agent
 
 | Model            | Family  | Params | Role Optimization | Benchmark Score |
 |------------------|---------|--------|-------------------|-----------------|
-| llama3.2:3b      | Llama   | 3B     | CODER             | code_gen=0.950  |
-| qwen2.5-coder:3b | Qwen    | 3B     | ANALYZER          | analysis=0.964  |
-| granite4:3b      | Granite | 3B     | REVIEWER          | code_review=0.935 |
+| llama3.2:3b      | Llama   | 3B     | CODER             | code_gen=0.983  |
+| qwen2.5-coder:3b | Qwen    | 3B     | ANALYZER          | analysis=0.939  |
+| granite4:3b      | Granite | 3B     | REVIEWER          | code_review=0.928 |
 
 #### Judge Models (Large, 20-24B+)
 
@@ -600,7 +600,7 @@ Following LLM-as-a-Judge best practices, models are designated as either **agent
 
 ### Key Insights
 
-1. **phi4-mini:3.8b is the new top performer** (0.892) - excels at code_review (0.991)
+1. **phi4-mini:3.8b is the top performer** (0.892) - excels at code_review (0.991)
 2. **llama3.2:3b close second** (0.889) - best at code_generation (0.983) and reasoning (0.909)
 3. **qwen3:4b dominates instruction_following** (0.84 vs 0.57-0.71) - significantly better than others
 4. **qwen2.5-coder:3b excels at code_debug** (0.965) and qa_reasoning (0.957)
