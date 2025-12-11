@@ -3,508 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APEE: Adaptive Poly-Agentic Evaluation Ecosystem | Technical Notes Blog</title>
-    <meta name="description" content="A comprehensive framework for evaluating and benchmarking multi-agent AI systems using LLM-as-a-Judge methodology">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>APEE: Adaptive Poly-Agentic Evaluation Ecosystem | A.H. Javid</title>
+    <meta name="description" content="A comprehensive framework for evaluating multi-agent AI systems using LLM-as-a-Judge methodology">
     <link rel="stylesheet" href="../../assets/css/post.css">
-    <style>
-        /* APEE-specific styles - purple/teal theme */
-        .hero-section {
-            background: linear-gradient(135deg, #7c3aed 0%, #10b981 100%);
-            color: white;
-            padding: 80px 0;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><defs><pattern id="agents" width="100" height="20" patternUnits="userSpaceOnUse"><circle cx="15" cy="10" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="50" cy="5" r="1.5" fill="rgba(255,255,255,0.08)"/><circle cx="85" cy="12" r="2.5" fill="rgba(255,255,255,0.06)"/><line x1="15" y1="10" x2="50" y2="5" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/><line x1="50" y1="5" x2="85" y2="12" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/></pattern></defs><rect width="100%" height="100%" fill="url(%23agents)"/></svg>') repeat;
-            opacity: 0.3;
-        }
-        
-        .hero-content {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 20px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .hero-title {
-            font-size: 3.2em;
-            margin-bottom: 20px;
-            font-weight: 700;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .hero-subtitle {
-            font-size: 1.4em;
-            opacity: 0.9;
-            margin-bottom: 30px;
-            font-weight: 300;
-        }
-        
-        .post-meta {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            flex-wrap: wrap;
-            opacity: 0.9;
-            font-size: 1.1em;
-        }
-        
-        .post-meta span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .article-content {
-            max-width: 900px;
-            margin: -50px auto 60px;
-            background: white;
-            border-radius: 20px;
-            padding: 60px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            position: relative;
-            z-index: 2;
-            line-height: 1.7;
-        }
-        
-        h2 {
-            color: #2c3e50;
-            font-size: 1.8em;
-            margin: 40px 0 20px;
-            padding-bottom: 10px;
-            border-bottom: 3px solid #7c3aed;
-        }
-        
-        h3 {
-            color: #34495e;
-            margin: 25px 0 15px;
-        }
-        
-        p {
-            color: #5a6c7d;
-            margin-bottom: 15px;
-        }
-        
-        /* Key findings box */
-        .insight-box {
-            background: linear-gradient(135deg, #f3e8ff, #ecfdf5);
-            border-radius: 15px;
-            padding: 30px;
-            margin: 40px 0;
-            border-left: 5px solid #7c3aed;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.1);
-        }
-        
-        .insight-box h3 {
-            color: #7c3aed;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .insight-box ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-        
-        .insight-box li {
-            padding: 8px 0;
-            color: #4a5568;
-        }
-        
-        /* Performance table */
-        .performance-section {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 35px;
-            margin: 40px 0;
-            border-left: 5px solid #10b981;
-        }
-        
-        .performance-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 25px 0;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            font-size: 0.9em;
-        }
-        
-        .performance-table th,
-        .performance-table td {
-            padding: 12px 10px;
-            text-align: left;
-            border-bottom: 1px solid #e1e8ed;
-        }
-        
-        .performance-table th {
-            background: linear-gradient(135deg, #7c3aed, #10b981);
-            color: white;
-            font-weight: 600;
-            font-size: 0.9em;
-        }
-        
-        .performance-table tbody tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .score-high {
-            color: #10b981;
-            font-weight: 700;
-        }
-        
-        .score-medium {
-            color: #f59e0b;
-            font-weight: 600;
-        }
-        
-        .score-low {
-            color: #ef4444;
-            font-weight: 600;
-        }
-        
-        /* Feature cards */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 25px;
-            margin: 30px 0;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            border: 1px solid #e1e8ed;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15);
-            border-color: #7c3aed;
-        }
-        
-        .card-icon {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-        }
-        
-        .card h4 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-size: 1.1em;
-        }
-        
-        .card p {
-            color: #7f8c8d;
-            font-size: 0.95em;
-            margin: 0;
-        }
-        
-        /* Code block */
-        .code-section {
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 25px;
-            border-radius: 12px;
-            overflow-x: auto;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            margin: 30px 0;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            position: relative;
-        }
-        
-        .code-section pre {
-            margin: 0;
-            padding: 0;
-            background: transparent;
-            border: none;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-        
-        .code-section code {
-            background: transparent;
-            color: inherit;
-            padding: 0;
-            font-size: 0.85em;
-            line-height: 1.6;
-            font-family: inherit;
-        }
-        
-        .code-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #7c3aed, #10b981);
-        }
-        
-        /* Architecture diagram */
-        .architecture-box {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 30px;
-            margin: 40px 0;
-            overflow-x: auto;
-        }
-        
-        .architecture-box pre {
-            margin: 0;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.85em;
-            color: #10b981;
-            line-height: 1.4;
-        }
-        
-        /* Roadmap */
-        .roadmap {
-            position: relative;
-            padding-left: 30px;
-            margin: 30px 0;
-        }
-        
-        .roadmap::before {
-            content: '';
-            position: absolute;
-            left: 8px;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: linear-gradient(to bottom, #7c3aed, #10b981);
-            border-radius: 2px;
-        }
-        
-        .roadmap-item {
-            position: relative;
-            margin-bottom: 25px;
-            padding-left: 25px;
-        }
-        
-        .roadmap-item::before {
-            content: '';
-            position: absolute;
-            left: -25px;
-            top: 5px;
-            width: 16px;
-            height: 16px;
-            background: white;
-            border: 3px solid #7c3aed;
-            border-radius: 50%;
-        }
-        
-        .roadmap-item.completed::before {
-            background: #10b981;
-            border-color: #10b981;
-        }
-        
-        .roadmap-item h4 {
-            color: #2c3e50;
-            margin-bottom: 8px;
-        }
-        
-        .roadmap-item p {
-            color: #7f8c8d;
-            font-size: 0.95em;
-            margin: 0;
-        }
-        
-        /* CTA buttons */
-        .cta-section {
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(16, 185, 129, 0.1));
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            margin: 40px 0;
-            border: 1px solid rgba(124, 58, 237, 0.2);
-        }
-        
-        .btn-group {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 25px;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 15px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #7c3aed, #10b981);
-            color: white;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
-        }
-        
-        .btn-secondary {
-            background: white;
-            color: #7c3aed;
-            border: 2px solid #7c3aed;
-        }
-        
-        .btn-secondary:hover {
-            background: #7c3aed;
-            color: white;
-        }
-        
-        /* Navigation */
-        .nav-back {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: rgba(255,255,255,0.9);
-            padding: 12px 20px;
-            border-radius: 50px;
-            text-decoration: none;
-            color: #7c3aed;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-back:hover {
-            background: #7c3aed;
-            color: white;
-        }
-        
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 40px 20px;
-            color: #7f8c8d;
-            border-top: 1px solid #e1e8ed;
-            margin-top: 60px;
-        }
-        
-        footer a {
-            color: #7c3aed;
-            text-decoration: none;
-        }
-        
-        footer a:hover {
-            text-decoration: underline;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.2em;
-            }
-            
-            .article-content {
-                padding: 30px 20px;
-                margin: -30px 15px 40px;
-            }
-            
-            .post-meta {
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .performance-table {
-                font-size: 0.8em;
-            }
-            
-            .card-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .nav-back {
-                top: 10px;
-                left: 10px;
-                padding: 10px 15px;
-                font-size: 0.9em;
-            }
-        }
-    </style>
 </head>
 <body>
-    <a href="../../index.html" class="nav-back">
-        <i class="fas fa-arrow-left"></i> Back to Blog
-    </a>
+    <nav class="site-nav">
+        <div class="nav-container">
+            <a href="../../" class="nav-brand">A.H. Javid</a>
+            <div class="nav-links">
+                <a href="../../#research">Research</a>
+                <a href="https://github.com/ahjavid/technical-notes-blog">GitHub</a>
+            </div>
+        </div>
+    </nav>
 
-    <header class="hero-section">
-        <div class="hero-content">
-            <h1 class="hero-title">APEE: Adaptive Poly-Agentic Evaluation Ecosystem</h1>
-            <p class="hero-subtitle">A comprehensive framework for evaluating multi-agent AI systems using LLM-as-a-Judge methodology</p>
-            <div class="post-meta">
-                <span><i class="fas fa-calendar"></i> December 2025</span>
-                <span><i class="fas fa-clock"></i> ~15 min read</span>
-                <span><i class="fas fa-robot"></i> 12 Scenarios</span>
-                <span><i class="fas fa-flask"></i> Active Research</span>
+    <header class="article-header">
+        <div class="article-header-inner">
+            <a href="../../" class="back-link">← Back to Research</a>
+            <span class="article-category">Multi-Agent AI</span>
+            <h1 class="article-title">APEE: Adaptive Poly-Agentic Evaluation Ecosystem</h1>
+            <p class="article-subtitle">
+                A comprehensive framework for evaluating and benchmarking multi-agent AI systems 
+                using LLM-as-a-Judge methodology. 12 collaborative scenarios tested across 6 
+                collaboration patterns with ensemble judges.
+            </p>
+            <div class="article-meta">
+                <span class="article-meta-item">December 2025</span>
+                <span class="article-meta-item">15 min read</span>
+                <span class="article-meta-item">Active Research</span>
             </div>
         </div>
     </header>
 
     <article class="article-content">
-        <h2 id="overview"><i class="fas fa-bullseye"></i> Overview</h2>
+        <div class="key-findings">
+            <div class="key-findings-title">Key Findings</div>
+            <ul>
+                <li><strong>Research synthesis leads:</strong> 7.3/10 overall — sequential pattern excels at structured analysis</li>
+                <li><strong>L2 Collaborative bottleneck:</strong> Average 5.6/10 vs L1 (5.7) and L3 (8.3) — collaboration needs work</li>
+                <li><strong>LLM-as-a-Judge:</strong> 20-24B parameter judges evaluate 3B agent outputs with detailed feedback</li>
+                <li><strong>Phase 7 complete:</strong> Progressive, jury, and calibrated evaluation modes implemented</li>
+            </ul>
+        </div>
+
+        <h2>Overview</h2>
         <p>
-            The <strong>Adaptive Poly-Agentic Evaluation Ecosystem (APEE)</strong> is a framework for systematically evaluating 
-            multi-agent AI systems. It uses <strong>LLM-as-a-Judge</strong> evaluation where large language models (20-24B parameters) 
-            evaluate smaller agent outputs, providing meaningful, nuanced scores rather than simple heuristics.
+            The <strong>Adaptive Poly-Agentic Evaluation Ecosystem (APEE)</strong> is a framework for 
+            systematically evaluating multi-agent AI systems. It uses LLM-as-a-Judge evaluation where 
+            large language models (20-24B parameters) evaluate smaller agent outputs, providing meaningful, 
+            nuanced scores rather than simple heuristics.
         </p>
 
-        <div class="card-grid">
+        <div class="cards-grid">
             <div class="card">
-                <div class="card-icon">🎯</div>
-                <h4>LLM-as-a-Judge</h4>
-                <p>Large models evaluate smaller agent outputs with detailed feedback and reasoning.</p>
+                <div class="card-title">LLM-as-a-Judge</div>
+                <div class="card-content">Large models evaluate smaller agent outputs with detailed feedback and reasoning.</div>
             </div>
             <div class="card">
-                <div class="card-icon">🤝</div>
-                <h4>Ensemble Judges</h4>
-                <p>Multiple judge models from different families reduce evaluation bias.</p>
+                <div class="card-title">Ensemble Judges</div>
+                <div class="card-content">Multiple judge models from different families reduce evaluation bias.</div>
             </div>
             <div class="card">
-                <div class="card-icon">📊</div>
-                <h4>Three-Tier Metrics</h4>
-                <p>Individual (L1) → Collaborative (L2) → Ecosystem (L3) evaluation levels.</p>
+                <div class="card-title">Three-Tier Metrics</div>
+                <div class="card-content">Individual (L1) → Collaborative (L2) → Ecosystem (L3) evaluation levels.</div>
             </div>
             <div class="card">
-                <div class="card-icon">🔄</div>
-                <h4>6 Collaboration Patterns</h4>
-                <p>Parallel, sequential, debate, hierarchical, consensus, peer review.</p>
+                <div class="card-title">6 Collaboration Patterns</div>
+                <div class="card-content">Parallel, sequential, debate, hierarchical, consensus, peer review.</div>
             </div>
         </div>
 
-        <h2 id="quickstart"><i class="fas fa-rocket"></i> Quick Start</h2>
+        <h2>Quick Start</h2>
         
-        <div class="code-section">
+        <div class="code-block">
+            <div class="code-block-header">
+                <span>Terminal</span>
+            </div>
             <pre><code># Clone and install
 git clone https://github.com/ahjavid/technical-notes-blog.git
 cd technical-notes-blog/posts/apee-evaluation-ecosystem
@@ -517,122 +92,94 @@ ollama pull gpt-oss:20b mistral-small3.2:24b
 # Run LLM-as-a-Judge evaluation
 python examples/proper_apee_evaluation.py
 
-# Run Phase 6 visualization demo
-python examples/phase6_demo.py
-
-# Run advanced evaluation modes (Phase 7)
+# Run advanced evaluation modes
 python examples/advanced_evaluation_demo.py --mode all</code></pre>
         </div>
 
-        <h2 id="architecture"><i class="fas fa-sitemap"></i> Architecture</h2>
+        <h2>Architecture</h2>
         
-        <div class="architecture-box">
-            <pre>
-┌─────────────────────────────────────────────────────────────────────┐
-│                        APEE Framework                               │
-├─────────────────────────────────────────────────────────────────────┤
-│  AGENTS (Small 3B models - diverse families)                        │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │    Coder     │  │   Analyst    │  │   Reviewer   │               │
-│  │  (Executor)  │  │  (Analyzer)  │  │  (Reviewer)  │               │
-│  │ llama3.2:3b  │  │qwen2.5-coder │  │ granite4:3b  │               │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
-│         │                 │                 │                       │
-│         └────────────┬────┴─────────────────┘                       │
-│                      │                                              │
-│         ┌────────────▼─────────────┐                                │
-│         │      Coordinator         │  6 Collaboration Patterns      │
-│         │  • run_parallel()        │  • parallel, sequential        │
-│         │  • run_pipeline()        │  • debate, hierarchical        │
-│         │  • run_consensus()       │  • consensus, peer_review      │
-│         └────────────┬─────────────┘                                │
-│                      │                                              │
-│         ┌────────────▼─────────────┐                                │
-│         │   Ensemble Evaluator     │  LLM-as-a-Judge                │
-│         │  • gpt-oss:20b (Judge 1) │  L1: Individual                │
-│         │  • mistral-small3.2:24b  │  L2: Collaborative             │
-│         │  • Aggregation: median   │  L3: Ecosystem                 │
-│         └──────────────────────────┘                                │
-└─────────────────────────────────────────────────────────────────────┘
-            </pre>
-        </div>
-
-        <h3>Configuration</h3>
         <p><strong>Agents</strong> (small 3B models, diverse families):</p>
-        <table class="performance-table">
-            <thead>
-                <tr>
-                    <th>Role</th>
-                    <th>Model</th>
-                    <th>Family</th>
-                    <th>Strength</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Coder (Executor)</td>
-                    <td>llama3.2:3b</td>
-                    <td>Llama</td>
-                    <td>Code Generation</td>
-                </tr>
-                <tr>
-                    <td>Analyst (Analyzer)</td>
-                    <td>qwen2.5-coder:3b</td>
-                    <td>Qwen</td>
-                    <td>Analysis</td>
-                </tr>
-                <tr>
-                    <td>Reviewer</td>
-                    <td>granite4:3b</td>
-                    <td>Granite</td>
-                    <td>Code Review</td>
-                </tr>
-            </tbody>
-        </table>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Model</th>
+                        <th>Family</th>
+                        <th>Strength</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Coder (Executor)</td>
+                        <td><code>llama3.2:3b</code></td>
+                        <td>Llama</td>
+                        <td>Code Generation</td>
+                    </tr>
+                    <tr>
+                        <td>Analyst (Analyzer)</td>
+                        <td><code>qwen2.5-coder:3b</code></td>
+                        <td>Qwen</td>
+                        <td>Analysis</td>
+                    </tr>
+                    <tr>
+                        <td>Reviewer</td>
+                        <td><code>granite4:3b</code></td>
+                        <td>Granite</td>
+                        <td>Code Review</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <p><strong>Judges</strong> (large models, different families):</p>
-        <table class="performance-table">
-            <thead>
-                <tr>
-                    <th>Judge</th>
-                    <th>Model</th>
-                    <th>Size</th>
-                    <th>Family</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Judge 1</td>
-                    <td>gpt-oss:20b</td>
-                    <td>20B</td>
-                    <td>GPT-OSS</td>
-                </tr>
-                <tr>
-                    <td>Judge 2</td>
-                    <td>mistral-small3.2:24b</td>
-                    <td>24B</td>
-                    <td>Mistral</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Phase 5: LLM-as-a-Judge Results -->
-        <h2 id="phase5-results"><i class="fas fa-gavel"></i> Phase 5: LLM-as-a-Judge Results</h2>
         
-        <div class="insight-box">
-            <h3><i class="fas fa-lightbulb"></i> Key Findings (December 2025)</h3>
-            <ul>
-                <li><strong>Conflict resolution leads:</strong> 7.8/10 overall - consensus pattern excels with high L1 (7.8) and L2 (7.5)</li>
-                <li><strong>Research synthesis and constrained problem tie:</strong> 7.2/10 - sequential and debate patterns perform well</li>
-                <li><strong>L2 Collaborative is the bottleneck:</strong> Average 5.7/10 vs L1 (6.9/10) and L3 (8.2/10)</li>
-                <li><strong>L3 Ecosystem strongest:</strong> All scenarios score 7.4-8.8/10 - system-level metrics consistently high</li>
-                <li><strong>Score range:</strong> 5.8-7.8 with mean 6.7/10 across all 12 scenarios</li>
-            </ul>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Judge</th>
+                        <th>Model</th>
+                        <th>Size</th>
+                        <th>Family</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Judge 1</td>
+                        <td><code>gpt-oss:20b</code></td>
+                        <td>20B</td>
+                        <td>GPT-OSS</td>
+                    </tr>
+                    <tr>
+                        <td>Judge 2</td>
+                        <td><code>mistral-small3.2:24b</code></td>
+                        <td>24B</td>
+                        <td>Mistral</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <div class="performance-section">
-            <h3><i class="fas fa-table"></i> Multi-Agent Collaborative Evaluation (12 Scenarios)</h3>
-            <table class="performance-table">
+        <h2>LLM-as-a-Judge Results</h2>
+
+        <div class="callout callout-info">
+            <div class="callout-title">December 2025 Evaluation</div>
+            <div class="callout-content">
+                <ul>
+                    <li><strong>Conflict resolution leads:</strong> 7.8/10 overall — consensus pattern excels</li>
+                    <li><strong>L2 Collaborative is the bottleneck:</strong> Average 5.7/10 vs L1 (6.9/10) and L3 (8.2/10)</li>
+                    <li><strong>L3 Ecosystem strongest:</strong> All scenarios score 7.4-8.8/10</li>
+                    <li><strong>Score range:</strong> 5.8-7.8 with mean 6.7/10 across all 12 scenarios</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Multi-Agent Collaborative Evaluation</h3>
+        
+        <div class="table-container">
+            <table>
                 <thead>
                     <tr>
                         <th>Scenario</th>
@@ -650,7 +197,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>7.8</td>
                         <td>7.5</td>
                         <td>8.3</td>
-                        <td class="score-high">7.8</td>
+                        <td class="value-positive">7.8</td>
                     </tr>
                     <tr>
                         <td>Research Synthesis</td>
@@ -658,7 +205,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>7.5</td>
                         <td>6.2</td>
                         <td>8.6</td>
-                        <td class="score-high">7.2</td>
+                        <td class="value-positive">7.2</td>
                     </tr>
                     <tr>
                         <td>Constrained Problem</td>
@@ -666,7 +213,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>7.1</td>
                         <td>6.5</td>
                         <td>8.6</td>
-                        <td class="score-high">7.2</td>
+                        <td class="value-positive">7.2</td>
                     </tr>
                     <tr>
                         <td>Knowledge Transfer</td>
@@ -674,7 +221,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>7.1</td>
                         <td>6.1</td>
                         <td>8.7</td>
-                        <td class="score-high">7.1</td>
+                        <td class="value-positive">7.1</td>
                     </tr>
                     <tr>
                         <td>Adversarial Review</td>
@@ -682,7 +229,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>7.5</td>
                         <td>6.2</td>
                         <td>8.2</td>
-                        <td class="score-high">7.1</td>
+                        <td class="value-positive">7.1</td>
                     </tr>
                     <tr>
                         <td>Error Recovery</td>
@@ -690,7 +237,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>5.7</td>
                         <td>6.8</td>
                         <td>8.6</td>
-                        <td class="score-medium">6.9</td>
+                        <td class="value-neutral">6.9</td>
                     </tr>
                     <tr>
                         <td>Creative Collab</td>
@@ -698,7 +245,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>6.6</td>
                         <td>6.0</td>
                         <td>8.5</td>
-                        <td class="score-medium">6.8</td>
+                        <td class="value-neutral">6.8</td>
                     </tr>
                     <tr>
                         <td>Realtime Collab</td>
@@ -706,7 +253,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>7.0</td>
                         <td>5.0</td>
                         <td>8.8</td>
-                        <td class="score-medium">6.5</td>
+                        <td class="value-neutral">6.5</td>
                     </tr>
                     <tr>
                         <td>Doc Sprint</td>
@@ -714,7 +261,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>6.6</td>
                         <td>5.8</td>
                         <td>7.6</td>
-                        <td class="score-medium">6.5</td>
+                        <td class="value-neutral">6.5</td>
                     </tr>
                     <tr>
                         <td>Collab Code Review</td>
@@ -722,7 +269,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>6.8</td>
                         <td>5.5</td>
                         <td>7.4</td>
-                        <td class="score-medium">6.4</td>
+                        <td class="value-neutral">6.4</td>
                     </tr>
                     <tr>
                         <td>Emergent Behavior</td>
@@ -730,7 +277,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>7.2</td>
                         <td>3.8</td>
                         <td>8.4</td>
-                        <td class="score-medium">6.0</td>
+                        <td class="value-neutral">6.0</td>
                     </tr>
                     <tr>
                         <td>Scalability Test</td>
@@ -738,82 +285,52 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>6.7</td>
                         <td>4.0</td>
                         <td>8.0</td>
-                        <td class="score-low">5.8</td>
+                        <td class="value-negative">5.8</td>
                     </tr>
                 </tbody>
             </table>
-            <p style="text-align: center; color: #7f8c8d; font-size: 0.9em; margin-top: 15px;">
-                <strong>Legend:</strong> 
-                <span class="score-high">≥7.0 Excellent</span> | 
-                <span class="score-medium">6.0-6.9 Good</span> | 
-                <span class="score-low">&lt;6.0 Needs Work</span>
-            </p>
         </div>
 
-        <!-- Model Benchmark Results -->
-        <h2 id="benchmark-results"><i class="fas fa-trophy"></i> Model Benchmark Results (December 2025)</h2>
+        <h2>Model Benchmark Results</h2>
+
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value">0.892</div>
+                <div class="stat-label">phi4-mini Best</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">0.889</div>
+                <div class="stat-label">llama3.2 2nd</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Models Tested</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">19</div>
+                <div class="stat-label">Scenarios</div>
+            </div>
+        </div>
+
+        <h3>Performance by Task Category</h3>
         
-        <div class="insight-box">
-            <h3><i class="fas fa-medal"></i> Overall Rankings</h3>
-            <ul>
-                <li><strong>🥇 phi4-mini:3.8b:</strong> Quality 0.892 (±0.092) - Best overall, excels at code_review (0.991)</li>
-                <li><strong>🥈 llama3.2:3b:</strong> Quality 0.889 (±0.130) - Best code_generation (0.983), fastest at 3000ms</li>
-                <li><strong>🥉 gemma3:4b:</strong> Quality 0.876 (±0.121) - Strong code_debug (0.960)</li>
-                <li><strong>4. qwen3:4b:</strong> Quality 0.866 (±0.077) - Lowest variance, best instruction_following (0.840)</li>
-                <li><strong>5. granite4:3b:</strong> Quality 0.837 (±0.101) - Fastest (1904ms), best math (0.889)</li>
-                <li><strong>6. qwen2.5-coder:3b:</strong> Quality 0.829 (±0.138) - Best qa_reasoning (0.957)</li>
-            </ul>
-        </div>
-
-        <div class="performance-section">
-            <h3><i class="fas fa-table"></i> Performance by Task Category (6 Models × 19 Scenarios)</h3>
-            <table class="performance-table">
+        <div class="table-container">
+            <table>
                 <thead>
                     <tr>
                         <th>Category</th>
                         <th>qwen3:4b</th>
                         <th>llama3.2:3b</th>
                         <th>gemma3:4b</th>
-                        <th>granite4:3b</th>
-                        <th>qwen2.5-coder:3b</th>
                         <th>phi4-mini:3.8b</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>analysis</td>
-                        <td>0.861</td>
-                        <td>0.934</td>
-                        <td>0.837</td>
-                        <td>0.812</td>
-                        <td class="score-high">0.939</td>
-                        <td>0.927</td>
-                    </tr>
-                    <tr>
-                        <td>code_debug</td>
-                        <td>0.776</td>
-                        <td>0.933</td>
-                        <td>0.960</td>
-                        <td>0.901</td>
-                        <td class="score-high">0.965</td>
-                        <td>0.934</td>
-                    </tr>
-                    <tr>
-                        <td>code_explanation</td>
-                        <td class="score-high">0.893</td>
-                        <td>0.837</td>
-                        <td>0.871</td>
-                        <td>0.836</td>
-                        <td>0.855</td>
-                        <td>0.876</td>
-                    </tr>
-                    <tr>
                         <td>code_generation</td>
                         <td>0.927</td>
-                        <td class="score-high">0.983</td>
+                        <td class="value-positive">0.983</td>
                         <td>0.922</td>
-                        <td>0.853</td>
-                        <td>0.888</td>
                         <td>0.927</td>
                     </tr>
                     <tr>
@@ -821,334 +338,104 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                         <td>0.912</td>
                         <td>0.983</td>
                         <td>0.969</td>
-                        <td>0.928</td>
-                        <td>0.790</td>
-                        <td class="score-high">0.991</td>
+                        <td class="value-positive">0.991</td>
                     </tr>
                     <tr>
-                        <td>instruction_following</td>
-                        <td class="score-high">0.840</td>
-                        <td>0.571</td>
-                        <td>0.607</td>
-                        <td>0.599</td>
-                        <td>0.635</td>
-                        <td>0.713</td>
-                    </tr>
-                    <tr>
-                        <td>math</td>
-                        <td>0.719</td>
-                        <td>0.800</td>
-                        <td>0.838</td>
-                        <td class="score-high">0.889</td>
-                        <td class="score-low">0.538</td>
-                        <td>0.855</td>
-                    </tr>
-                    <tr>
-                        <td>qa_factual</td>
-                        <td>0.821</td>
-                        <td>0.881</td>
-                        <td>0.914</td>
-                        <td>0.848</td>
-                        <td>0.811</td>
-                        <td class="score-high">0.919</td>
+                        <td>code_debug</td>
+                        <td>0.776</td>
+                        <td>0.933</td>
+                        <td class="value-positive">0.960</td>
+                        <td>0.934</td>
                     </tr>
                     <tr>
                         <td>qa_reasoning</td>
                         <td>0.900</td>
                         <td>0.936</td>
                         <td>0.928</td>
-                        <td>0.895</td>
-                        <td class="score-high">0.957</td>
                         <td>0.903</td>
                     </tr>
                     <tr>
-                        <td>reasoning</td>
-                        <td>0.800</td>
-                        <td class="score-high">0.909</td>
-                        <td>0.890</td>
-                        <td>0.894</td>
-                        <td>0.897</td>
-                        <td>0.899</td>
-                    </tr>
-                    <tr>
-                        <td>summarization</td>
-                        <td class="score-high">0.912</td>
-                        <td>0.842</td>
-                        <td>0.839</td>
-                        <td>0.765</td>
-                        <td>0.792</td>
-                        <td>0.766</td>
-                    </tr>
-                </tbody>
-            </table>
-            <p style="text-align: center; color: #7f8c8d; font-size: 0.9em; margin-top: 15px;">
-                <strong>Best in category highlighted.</strong> Enhanced heuristic scoring with ROUGE, keyword matching, and constraint validation.
-            </p>
-        </div>
-
-        <!-- Phase 6: Visualization & Dashboard -->
-        <h2 id="phase6-features"><i class="fas fa-chart-line"></i> Phase 6: Visualization & Dashboard</h2>
-        
-        <div class="card-grid">
-            <div class="card">
-                <div class="card-icon">📈</div>
-                <h4>Interactive Visualization</h4>
-                <p>Plotly charts for performance analysis, pattern comparison, and metric breakdown.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">🔍</div>
-                <h4>Anomaly Detection</h4>
-                <p>Statistical methods (Z-score, IQR, MAD) to identify performance outliers.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">📊</div>
-                <h4>Pattern Analysis</h4>
-                <p>Trend detection, distribution analysis, and collaboration pattern insights.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">🖥️</div>
-                <h4>Dashboard Server</h4>
-                <p>Real-time monitoring with WebSocket updates and interactive API.</p>
-            </div>
-        </div>
-
-        <!-- Phase 7: Advanced Evaluation Patterns -->
-        <h2 id="phase7-modes"><i class="fas fa-layer-group"></i> Phase 7: Advanced Evaluation Patterns</h2>
-        
-        <p>Phase 7 introduces four evaluation modes with different characteristics:</p>
-        
-        <div class="card-grid" style="margin-bottom: 30px;">
-            <div class="card" style="border-left: 4px solid #10b981;">
-                <h4>🟢 Basic Mode (Baseline)</h4>
-                <p><strong>Avg: 6.69</strong> | Range: 5.8-7.8</p>
-                <p style="font-size: 0.85em;">Standard LLM-as-a-Judge. Top: Conflict Resolution (7.8)</p>
-            </div>
-            <div class="card" style="border-left: 4px solid #3498db;">
-                <h4>🔵 Progressive Mode</h4>
-                <p><strong>Avg: 6.79</strong> | Range: 6.1-7.4</p>
-                <p style="font-size: 0.85em;">4 depth levels with fail-fast. Top: Research/Adversarial (7.4)</p>
-            </div>
-            <div class="card" style="border-left: 4px solid #f1c40f;">
-                <h4>🟡 Jury Mode</h4>
-                <p><strong>Avg: 6.83</strong> | Range: 6.2-7.8</p>
-                <p style="font-size: 0.85em;">4 personas (Skeptic, Literalist, Optimist, Pragmatist). Top: Code Review (7.8)</p>
-            </div>
-            <div class="card" style="border-left: 4px solid #e74c3c;">
-                <h4>🔴 Calibrated Mode</h4>
-                <p><strong>Avg: 6.66</strong> | Range: 5.5-7.7</p>
-                <p style="font-size: 0.85em;">Calibration + jury. Top: Realtime Collab (7.7)</p>
-            </div>
-        </div>
-
-        <div class="insight-box" style="background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);">
-            <h3 style="color: white;"><i class="fas fa-balance-scale"></i> Evaluation Mode Summary</h3>
-            <table class="performance-table" style="margin-top: 15px;">
-                <thead>
-                    <tr>
-                        <th>Mode</th>
-                        <th>Pattern</th>
-                        <th>Avg</th>
-                        <th>Range</th>
-                        <th>Best For</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Basic</td>
-                        <td>Standard</td>
-                        <td>6.69</td>
-                        <td>5.8-7.8</td>
-                        <td>Quick assessment</td>
-                    </tr>
-                    <tr>
-                        <td>Progressive</td>
-                        <td>Sequential</td>
-                        <td>6.79</td>
-                        <td>6.1-7.4</td>
-                        <td>Large-scale screening</td>
-                    </tr>
-                    <tr>
-                        <td>Jury</td>
-                        <td>Independent</td>
-                        <td>6.83</td>
-                        <td>6.2-7.8</td>
-                        <td>Subjective evaluations</td>
-                    </tr>
-                    <tr>
-                        <td>Calibrated</td>
-                        <td>Combined</td>
-                        <td>6.66</td>
-                        <td>5.5-7.7</td>
-                        <td>Novel/ambiguous tasks</td>
+                        <td>instruction_following</td>
+                        <td class="value-positive">0.840</td>
+                        <td>0.571</td>
+                        <td>0.607</td>
+                        <td>0.713</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
-        <div class="performance-section">
-            <h3><i class="fas fa-exchange-alt"></i> Cross-Mode Comparison (All 12 Scenarios)</h3>
-            <table class="performance-table">
-                <thead>
-                    <tr>
-                        <th>Scenario</th>
-                        <th>Basic</th>
-                        <th>Progressive</th>
-                        <th>Jury</th>
-                        <th>Calibrated</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Conflict Resolution</td>
-                        <td class="score-high">7.8</td>
-                        <td class="score-medium">6.6</td>
-                        <td class="score-medium">6.6</td>
-                        <td class="score-medium">6.7</td>
-                    </tr>
-                    <tr>
-                        <td>Collab Code Review</td>
-                        <td class="score-medium">6.4</td>
-                        <td class="score-medium">6.8</td>
-                        <td class="score-high">7.8</td>
-                        <td class="score-high">7.3</td>
-                    </tr>
-                    <tr>
-                        <td>Research Synthesis</td>
-                        <td class="score-high">7.2</td>
-                        <td class="score-high">7.4</td>
-                        <td class="score-high">7.0</td>
-                        <td class="score-medium">6.7</td>
-                    </tr>
-                    <tr>
-                        <td>Realtime Collab</td>
-                        <td class="score-medium">6.5</td>
-                        <td class="score-high">7.2</td>
-                        <td class="score-high">7.2</td>
-                        <td class="score-high">7.7</td>
-                    </tr>
-                    <tr>
-                        <td>Adversarial Review</td>
-                        <td class="score-high">7.1</td>
-                        <td class="score-high">7.4</td>
-                        <td class="score-high">7.3</td>
-                        <td class="score-medium">6.8</td>
-                    </tr>
-                    <tr>
-                        <td>Knowledge Transfer</td>
-                        <td class="score-high">7.1</td>
-                        <td class="score-medium">6.4</td>
-                        <td class="score-high">7.3</td>
-                        <td class="score-medium">6.8</td>
-                    </tr>
-                    <tr>
-                        <td>Constrained Problem</td>
-                        <td class="score-high">7.2</td>
-                        <td class="score-medium">6.9</td>
-                        <td class="score-medium">6.2</td>
-                        <td class="score-medium">6.0</td>
-                    </tr>
-                    <tr>
-                        <td>Scalability Test</td>
-                        <td class="score-low">5.8</td>
-                        <td class="score-medium">6.5</td>
-                        <td class="score-medium">6.4</td>
-                        <td class="score-high">7.0</td>
-                    </tr>
-                    <tr>
-                        <td>Doc Sprint</td>
-                        <td class="score-medium">6.5</td>
-                        <td class="score-medium">6.9</td>
-                        <td class="score-high">7.0</td>
-                        <td class="score-medium">6.7</td>
-                    </tr>
-                    <tr>
-                        <td>Error Recovery</td>
-                        <td class="score-medium">6.9</td>
-                        <td class="score-medium">6.8</td>
-                        <td class="score-medium">6.2</td>
-                        <td class="score-medium">6.5</td>
-                    </tr>
-                    <tr>
-                        <td>Creative Collab</td>
-                        <td class="score-medium">6.8</td>
-                        <td class="score-medium">6.1</td>
-                        <td class="score-medium">6.7</td>
-                        <td class="score-low">5.5</td>
-                    </tr>
-                    <tr>
-                        <td>Emergent Behavior</td>
-                        <td class="score-medium">6.0</td>
-                        <td class="score-medium">6.5</td>
-                        <td class="score-medium">6.3</td>
-                        <td class="score-medium">6.2</td>
-                    </tr>
-                </tbody>
-            </table>
-            <p style="text-align: center; color: #7f8c8d; font-size: 0.9em; margin-top: 15px;">
-                <strong>High-Variance Scenarios:</strong> creative_collab (1.3), scalability_test (1.2), realtime_collab (1.2)
-            </p>
-        </div>
-
-        <!-- Roadmap -->
-        <h2 id="roadmap"><i class="fas fa-road"></i> Development Roadmap</h2>
+        <h2>Advanced Evaluation Patterns (Phase 7)</h2>
         
-        <div class="roadmap">
-            <div class="roadmap-item completed">
-                <h4>✅ Phase 1: Foundation</h4>
-                <p>APEE framework architecture, metric taxonomy, Python package, Ollama integration, coordinator with multiple execution modes.</p>
+        <p>Four evaluation modes with different characteristics:</p>
+        
+        <div class="cards-grid">
+            <div class="card">
+                <div class="card-title">Basic Mode</div>
+                <div class="card-content">
+                    <strong>Avg: 6.69</strong> | Range: 5.8-7.8<br>
+                    Standard LLM-as-a-Judge. Best for quick assessment.
+                </div>
             </div>
-            <div class="roadmap-item completed">
-                <h4>✅ Phase 2: Quality Scoring</h4>
-                <p>Heuristic-based scoring, comparative scoring, composite scorer framework, LLM-as-judge scorer, 18 unit tests.</p>
+            <div class="card">
+                <div class="card-title">Progressive Mode</div>
+                <div class="card-content">
+                    <strong>Avg: 6.79</strong> | Range: 6.1-7.4<br>
+                    4 depth levels with fail-fast. Best for large-scale screening.
+                </div>
             </div>
-            <div class="roadmap-item completed">
-                <h4>✅ Phase 3: Comprehensive Benchmarks</h4>
-                <p>19 benchmark scenarios, 11 categories, statistical analysis (mean, std, CI), 6 Ollama models tested including phi4-mini:3.8b.</p>
+            <div class="card">
+                <div class="card-title">Jury Mode</div>
+                <div class="card-content">
+                    <strong>Avg: 6.83</strong> | Range: 6.2-7.8<br>
+                    4 personas (Skeptic, Literalist, Optimist, Pragmatist).
+                </div>
             </div>
-            <div class="roadmap-item completed">
-                <h4>✅ Phase 4: Full APEE Compliance</h4>
-                <p>Multi-agent collaborative scenarios, three-tier metrics (L1→L2→L3), adaptive engine, 6 collaboration patterns.</p>
-            </div>
-            <div class="roadmap-item completed">
-                <h4>✅ Phase 5: LLM-as-a-Judge Evaluation</h4>
-                <p>LLM evaluators (Goal, Semantic, Collaboration, Synthesis), EnsembleEvaluator, judge/agent family separation, 12-14B judges for 3B agents.</p>
-            </div>
-            <div class="roadmap-item completed">
-                <h4>✅ Phase 6: Visualization & Dashboard</h4>
-                <p>Interactive charts, 12 collaboration scenarios, anomaly detection (Z-score, IQR, MAD), web dashboard.</p>
-            </div>
-            <div class="roadmap-item completed">
-                <h4>✅ Phase 7: Advanced Evaluation Patterns</h4>
-                <p>Progressive Deepening (4 levels), Jury with Personas (4 types), Calibration Loop, --mode CLI, 38 unit tests.</p>
-            </div>
-            <div class="roadmap-item">
-                <h4>🔜 Phase 8: Production</h4>
-                <p>PyPI publication, enterprise deployment, comprehensive documentation, community toolkit.</p>
+            <div class="card">
+                <div class="card-title">Calibrated Mode</div>
+                <div class="card-content">
+                    <strong>Avg: 6.66</strong> | Range: 5.5-7.7<br>
+                    Calibration + jury. Best for novel/ambiguous tasks.
+                </div>
             </div>
         </div>
 
-        <div class="cta-section">
-            <h2><i class="fas fa-hands-helping"></i> Get Involved</h2>
-            <p style="color: #5a6c7d; margin-bottom: 20px;">
-                APEE is an active research project. Contributions, feedback, and collaboration are welcome!
-            </p>
-            <div class="btn-group">
-                <a href="README.md" class="btn btn-primary">
-                    <i class="fas fa-book"></i> Full Documentation
-                </a>
-                <a href="https://github.com/ahjavid/technical-notes-blog" class="btn btn-secondary">
-                    <i class="fab fa-github"></i> View on GitHub
-                </a>
+        <h2>Development Roadmap</h2>
+        
+        <ul>
+            <li><strong>✅ Phase 1-4:</strong> Foundation, quality scoring, benchmarks, full APEE compliance</li>
+            <li><strong>✅ Phase 5:</strong> LLM-as-a-Judge with ensemble evaluators</li>
+            <li><strong>✅ Phase 6:</strong> Visualization, anomaly detection, dashboard</li>
+            <li><strong>✅ Phase 7:</strong> Advanced evaluation patterns (progressive, jury, calibrated)</li>
+            <li><strong>🔜 Phase 8:</strong> PyPI publication, enterprise deployment, documentation</li>
+        </ul>
+
+        <div class="callout callout-success">
+            <div class="callout-title">Get Involved</div>
+            <div class="callout-content">
+                APEE is an active research project. Check the 
+                <a href="README.md">full documentation</a> or view on 
+                <a href="https://github.com/ahjavid/technical-notes-blog">GitHub</a>.
             </div>
+        </div>
+
+        <div class="tags">
+            <span class="tag">Multi-Agent AI</span>
+            <span class="tag">LLM Evaluation</span>
+            <span class="tag">Ollama</span>
+            <span class="tag">Benchmarking</span>
+            <span class="tag">Python</span>
         </div>
     </article>
 
-    <footer>
-        <p>
-            Part of <a href="../../index.html">Technical Notes & Research Blog</a> by 
-            <a href="https://github.com/ahjavid">ahjavid</a>
-        </p>
-        <p style="margin-top: 10px; font-size: 0.9em;">Last Updated: December 10, 2025</p>
+    <footer class="site-footer">
+        <div class="footer-content">
+            <span class="footer-text">© 2025 A.H. Javid · Last updated December 2025</span>
+            <div class="footer-links">
+                <a href="../../">Home</a>
+                <a href="https://github.com/ahjavid">GitHub</a>
+            </div>
+        </div>
     </footer>
 </body>
 </html>
