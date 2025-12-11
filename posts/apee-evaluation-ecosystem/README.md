@@ -208,6 +208,7 @@ Calibration loop + jury combined - judges negotiate rubric before scoring.
   ollama pull llama3.2:3b
   ollama pull qwen2.5-coder:3b
   ollama pull granite4:3b
+  ollama pull phi4-mini:3.8b
   
   # Judges (large, different families)
   ollama pull gpt-oss:20b

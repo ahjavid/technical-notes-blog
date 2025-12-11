@@ -511,7 +511,7 @@ cd technical-notes-blog/posts/apee-evaluation-ecosystem
 pip install -e .
 
 # Pull required models
-ollama pull llama3.2:3b qwen2.5-coder:3b granite4:3b
+ollama pull llama3.2:3b qwen2.5-coder:3b granite4:3b phi4-mini:3.8b
 ollama pull gpt-oss:20b mistral-small3.2:24b
 
 # Run LLM-as-a-Judge evaluation
@@ -750,6 +750,142 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
             </p>
         </div>
 
+        <!-- Model Benchmark Results -->
+        <h2 id="benchmark-results"><i class="fas fa-trophy"></i> Model Benchmark Results (December 2025)</h2>
+        
+        <div class="insight-box">
+            <h3><i class="fas fa-medal"></i> Overall Rankings</h3>
+            <ul>
+                <li><strong>🥇 phi4-mini:3.8b:</strong> Quality 0.892 (±0.092) - Best overall, excels at code_review (0.991)</li>
+                <li><strong>🥈 llama3.2:3b:</strong> Quality 0.889 (±0.130) - Best code_generation (0.983), fastest at 3000ms</li>
+                <li><strong>🥉 gemma3:4b:</strong> Quality 0.876 (±0.121) - Strong code_debug (0.960)</li>
+                <li><strong>4. qwen3:4b:</strong> Quality 0.866 (±0.077) - Lowest variance, best instruction_following (0.840)</li>
+                <li><strong>5. granite4:3b:</strong> Quality 0.837 (±0.101) - Fastest (1904ms), best math (0.889)</li>
+                <li><strong>6. qwen2.5-coder:3b:</strong> Quality 0.829 (±0.138) - Best qa_reasoning (0.957)</li>
+            </ul>
+        </div>
+
+        <div class="performance-section">
+            <h3><i class="fas fa-table"></i> Performance by Task Category (6 Models × 19 Scenarios)</h3>
+            <table class="performance-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>qwen3:4b</th>
+                        <th>llama3.2:3b</th>
+                        <th>gemma3:4b</th>
+                        <th>granite4:3b</th>
+                        <th>qwen2.5-coder:3b</th>
+                        <th>phi4-mini:3.8b</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>analysis</td>
+                        <td>0.861</td>
+                        <td>0.934</td>
+                        <td>0.837</td>
+                        <td>0.812</td>
+                        <td class="score-high">0.939</td>
+                        <td>0.927</td>
+                    </tr>
+                    <tr>
+                        <td>code_debug</td>
+                        <td>0.776</td>
+                        <td>0.933</td>
+                        <td>0.960</td>
+                        <td>0.901</td>
+                        <td class="score-high">0.965</td>
+                        <td>0.934</td>
+                    </tr>
+                    <tr>
+                        <td>code_explanation</td>
+                        <td class="score-high">0.893</td>
+                        <td>0.837</td>
+                        <td>0.871</td>
+                        <td>0.836</td>
+                        <td>0.855</td>
+                        <td>0.876</td>
+                    </tr>
+                    <tr>
+                        <td>code_generation</td>
+                        <td>0.927</td>
+                        <td class="score-high">0.983</td>
+                        <td>0.922</td>
+                        <td>0.853</td>
+                        <td>0.888</td>
+                        <td>0.927</td>
+                    </tr>
+                    <tr>
+                        <td>code_review</td>
+                        <td>0.912</td>
+                        <td>0.983</td>
+                        <td>0.969</td>
+                        <td>0.928</td>
+                        <td>0.790</td>
+                        <td class="score-high">0.991</td>
+                    </tr>
+                    <tr>
+                        <td>instruction_following</td>
+                        <td class="score-high">0.840</td>
+                        <td>0.571</td>
+                        <td>0.607</td>
+                        <td>0.599</td>
+                        <td>0.635</td>
+                        <td>0.713</td>
+                    </tr>
+                    <tr>
+                        <td>math</td>
+                        <td>0.719</td>
+                        <td>0.800</td>
+                        <td>0.838</td>
+                        <td class="score-high">0.889</td>
+                        <td class="score-low">0.538</td>
+                        <td>0.855</td>
+                    </tr>
+                    <tr>
+                        <td>qa_factual</td>
+                        <td>0.821</td>
+                        <td>0.881</td>
+                        <td>0.914</td>
+                        <td>0.848</td>
+                        <td>0.811</td>
+                        <td class="score-high">0.919</td>
+                    </tr>
+                    <tr>
+                        <td>qa_reasoning</td>
+                        <td>0.900</td>
+                        <td>0.936</td>
+                        <td>0.928</td>
+                        <td>0.895</td>
+                        <td class="score-high">0.957</td>
+                        <td>0.903</td>
+                    </tr>
+                    <tr>
+                        <td>reasoning</td>
+                        <td>0.800</td>
+                        <td class="score-high">0.909</td>
+                        <td>0.890</td>
+                        <td>0.894</td>
+                        <td>0.897</td>
+                        <td>0.899</td>
+                    </tr>
+                    <tr>
+                        <td>summarization</td>
+                        <td class="score-high">0.912</td>
+                        <td>0.842</td>
+                        <td>0.839</td>
+                        <td>0.765</td>
+                        <td>0.792</td>
+                        <td>0.766</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="text-align: center; color: #7f8c8d; font-size: 0.9em; margin-top: 15px;">
+                <strong>Best in category highlighted.</strong> Enhanced heuristic scoring with ROUGE, keyword matching, and constraint validation.
+            </p>
+        </div>
+
         <!-- Phase 6: Visualization & Dashboard -->
         <h2 id="phase6-features"><i class="fas fa-chart-line"></i> Phase 6: Visualization & Dashboard</h2>
         
@@ -967,7 +1103,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
             </div>
             <div class="roadmap-item completed">
                 <h4>✅ Phase 3: Comprehensive Benchmarks</h4>
-                <p>19 benchmark scenarios, 11 categories, statistical analysis (mean, std, CI), 5+ Ollama models tested.</p>
+                <p>19 benchmark scenarios, 11 categories, statistical analysis (mean, std, CI), 6 Ollama models tested including phi4-mini:3.8b.</p>
             </div>
             <div class="roadmap-item completed">
                 <h4>✅ Phase 4: Full APEE Compliance</h4>
@@ -1012,7 +1148,7 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
             Part of <a href="../../index.html">Technical Notes & Research Blog</a> by 
             <a href="https://github.com/ahjavid">ahjavid</a>
         </p>
-        <p style="margin-top: 10px; font-size: 0.9em;">Last Updated: December 9, 2025</p>
+        <p style="margin-top: 10px; font-size: 0.9em;">Last Updated: December 10, 2025</p>
     </footer>
 </body>
 </html>
