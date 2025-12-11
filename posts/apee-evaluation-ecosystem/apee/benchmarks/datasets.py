@@ -104,7 +104,10 @@ class BenchmarkDataset:
                 prompt="Write a Python function that returns the nth Fibonacci number using recursion with memoization.",
                 expected_keywords=["def", "fibonacci", "memo", "return", "if"],
                 expected_structure="code_block",
-                reference_answer="""def fibonacci(n, memo={}):
+                # Note: Using None default avoids mutable default argument anti-pattern
+                reference_answer="""def fibonacci(n, memo=None):
+    if memo is None:
+        memo = {}
     if n in memo:
         return memo[n]
     if n <= 1:
@@ -129,12 +132,13 @@ class BenchmarkDataset:
                 category=TaskCategory.CODE_GENERATION,
                 complexity=Complexity.EASY,
                 prompt="Implement binary search in Python. The function should return the index of the target element or -1 if not found.",
-                expected_keywords=["def", "binary", "search", "mid", "return"],
+                expected_keywords=["def", "binary", "search", "mid", "return", "while"],
                 expected_structure="code_block",
+                # Note: mid = left + (right - left) // 2 is overflow-safe (matters in other languages)
                 reference_answer="""def binary_search(arr, target):
     left, right = 0, len(arr) - 1
     while left <= right:
-        mid = (left + right) // 2
+        mid = left + (right - left) // 2  # overflow-safe
         if arr[mid] == target:
             return mid
         elif arr[mid] < target:
@@ -234,13 +238,16 @@ def reverse_string(s):
         result.append(s[i])
     return ''.join(result)
 ```""",
-                expected_keywords=["index", "range", "len(s)-1", "off-by-one"],
+                expected_keywords=["index", "range", "IndexError", "off-by-one", "-1"],
                 expected_structure="code_block",
+                # Bug: range(len(s), 0, -1) produces indices len(s)..1, but s[len(s)] is out of bounds
+                # Fix: range(len(s)-1, -1, -1) produces indices len(s)-1..0
                 reference_answer="""def reverse_string(s):
     result = []
-    for i in range(len(s)-1, -1, -1):
+    for i in range(len(s) - 1, -1, -1):
         result.append(s[i])
-    return ''.join(result)""",
+    return ''.join(result)
+# Alternative: return s[::-1]""",
                 rubric={"bug_identified": 0.4, "correct_fix": 0.4, "explanation": 0.2},
             ),
             
@@ -282,8 +289,8 @@ def find_pairs(arr, target):
         seen.add(num)
     return pairs
 ```""",
-                expected_keywords=["O(n)", "O(n)", "time", "space", "hash"],
-                reference_answer="Time: O(n), Space: O(n)",
+                expected_keywords=["O(n)", "time", "space", "set", "linear", "hash"],
+                reference_answer="Time complexity: O(n) - single pass through array. Space complexity: O(n) - set stores up to n elements.",
                 rubric={"time_correct": 0.35, "space_correct": 0.35, "explanation": 0.3},
             ),
             
@@ -337,8 +344,9 @@ REST (Representational State Transfer) is an architectural style for designing n
                 category=TaskCategory.MATH,
                 complexity=Complexity.MEDIUM,
                 prompt="A bag contains 5 red balls and 3 blue balls. If you draw 2 balls without replacement, what is the probability that both are red?",
-                expected_keywords=["5/8", "4/7", "20/56", "5/14"],
-                reference_answer="(5/8) × (4/7) = 20/56 = 5/14 ≈ 0.357",
+                # P(both red) = P(1st red) × P(2nd red | 1st red) = (5/8) × (4/7) = 20/56 = 5/14
+                expected_keywords=["5/8", "4/7", "5/14", "without replacement", "conditional"],
+                reference_answer="P(both red) = (5/8) × (4/7) = 20/56 = 5/14 ≈ 0.357 or about 35.7%",
                 rubric={"correct_answer": 0.5, "methodology": 0.3, "explanation": 0.2},
             ),
             
