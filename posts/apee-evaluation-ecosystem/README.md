@@ -554,6 +554,7 @@ Following LLM-as-a-Judge best practices, models are designated as either **agent
 
 | Model            | Family | Params | Notes                          |
 |------------------|--------|--------|--------------------------------|
+| phi4-mini:3.8b   | Phi    | 3.8B   | Top performer, code review     |
 | qwen2.5-coder:7b | Qwen   | 7B     | Medium coding model            |
 | qwen3:4b         | Qwen   | 4B     | Small reasoning model          |
 | qwen3:8b         | Qwen   | 8B     | Medium reasoning model         |
@@ -561,50 +562,52 @@ Following LLM-as-a-Judge best practices, models are designated as either **agent
 
 ### Comprehensive Benchmark Results
 
-**Configuration**: 5 models × 19 scenarios × 2 runs = 190 total evaluations
+**Configuration**: 6 models × 19 scenarios × 1 run = 114 total evaluations (December 10, 2025)
 
 | Model             | Quality    | ±Std  | Success | Latency |
-|-------------------|------------|-------|---------|---------|
-| **qwen3:4b**      | **0.898**  | 0.047 | 100%    | 3777ms  |
-| llama3.2:3b       | 0.879      | 0.133 | 100%    | 2446ms  |
-| gemma3:4b         | 0.869      | 0.108 | 100%    | 3023ms  |
-| granite4:3b       | 0.860      | 0.132 | 100%    | **1879ms** |
-| qwen2.5-coder:3b  | 0.848      | 0.128 | 100%    | 2011ms  |
+|-------------------|------------|-------|---------|----------|
+| **phi4-mini:3.8b**| **0.892**  | 0.092 | 100%    | 3853ms  |
+| llama3.2:3b       | 0.889      | 0.130 | 100%    | 3000ms  |
+| gemma3:4b         | 0.876      | 0.121 | 100%    | 3681ms  |
+| qwen3:4b          | 0.866      | 0.077 | 100%    | 7457ms  |
+| granite4:3b       | 0.837      | 0.101 | 100%    | **1904ms** |
+| qwen2.5-coder:3b  | 0.829      | 0.138 | 100%    | 2386ms  |
 
 ### Performance by Task Category
 
-| Category              | qwen3:4b  | llama3.2:3b | gemma3:4b | granite4:3b | qwen2.5-coder:3b |
-|-----------------------|-----------|-------------|-----------|-------------|------------------|
-| analysis              | 0.899     | 0.963       | 0.856     | 0.921       | **0.964**        |
-| code_debug            | 0.787     | 0.874       | 0.867     | 0.913       | **0.914**        |
-| code_explanation      | 0.929     | 0.904       | **0.933** | 0.853       | 0.844            |
-| code_generation       | 0.909     | **0.950**   | 0.898     | 0.849       | 0.869            |
-| code_review           | 0.942     | 0.953       | **0.956** | 0.935       | 0.936            |
-| instruction_following | **0.871** | 0.550       | 0.552     | 0.540       | 0.564            |
-| math                  | 0.759     | 0.819       | 0.884     | **0.918**   | 0.661            |
-| qa_factual            | 0.927     | 0.939       | 0.938     | **0.943**   | 0.909            |
-| qa_reasoning          | 0.943     | 0.910       | 0.931     | 0.933       | **0.966**        |
-| reasoning             | 0.934     | 0.883       | 0.889     | 0.892       | **0.950**        |
-| summarization         | **0.912** | 0.837       | 0.777     | 0.674       | 0.749            |
+| Category              | qwen3:4b  | llama3.2:3b | gemma3:4b | granite4:3b | qwen2.5-coder:3b | phi4-mini:3.8b |
+|-----------------------|-----------|-------------|-----------|-------------|------------------|----------------|
+| analysis              | 0.861     | 0.934       | 0.837     | 0.812       | **0.939**        | 0.927          |
+| code_debug            | 0.776     | 0.933       | 0.960     | 0.901       | **0.965**        | 0.934          |
+| code_explanation      | **0.893** | 0.837       | 0.871     | 0.836       | 0.855            | 0.876          |
+| code_generation       | 0.927     | **0.983**   | 0.922     | 0.853       | 0.888            | 0.927          |
+| code_review           | 0.912     | 0.983       | 0.969     | 0.928       | 0.790            | **0.991**      |
+| instruction_following | **0.840** | 0.571       | 0.607     | 0.599       | 0.635            | 0.713          |
+| math                  | 0.719     | 0.800       | 0.838     | **0.889**   | 0.538            | 0.855          |
+| qa_factual            | 0.821     | 0.881       | 0.914     | 0.848       | 0.811            | **0.919**      |
+| qa_reasoning          | 0.900     | 0.936       | 0.928     | 0.895       | **0.957**        | 0.903          |
+| reasoning             | 0.800     | **0.909**   | 0.890     | 0.894       | 0.897            | 0.899          |
+| summarization         | **0.912** | 0.842       | 0.839     | 0.765       | 0.792            | 0.766          |
 
 ### 🏆 Winners
 
 | Metric | Winner | Value |
 |--------|--------|-------|
-| **Best Quality** | qwen3:4b | 0.898 |
-| **Lowest Variance** | qwen3:4b | ±0.047 |
-| **Fastest** | granite4:3b | 1879ms |
+| **Best Quality** | phi4-mini:3.8b | 0.892 |
+| **Lowest Variance** | qwen3:4b | ±0.077 |
+| **Fastest** | granite4:3b | 1904ms |
 | **Most Efficient** | granite4:3b | quality/latency |
 
 ### Key Insights
 
-1. **qwen3:4b dominates instruction_following** (0.87 vs 0.54-0.56) - significantly better than all others
-2. **qwen2.5-coder:3b excels at reasoning tasks** - top in analysis, code_debug, qa_reasoning, reasoning
-3. **llama3.2:3b best at code_generation** - highest score (0.95) for generating code
-4. **granite4:3b leads math and qa_factual** - best for factual/mathematical tasks
-5. **gemma3:4b top at code_explanation and code_review** - best for understanding existing code
-6. **All models achieved 100% success rate** - all capable of completing tasks
-7. **Each model has unique strengths** - no single model dominates all categories
+1. **phi4-mini:3.8b is the new top performer** (0.892) - excels at code_review (0.991)
+2. **llama3.2:3b close second** (0.889) - best at code_generation (0.983) and reasoning (0.909)
+3. **qwen3:4b dominates instruction_following** (0.84 vs 0.57-0.71) - significantly better than others
+4. **qwen2.5-coder:3b excels at code_debug** (0.965) and qa_reasoning (0.957)
+5. **granite4:3b leads math** (0.889) and is fastest (1904ms) - best efficiency
+6. **gemma3:4b strong at code_debug** (0.960) and code_review (0.969)
+7. **All models achieved 100% success rate** - all capable of completing tasks
+8. **Each model has unique category strengths** - no single model dominates all
 
 ### Running Your Own Benchmark
 
