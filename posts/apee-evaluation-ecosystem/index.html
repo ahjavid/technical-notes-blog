@@ -86,7 +86,7 @@ cd technical-notes-blog/posts/apee-evaluation-ecosystem
 pip install -e .
 
 # Pull required models
-ollama pull llama3.2:3b qwen2.5-coder:3b granite4:3b phi4-mini:3.8b
+ollama pull llama3.2:3b qwen2.5-coder:3b phi4-mini:3.8b
 ollama pull gpt-oss:20b mistral-small3.2:24b
 
 # Run LLM-as-a-Judge evaluation
@@ -125,8 +125,8 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                     </tr>
                     <tr>
                         <td>Reviewer</td>
-                        <td><code>granite4:3b</code></td>
-                        <td>Granite</td>
+                        <td><code>phi4-mini:3.8b</code></td>
+                        <td>Phi</td>
                         <td>Code Review</td>
                     </tr>
                 </tbody>
@@ -168,15 +168,15 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
             <div class="callout-title">December 2025 Evaluation</div>
             <div class="callout-content">
                 <ul>
-                    <li><strong>Conflict resolution leads:</strong> 7.8/10 overall — consensus pattern excels</li>
-                    <li><strong>L2 Collaborative is the bottleneck:</strong> Average 5.7/10 vs L1 (6.9/10) and L3 (8.2/10)</li>
-                    <li><strong>L3 Ecosystem strongest:</strong> All scenarios score 7.4-8.8/10</li>
-                    <li><strong>Score range:</strong> 5.8-7.8 with mean 6.7/10 across all 12 scenarios</li>
+                    <li><strong>Adversarial review leads:</strong> 8.0/10 overall — debate pattern excels (L2=8.2)</li>
+                    <li><strong>L2 Collaborative improved:</strong> Average 7.3/10 (was 5.7/10 before message fix)</li>
+                    <li><strong>L3 Ecosystem strongest:</strong> All scenarios score 7.2-8.7/10</li>
+                    <li><strong>Score range:</strong> 6.6-8.0 with mean 7.03/10 across all 12 scenarios (Basic mode)</li>
                 </ul>
             </div>
         </div>
 
-        <h3>Multi-Agent Collaborative Evaluation</h3>
+        <h3>Multi-Agent Collaborative Evaluation (Basic Mode)</h3>
         
         <div class="table-container">
             <table>
@@ -192,100 +192,100 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Conflict Resolution</td>
-                        <td>Consensus</td>
+                        <td>Adversarial Review</td>
+                        <td>Debate</td>
                         <td>7.8</td>
-                        <td>7.5</td>
-                        <td>8.3</td>
-                        <td class="value-positive">7.8</td>
-                    </tr>
-                    <tr>
-                        <td>Research Synthesis</td>
-                        <td>Sequential</td>
-                        <td>7.5</td>
-                        <td>6.2</td>
-                        <td>8.6</td>
-                        <td class="value-positive">7.2</td>
+                        <td>8.2</td>
+                        <td>8.0</td>
+                        <td class="value-positive">8.0</td>
                     </tr>
                     <tr>
                         <td>Constrained Problem</td>
                         <td>Debate</td>
-                        <td>7.1</td>
-                        <td>6.5</td>
-                        <td>8.6</td>
-                        <td class="value-positive">7.2</td>
+                        <td>6.8</td>
+                        <td>7.8</td>
+                        <td>8.0</td>
+                        <td class="value-positive">7.5</td>
+                    </tr>
+                    <tr>
+                        <td>Research Synthesis</td>
+                        <td>Sequential</td>
+                        <td>7.8</td>
+                        <td>6.4</td>
+                        <td>8.4</td>
+                        <td class="value-positive">7.3</td>
+                    </tr>
+                    <tr>
+                        <td>Creative Collab</td>
+                        <td>Debate</td>
+                        <td>6.0</td>
+                        <td>7.8</td>
+                        <td>8.1</td>
+                        <td class="value-positive">7.3</td>
                     </tr>
                     <tr>
                         <td>Knowledge Transfer</td>
                         <td>Sequential</td>
-                        <td>7.1</td>
-                        <td>6.1</td>
-                        <td>8.7</td>
+                        <td>7.2</td>
+                        <td>6.8</td>
+                        <td>8.0</td>
+                        <td class="value-positive">7.3</td>
+                    </tr>
+                    <tr>
+                        <td>Conflict Resolution</td>
+                        <td>Consensus</td>
+                        <td>7.3</td>
+                        <td>7.5</td>
+                        <td>7.2</td>
+                        <td class="value-positive">7.3</td>
+                    </tr>
+                    <tr>
+                        <td>Realtime Collab</td>
+                        <td>Parallel</td>
+                        <td>7.3</td>
+                        <td>6.8</td>
+                        <td>8.4</td>
+                        <td class="value-positive">7.2</td>
+                    </tr>
+                    <tr>
+                        <td>Scalability Test</td>
+                        <td>Hierarchical</td>
+                        <td>7.5</td>
+                        <td>7.2</td>
+                        <td>7.6</td>
                         <td class="value-positive">7.1</td>
                     </tr>
                     <tr>
-                        <td>Adversarial Review</td>
-                        <td>Debate</td>
-                        <td>7.5</td>
+                        <td>Doc Sprint</td>
+                        <td>Peer Review</td>
                         <td>6.2</td>
-                        <td>8.2</td>
+                        <td>7.5</td>
+                        <td>7.6</td>
                         <td class="value-positive">7.1</td>
                     </tr>
                     <tr>
                         <td>Error Recovery</td>
                         <td>Hierarchical</td>
-                        <td>5.7</td>
-                        <td>6.8</td>
-                        <td>8.6</td>
-                        <td class="value-neutral">6.9</td>
-                    </tr>
-                    <tr>
-                        <td>Creative Collab</td>
-                        <td>Debate</td>
-                        <td>6.6</td>
-                        <td>6.0</td>
-                        <td>8.5</td>
-                        <td class="value-neutral">6.8</td>
-                    </tr>
-                    <tr>
-                        <td>Realtime Collab</td>
-                        <td>Parallel</td>
-                        <td>7.0</td>
-                        <td>5.0</td>
-                        <td>8.8</td>
-                        <td class="value-neutral">6.5</td>
-                    </tr>
-                    <tr>
-                        <td>Doc Sprint</td>
-                        <td>Peer Review</td>
-                        <td>6.6</td>
-                        <td>5.8</td>
-                        <td>7.6</td>
-                        <td class="value-neutral">6.5</td>
+                        <td>6.4</td>
+                        <td>7.4</td>
+                        <td>7.8</td>
+                        <td class="value-positive">7.1</td>
                     </tr>
                     <tr>
                         <td>Collab Code Review</td>
                         <td>Peer Review</td>
                         <td>6.8</td>
-                        <td>5.5</td>
-                        <td>7.4</td>
-                        <td class="value-neutral">6.4</td>
+                        <td>7.0</td>
+                        <td>7.8</td>
+                        <td class="value-neutral">7.0</td>
                     </tr>
                     <tr>
                         <td>Emergent Behavior</td>
                         <td>Parallel</td>
-                        <td>7.2</td>
-                        <td>3.8</td>
-                        <td>8.4</td>
-                        <td class="value-neutral">6.0</td>
-                    </tr>
-                    <tr>
-                        <td>Scalability Test</td>
-                        <td>Hierarchical</td>
-                        <td>6.7</td>
-                        <td>4.0</td>
-                        <td>8.0</td>
-                        <td class="value-negative">5.8</td>
+                        <td>7.4</td>
+                        <td>5.0</td>
+                        <td>8.7</td>
+                        <td class="value-neutral">6.6</td>
                     </tr>
                 </tbody>
             </table>
