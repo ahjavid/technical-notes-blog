@@ -131,9 +131,9 @@ from apee import OllamaAgent, AgentRole
 
 # Role-optimized agents based on benchmark strengths
 agents = [
-    OllamaAgent("coder", AgentRole.EXECUTOR, model="llama3.2:3b"),      # code_gen=0.950
-    OllamaAgent("analyst", AgentRole.ANALYZER, model="qwen2.5-coder:3b"), # analysis=0.964
-    OllamaAgent("reviewer", AgentRole.REVIEWER, model="granite4:3b"),    # code_review=0.935
+    OllamaAgent("coder", AgentRole.EXECUTOR, model="llama3.2:3b"),      # code_gen=0.983
+    OllamaAgent("analyst", AgentRole.ANALYZER, model="qwen2.5-coder:3b"), # analysis=0.939
+    OllamaAgent("reviewer", AgentRole.REVIEWER, model="granite4:3b"),    # code_review=0.928
 ]
 
 # Each agent can execute tasks asynchronously
@@ -308,9 +308,9 @@ Overall = (L1_avg × 0.30) + (L2_avg × 0.45) + (L3_avg × 0.25)
 **Agents** (small, diverse families - role-optimized):
 | Role | Model | Family | Benchmark Strength |
 |------|-------|--------|-------------------|
-| Coder (Executor) | llama3.2:3b | Llama | code_generation: 0.950 |
-| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | analysis: 0.964 |
-| Reviewer | granite4:3b | Granite | code_review: 0.935 |
+| Coder (Executor) | llama3.2:3b | Llama | code_generation: 0.983 |
+| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | analysis: 0.939 |
+| Reviewer | granite4:3b | Granite | code_review: 0.928 |
 
 **Judges** (large, different families):
 | Judge | Model | Size | Family |
