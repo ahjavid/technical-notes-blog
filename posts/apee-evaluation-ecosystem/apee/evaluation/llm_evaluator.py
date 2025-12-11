@@ -788,7 +788,7 @@ def create_ensemble_evaluator(
     Factory to create an ensemble evaluator with sensible defaults.
     
     Default uses large judges (12-14B) from different families.
-    Agents: llama3.2:3b, qwen2.5-coder:3b, granite4:3b (3B)
+    Agents: llama3.2:3b, qwen2.5-coder:3b, phi4-mini:3.8b (3-4B)
     Judges: qwen3:14b, gemma3:12b (12-14B)
     """
     if judge_models is None:

@@ -104,7 +104,7 @@ MODEL_POOL = {
 
 
 # Recommended configurations
-RECOMMENDED_AGENTS = ["llama3.2:3b", "qwen2.5-coder:3b", "granite4:3b"]
+RECOMMENDED_AGENTS = ["llama3.2:3b", "qwen2.5-coder:3b", "phi4-mini:3.8b"]
 RECOMMENDED_JUDGES = ["qwen3:14b", "gemma3:12b"]
 
 
@@ -130,9 +130,9 @@ def get_recommended_model(role: AgentRole, prefer_fast: bool = True) -> str:
     Get recommended model for a given agent role.
     
     Selection based on comprehensive benchmark results:
-    - llama3.2:3b: Best at code_generation (0.950)
-    - qwen2.5-coder:3b: Best at analysis (0.964), reasoning (0.950)
-    - granite4:3b: Best at code_review (0.935), math (0.918)
+    - llama3.2:3b: Best at code_generation (0.983)
+    - qwen2.5-coder:3b: Best at analysis (0.939), reasoning (0.950)
+    - phi4-mini:3.8b: Best at code_review (0.991)
     
     Args:
         role: The agent's role
@@ -143,7 +143,7 @@ def get_recommended_model(role: AgentRole, prefer_fast: bool = True) -> str:
         AgentRole.ANALYZER: "qwen2.5-coder:3b",  # analysis=0.964
         AgentRole.CODER: "llama3.2:3b",  # code_gen=0.950
         AgentRole.EXECUTOR: "llama3.2:3b",  # code_gen=0.950
-        AgentRole.REVIEWER: "granite4:3b",  # code_review=0.935
+        AgentRole.REVIEWER: "phi4-mini:3.8b",  # code_review=0.991
         AgentRole.SYNTHESIZER: "qwen2.5-coder:3b",  # reasoning=0.950
         AgentRole.PLANNER: "qwen2.5-coder:3b",  # analysis=0.964
         AgentRole.CUSTOM: DEFAULT_MODEL,

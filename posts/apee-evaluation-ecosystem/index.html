@@ -162,6 +162,152 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
             </table>
         </div>
 
+        <h2>Model Benchmark Results</h2>
+
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-value">0.892</div>
+                <div class="stat-label">phi4-mini Best</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">0.889</div>
+                <div class="stat-label">llama3.2 2nd</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Models Tested</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">19</div>
+                <div class="stat-label">Scenarios</div>
+            </div>
+        </div>
+
+        <div class="callout callout-success">
+            <div class="callout-title">December 2025 Rankings (6 Models × 19 Scenarios)</div>
+            <div class="callout-content">
+                <ul>
+                    <li><strong>🥇 phi4-mini:3.8b:</strong> Quality 0.892 (±0.092) — Best overall, excels at code_review (0.991)</li>
+                    <li><strong>🥈 llama3.2:3b:</strong> Quality 0.889 (±0.130) — Best code_generation (0.983), fastest at 3000ms</li>
+                    <li><strong>🥉 gemma3:4b:</strong> Quality 0.876 (±0.121) — Strong code_debug (0.960)</li>
+                    <li><strong>4. qwen3:4b:</strong> Quality 0.866 (±0.077) — Lowest variance, best instruction_following (0.840)</li>
+                    <li><strong>5. granite4:3b:</strong> Quality 0.837 (±0.101) — Fastest (1904ms), best math (0.889)</li>
+                    <li><strong>6. qwen2.5-coder:3b:</strong> Quality 0.829 (±0.138) — Best qa_reasoning (0.957)</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Full Performance Matrix</h3>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>qwen3</th>
+                        <th>llama3.2</th>
+                        <th>gemma3</th>
+                        <th>granite4</th>
+                        <th>qwen2.5-coder</th>
+                        <th>phi4-mini</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>analysis</td>
+                        <td>0.861</td>
+                        <td>0.934</td>
+                        <td>0.837</td>
+                        <td>0.812</td>
+                        <td class="value-positive">0.939</td>
+                        <td>0.927</td>
+                    </tr>
+                    <tr>
+                        <td>code_debug</td>
+                        <td>0.776</td>
+                        <td>0.933</td>
+                        <td class="value-positive">0.960</td>
+                        <td>0.901</td>
+                        <td>0.965</td>
+                        <td>0.934</td>
+                    </tr>
+                    <tr>
+                        <td>code_explanation</td>
+                        <td class="value-positive">0.893</td>
+                        <td>0.837</td>
+                        <td>0.871</td>
+                        <td>0.836</td>
+                        <td>0.855</td>
+                        <td>0.876</td>
+                    </tr>
+                    <tr>
+                        <td>code_generation</td>
+                        <td>0.927</td>
+                        <td class="value-positive">0.983</td>
+                        <td>0.922</td>
+                        <td>0.853</td>
+                        <td>0.888</td>
+                        <td>0.927</td>
+                    </tr>
+                    <tr>
+                        <td>code_review</td>
+                        <td>0.912</td>
+                        <td>0.983</td>
+                        <td>0.969</td>
+                        <td>0.928</td>
+                        <td>0.790</td>
+                        <td class="value-positive">0.991</td>
+                    </tr>
+                    <tr>
+                        <td>instruction_following</td>
+                        <td class="value-positive">0.840</td>
+                        <td>0.571</td>
+                        <td>0.607</td>
+                        <td>0.599</td>
+                        <td>0.635</td>
+                        <td>0.713</td>
+                    </tr>
+                    <tr>
+                        <td>math</td>
+                        <td>0.719</td>
+                        <td>0.800</td>
+                        <td>0.838</td>
+                        <td class="value-positive">0.889</td>
+                        <td>0.538</td>
+                        <td>0.855</td>
+                    </tr>
+                    <tr>
+                        <td>qa_reasoning</td>
+                        <td>0.900</td>
+                        <td>0.936</td>
+                        <td>0.928</td>
+                        <td>0.895</td>
+                        <td class="value-positive">0.957</td>
+                        <td>0.903</td>
+                    </tr>
+                    <tr>
+                        <td>reasoning</td>
+                        <td>0.800</td>
+                        <td class="value-positive">0.909</td>
+                        <td>0.890</td>
+                        <td>0.894</td>
+                        <td>0.897</td>
+                        <td>0.899</td>
+                    </tr>
+                    <tr>
+                        <td>summarization</td>
+                        <td class="value-positive">0.912</td>
+                        <td>0.842</td>
+                        <td>0.839</td>
+                        <td>0.765</td>
+                        <td>0.792</td>
+                        <td>0.766</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p><em>Best in category highlighted. Enhanced heuristic scoring with ROUGE, keyword matching, and constraint validation.</em></p>
+
         <h2>LLM-as-a-Judge Results</h2>
 
         <div class="callout callout-info">
@@ -291,80 +437,6 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
             </table>
         </div>
 
-        <h2>Model Benchmark Results</h2>
-
-        <div class="stats-row">
-            <div class="stat-item">
-                <div class="stat-value">0.892</div>
-                <div class="stat-label">phi4-mini Best</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">0.889</div>
-                <div class="stat-label">llama3.2 2nd</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">6</div>
-                <div class="stat-label">Models Tested</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">19</div>
-                <div class="stat-label">Scenarios</div>
-            </div>
-        </div>
-
-        <h3>Performance by Task Category</h3>
-        
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>qwen3:4b</th>
-                        <th>llama3.2:3b</th>
-                        <th>gemma3:4b</th>
-                        <th>phi4-mini:3.8b</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>code_generation</td>
-                        <td>0.927</td>
-                        <td class="value-positive">0.983</td>
-                        <td>0.922</td>
-                        <td>0.927</td>
-                    </tr>
-                    <tr>
-                        <td>code_review</td>
-                        <td>0.912</td>
-                        <td>0.983</td>
-                        <td>0.969</td>
-                        <td class="value-positive">0.991</td>
-                    </tr>
-                    <tr>
-                        <td>code_debug</td>
-                        <td>0.776</td>
-                        <td>0.933</td>
-                        <td class="value-positive">0.960</td>
-                        <td>0.934</td>
-                    </tr>
-                    <tr>
-                        <td>qa_reasoning</td>
-                        <td>0.900</td>
-                        <td>0.936</td>
-                        <td>0.928</td>
-                        <td>0.903</td>
-                    </tr>
-                    <tr>
-                        <td>instruction_following</td>
-                        <td class="value-positive">0.840</td>
-                        <td>0.571</td>
-                        <td>0.607</td>
-                        <td>0.713</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
         <h2>Advanced Evaluation Patterns (Phase 7)</h2>
         
         <p>Four evaluation modes with different characteristics:</p>
@@ -399,133 +471,6 @@ python examples/advanced_evaluation_demo.py --mode all</code></pre>
                 </div>
             </div>
         </div>
-
-        <h2>Full Model Rankings</h2>
-        
-        <div class="callout callout-success">
-            <div class="callout-title">December 2025 Rankings (6 Models × 19 Scenarios)</div>
-            <div class="callout-content">
-                <ul>
-                    <li><strong>🥇 phi4-mini:3.8b:</strong> Quality 0.892 (±0.092) — Best overall, excels at code_review (0.991)</li>
-                    <li><strong>🥈 llama3.2:3b:</strong> Quality 0.889 (±0.130) — Best code_generation (0.983), fastest at 3000ms</li>
-                    <li><strong>🥉 gemma3:4b:</strong> Quality 0.876 (±0.121) — Strong code_debug (0.960)</li>
-                    <li><strong>4. qwen3:4b:</strong> Quality 0.866 (±0.077) — Lowest variance, best instruction_following (0.840)</li>
-                    <li><strong>5. granite4:3b:</strong> Quality 0.837 (±0.101) — Fastest (1904ms), best math (0.889)</li>
-                    <li><strong>6. qwen2.5-coder:3b:</strong> Quality 0.829 (±0.138) — Best qa_reasoning (0.957)</li>
-                </ul>
-            </div>
-        </div>
-
-        <h3>Full Performance Matrix</h3>
-        
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Category</th>
-                        <th>qwen3</th>
-                        <th>llama3.2</th>
-                        <th>gemma3</th>
-                        <th>granite4</th>
-                        <th>qwen2.5-coder</th>
-                        <th>phi4-mini</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>analysis</td>
-                        <td>0.861</td>
-                        <td>0.934</td>
-                        <td>0.837</td>
-                        <td>0.812</td>
-                        <td class="value-positive">0.939</td>
-                        <td>0.927</td>
-                    </tr>
-                    <tr>
-                        <td>code_debug</td>
-                        <td>0.776</td>
-                        <td>0.933</td>
-                        <td class="value-positive">0.960</td>
-                        <td>0.901</td>
-                        <td>0.965</td>
-                        <td>0.934</td>
-                    </tr>
-                    <tr>
-                        <td>code_explanation</td>
-                        <td class="value-positive">0.893</td>
-                        <td>0.837</td>
-                        <td>0.871</td>
-                        <td>0.836</td>
-                        <td>0.855</td>
-                        <td>0.876</td>
-                    </tr>
-                    <tr>
-                        <td>code_generation</td>
-                        <td>0.927</td>
-                        <td class="value-positive">0.983</td>
-                        <td>0.922</td>
-                        <td>0.853</td>
-                        <td>0.888</td>
-                        <td>0.927</td>
-                    </tr>
-                    <tr>
-                        <td>code_review</td>
-                        <td>0.912</td>
-                        <td>0.983</td>
-                        <td>0.969</td>
-                        <td>0.928</td>
-                        <td>0.790</td>
-                        <td class="value-positive">0.991</td>
-                    </tr>
-                    <tr>
-                        <td>instruction_following</td>
-                        <td class="value-positive">0.840</td>
-                        <td>0.571</td>
-                        <td>0.607</td>
-                        <td>0.599</td>
-                        <td>0.635</td>
-                        <td>0.713</td>
-                    </tr>
-                    <tr>
-                        <td>math</td>
-                        <td>0.719</td>
-                        <td>0.800</td>
-                        <td>0.838</td>
-                        <td class="value-positive">0.889</td>
-                        <td>0.538</td>
-                        <td>0.855</td>
-                    </tr>
-                    <tr>
-                        <td>qa_reasoning</td>
-                        <td>0.900</td>
-                        <td>0.936</td>
-                        <td>0.928</td>
-                        <td>0.895</td>
-                        <td class="value-positive">0.957</td>
-                        <td>0.903</td>
-                    </tr>
-                    <tr>
-                        <td>reasoning</td>
-                        <td>0.800</td>
-                        <td class="value-positive">0.909</td>
-                        <td>0.890</td>
-                        <td>0.894</td>
-                        <td>0.897</td>
-                        <td>0.899</td>
-                    </tr>
-                    <tr>
-                        <td>summarization</td>
-                        <td class="value-positive">0.912</td>
-                        <td>0.842</td>
-                        <td>0.839</td>
-                        <td>0.765</td>
-                        <td>0.792</td>
-                        <td>0.766</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <p><em>Best in category highlighted. Enhanced heuristic scoring with ROUGE, keyword matching, and constraint validation.</em></p>
 
         <h2>Phase 6: Visualization & Dashboard</h2>
         

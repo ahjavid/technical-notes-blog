@@ -541,7 +541,7 @@ Following LLM-as-a-Judge best practices, models are designated as either **agent
 |------------------|---------|--------|-------------------|-----------------|
 | llama3.2:3b      | Llama   | 3B     | CODER             | code_gen=0.983  |
 | qwen2.5-coder:3b | Qwen    | 3B     | ANALYZER          | analysis=0.939  |
-| granite4:3b      | Granite | 3B     | REVIEWER          | code_review=0.928 |
+| phi4-mini:3.8b   | Phi     | 3.8B   | REVIEWER          | code_review=0.991 |
 
 #### Judge Models (Large, 20-24B+)
 
