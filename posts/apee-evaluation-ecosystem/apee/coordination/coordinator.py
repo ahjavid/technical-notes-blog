@@ -87,18 +87,21 @@ class Coordinator:
         task: Task, 
         agent_order: list[str],
         pass_context: bool = True,
-        stop_on_failure: bool = False
+        stop_on_failure: bool = False,
+        require_build_on_previous: bool = True
     ) -> list[AgentResult]:
         """
-        Run agents sequentially, optionally passing output to next agent.
+        Run agents sequentially with explicit handoff and build-on-previous requirements.
         
-        Best for: Code review workflows, multi-stage analysis.
+        Each agent receives the previous agent's output and must explicitly build on it.
+        Best for: Code review workflows, multi-stage analysis, knowledge transfer.
         
         Args:
             task: The task to process
             agent_order: List of agent IDs in execution order
             pass_context: Whether to pass each agent's output to the next
             stop_on_failure: Whether to stop pipeline if an agent fails
+            require_build_on_previous: If True, prompts explicitly require building on previous work
         """
         import logging
         logger = logging.getLogger(__name__)
@@ -106,6 +109,9 @@ class Coordinator:
         start_time = time.time()
         results = []
         accumulated_context = dict(task.context)
+        all_previous_outputs = []  # Track ALL previous outputs for synthesis
+        
+        total_steps = len(agent_order)
         
         for i, agent_id in enumerate(agent_order):
             agent = self.agents.get(agent_id)
@@ -113,12 +119,63 @@ class Coordinator:
                 logger.warning(f"Pipeline: Agent '{agent_id}' not found, skipping step {i}")
                 continue
             
-            # Create task with accumulated context
+            step_num = i + 1
+            
+            # Build stage-specific instructions
+            if i == 0:
+                # First agent - initial analysis
+                stage_instruction = (
+                    f"PIPELINE Stage {step_num}/{total_steps}: Initial Analysis\n\n"
+                    f"You are the FIRST agent in a sequential pipeline. "
+                    f"Your output will be passed to the next agent who will build on it.\n"
+                    f"Provide a thorough foundation that others can extend."
+                )
+                task_desc = f"{stage_instruction}\n\nTask: {task.description}"
+            elif i == total_steps - 1:
+                # Last agent - final synthesis
+                all_prev_formatted = "\n\n".join([
+                    f"=== Stage {j+1} ({prev['agent_id']}, {prev['role']}) ===\n{prev['output']}"
+                    for j, prev in enumerate(all_previous_outputs)
+                ])
+                stage_instruction = (
+                    f"PIPELINE Stage {step_num}/{total_steps}: Final Synthesis\n\n"
+                    f"You are the FINAL agent. You MUST:\n"
+                    f"1. INTEGRATE all previous contributions (don't ignore any)\n"
+                    f"2. SYNTHESIZE a cohesive final output\n"
+                    f"3. ACKNOWLEDGE key insights from each previous stage\n"
+                    f"4. ADD your own perspective/refinements\n\n"
+                    f"=== ALL Previous Stage Outputs ===\n{all_prev_formatted}"
+                )
+                task_desc = f"{stage_instruction}\n\nOriginal Task: {task.description}"
+            else:
+                # Middle agent - build on previous
+                prev_output = all_previous_outputs[-1] if all_previous_outputs else None
+                all_prev_formatted = "\n\n".join([
+                    f"=== Stage {j+1} ({prev['agent_id']}, {prev['role']}) ===\n{prev['output']}"
+                    for j, prev in enumerate(all_previous_outputs)
+                ])
+                stage_instruction = (
+                    f"PIPELINE Stage {step_num}/{total_steps}: Build & Extend\n\n"
+                    f"You are in the MIDDLE of a sequential pipeline. You MUST:\n"
+                    f"1. BUILD ON the previous agent(s) work - don't start from scratch\n"
+                    f"2. EXTEND with your expertise ({agent.role.value})\n"
+                    f"3. REFERENCE specific points from previous stages\n"
+                    f"4. ADD new value while preserving previous insights\n\n"
+                    f"=== Previous Stage Outputs ===\n{all_prev_formatted}"
+                )
+                task_desc = f"{stage_instruction}\n\nOriginal Task: {task.description}"
+            
+            # Create task with stage instructions
             pipeline_task = Task(
-                task_id=f"{task.task_id}_step{i}_{agent_id}",
-                description=task.description,
+                task_id=f"{task.task_id}_stage{step_num}_{agent_id}",
+                description=task_desc,
                 complexity=task.complexity,
-                context=accumulated_context.copy()
+                context={
+                    **accumulated_context,
+                    "pipeline_stage": step_num,
+                    "total_stages": total_steps,
+                    "previous_outputs": all_previous_outputs.copy(),
+                }
             )
             
             try:
@@ -139,14 +196,35 @@ class Coordinator:
             results.append(result)
             self.results.append(result)
             
+            # Log message handoff to next agent
+            if i < total_steps - 1 and result.success:
+                next_agent_id = agent_order[i + 1] if i + 1 < len(agent_order) else None
+                if next_agent_id and next_agent_id in self.agents:
+                    self.send_message(
+                        agent_id,
+                        next_agent_id,
+                        f"[Pipeline Handoff Stage {step_num}→{step_num+1}] {result.output[:1000]}",
+                        message_type="handoff"
+                    )
+            
             # Check for failure if stop_on_failure is enabled
             if stop_on_failure and not result.success:
                 logger.warning(f"Pipeline: Stopping due to failure at step {i} (agent '{agent_id}')")
                 break
             
-            # Add output to context for next agent
-            if pass_context and result.success:
-                accumulated_context[f"{agent.role.value}_output"] = result.output[:self.output_truncation_limit]
+            # Track all outputs for later agents
+            if result.success:
+                all_previous_outputs.append({
+                    "agent_id": agent_id,
+                    "role": agent.role.value,
+                    "output": result.output[:self.output_truncation_limit],
+                    "stage": step_num,
+                })
+                
+                # Also add to accumulated context for backward compatibility
+                if pass_context:
+                    accumulated_context[f"{agent.role.value}_output"] = result.output[:self.output_truncation_limit]
+                    accumulated_context[f"stage{step_num}_output"] = result.output[:self.output_truncation_limit]
         
         self._log_execution("pipeline", task, results, time.time() - start_time)
         return results
