@@ -103,7 +103,7 @@ async def run_and_evaluate_scenario(
     try:
         if pattern.value == "debate":
             n_debate_agents = 3
-            n_rounds = 2
+            n_rounds = 3  # Increased from 2 for more thorough debate
             results = await coordinator.run_debate(
                 task=task, rounds=n_rounds, agent_ids=agent_ids[:n_debate_agents]
             )
@@ -169,7 +169,7 @@ async def run_and_evaluate_scenario(
                     
         elif pattern.value == "consensus":
             n_consensus_agents = 3
-            max_rounds = 2
+            max_rounds = 3  # Increased from 2 for more thorough consensus building
             results = await coordinator.run_consensus(
                 task=task, max_rounds=max_rounds, agent_ids=agent_ids[:n_consensus_agents]
             )
@@ -432,7 +432,7 @@ async def main(evaluation_mode: str = EvaluationMode.BASIC):
         OllamaAgent(
             agent_id="reviewer",
             role=AgentRole.REVIEWER,
-            model="granite4:3b",  # Good code_review: 0.935 - final quality check
+            model="phi4-mini:3.8b",  # Good code_review: 0.935 - final quality check
         ),
     ]
     
@@ -635,7 +635,7 @@ async def main(evaluation_mode: str = EvaluationMode.BASIC):
             "agent_models": {
                 "analyst": "qwen2.5-coder:3b",  # Leader for hierarchical
                 "coder": "llama3.2:3b",
-                "reviewer": "granite4:3b",
+                "reviewer": "phi4-mini:3.8b",
             },
             "scenarios": []
         }

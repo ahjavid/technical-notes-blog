@@ -194,7 +194,7 @@ print(f"Overall APEE Score: {result['overall_apee_score']}/10")
 
 **Why Ensemble Judges?**
 - Different model families reduce self-preference bias
-- Large judges (12-14B) evaluate small agents (3B) more objectively
+- Large judges (20-14B) evaluate small agents (3B) more objectively
 - Median aggregation is robust to outlier scores
 
 #### 3.2.4 Adaptive Engine

@@ -154,19 +154,21 @@ class Coordinator:
     async def run_debate(
         self, 
         task: Task, 
-        rounds: int = 2,
-        agent_ids: Optional[list[str]] = None
+        rounds: int = 3,
+        agent_ids: Optional[list[str]] = None,
+        require_response_to_others: bool = True
     ) -> list[AgentResult]:
         """
-        Run agents in a debate format with multiple rounds.
+        Run agents in a debate format with multiple rounds and explicit agent-to-agent responses.
         
-        Each round, agents can see previous responses and respond in parallel.
-        Best for: Decision-making, exploring trade-offs.
+        Each round, agents MUST respond to and engage with other agents' previous arguments.
+        Best for: Decision-making, exploring trade-offs, adversarial review.
         
         Args:
             task: The task/question to debate
-            rounds: Number of debate rounds
+            rounds: Number of debate rounds (default: 3 for meaningful exchange)
             agent_ids: Specific agents to include (default: all)
+            require_response_to_others: If True, prompts explicitly require responding to others
         """
         start_time = time.time()
         all_results = []
@@ -175,26 +177,73 @@ class Coordinator:
             if agent_ids else list(self.agents.values())
         )
         
+        if len(participating_agents) < 2:
+            raise ValueError("Debate requires at least 2 agents")
+        
         for round_num in range(rounds):
             round_context = dict(task.context)
             round_context["debate_round"] = round_num + 1
             round_context["total_rounds"] = rounds
             
-            # Add previous round's responses
+            # Build debate instructions based on round
+            if round_num == 0:
+                debate_instruction = (
+                    "This is a DEBATE. Present your initial position on the task. "
+                    "Be clear about your stance and reasoning. Other agents will respond to you."
+                )
+            else:
+                debate_instruction = (
+                    f"This is round {round_num + 1} of a DEBATE. "
+                    "You MUST engage with other agents' arguments:\n"
+                    "1. Acknowledge points you agree with from specific agents\n"
+                    "2. Counter arguments you disagree with - cite which agent and why\n"
+                    "3. Refine or strengthen your position based on the discussion\n"
+                    "4. Try to find synthesis where possible"
+                )
+            
+            round_context["debate_instruction"] = debate_instruction
+            
+            # Add previous round's responses with explicit formatting for engagement
             if all_results:
                 prev_round_start = -len(participating_agents)
-                prev_responses = {
-                    r.agent_id: r.output[:self.context_truncation_limit]
-                    for r in all_results[prev_round_start:]
-                }
+                prev_responses = {}
+                formatted_responses = []
+                
+                for r in all_results[prev_round_start:]:
+                    prev_responses[r.agent_id] = r.output[:self.context_truncation_limit]
+                    formatted_responses.append(
+                        f"=== {r.agent_id} ({r.agent_role}) said ===\n{r.output[:self.context_truncation_limit]}\n"
+                    )
+                
                 round_context["previous_responses"] = prev_responses
+                round_context["formatted_debate_history"] = "\n".join(formatted_responses)
+                
+                # Log messages between agents for tracking
+                for r in all_results[prev_round_start:]:
+                    for other_agent in participating_agents:
+                        if other_agent.agent_id != r.agent_id:
+                            self.send_message(
+                                r.agent_id, 
+                                other_agent.agent_id, 
+                                f"[Round {round_num}] {r.output[:500]}",
+                                message_type="debate"
+                            )
             
-            # Prepare all debate tasks for this round
+            # Prepare debate tasks with explicit engagement requirements
             debate_tasks = []
             for agent in participating_agents:
+                if round_num == 0:
+                    task_desc = f"DEBATE Round {round_num + 1}/{rounds}: {task.description}"
+                else:
+                    task_desc = (
+                        f"DEBATE Round {round_num + 1}/{rounds}: {task.description}\n\n"
+                        f"IMPORTANT: You must respond to the other agents' arguments below.\n\n"
+                        f"{round_context.get('formatted_debate_history', '')}"
+                    )
+                
                 debate_task = Task(
-                    task_id=f"{task.task_id}_round{round_num}_{agent.agent_id}",
-                    description=f"Round {round_num + 1}/{rounds}: {task.description}",
+                    task_id=f"{task.task_id}_debate_r{round_num}_{agent.agent_id}",
+                    description=task_desc,
                     complexity=task.complexity,
                     context=round_context
                 )
@@ -205,12 +254,12 @@ class Coordinator:
                 agent.execute(debate_task) for agent, debate_task in debate_tasks
             ], return_exceptions=True)
             
-            # Process results, converting exceptions to failed results
+            # Process results
             round_results = []
             for (agent, _), result in zip(debate_tasks, round_results_raw):
                 if isinstance(result, Exception):
                     result = AgentResult(
-                        task_id=f"{task.task_id}_round{round_num}_{agent.agent_id}",
+                        task_id=f"{task.task_id}_debate_r{round_num}_{agent.agent_id}",
                         agent_id=agent.agent_id,
                         agent_role=agent.role.value,
                         output="",
@@ -260,20 +309,24 @@ class Coordinator:
         self,
         task: Task,
         leader_id: str,
-        worker_ids: Optional[list[str]] = None
+        worker_ids: Optional[list[str]] = None,
+        include_feedback_round: bool = True
     ) -> list[AgentResult]:
         """
-        Run agents in a hierarchical pattern with a leader delegating to workers.
+        Run agents in a hierarchical pattern with explicit delegation and feedback.
         
-        The leader first analyzes the task and breaks it down, then workers
-        execute subtasks, and finally the leader synthesizes results.
+        Phase 1: Leader analyzes the task and creates delegated work assignments
+        Phase 2: Workers execute their assignments in parallel
+        Phase 3 (optional): Workers report back and leader provides feedback
+        Phase 4: Leader synthesizes all results into final output
         
-        Best for: Complex task breakdown, large projects.
+        Best for: Complex task breakdown, large projects, team coordination.
         
         Args:
             task: The task to process
             leader_id: ID of the leader agent
             worker_ids: IDs of worker agents (default: all except leader)
+            include_feedback_round: If True, includes worker feedback and leader response
         """
         start_time = time.time()
         results = []
@@ -291,64 +344,157 @@ class Coordinator:
         if len(workers) < 1:
             raise ValueError("Hierarchical pattern requires at least 1 worker agent")
         
-        # Phase 1: Leader analyzes and plans
+        worker_names = [w.agent_id for w in workers]
+        
+        # Phase 1: Leader analyzes and creates specific assignments
         planning_task = Task(
             task_id=f"{task.task_id}_plan",
-            description=f"As team leader, analyze this task and create a plan. Task: {task.description}",
+            description=(
+                f"HIERARCHICAL COORDINATION - Phase 1: Planning & Delegation\n\n"
+                f"You are the TEAM LEADER. Analyze this task and create a plan.\n\n"
+                f"Task: {task.description}\n\n"
+                f"Your team members: {', '.join(worker_names)}\n\n"
+                f"Provide:\n"
+                f"1. TASK ANALYSIS: Break down the task into components\n"
+                f"2. DELEGATION: Assign specific work to each team member by name\n"
+                f"3. COORDINATION NOTES: How should team members' work fit together?\n"
+                f"4. SUCCESS CRITERIA: How will you evaluate the final result?"
+            ),
             complexity=task.complexity,
             context={
                 **task.context,
                 "role": "leader",
                 "phase": "planning",
                 "worker_count": len(workers),
+                "worker_names": worker_names,
             }
         )
         leader_plan = await leader.execute(planning_task)
         results.append(leader_plan)
         
-        # Phase 2: Workers execute in parallel
+        # Send delegation messages to workers
+        for worker in workers:
+            self.send_message(
+                leader_id,
+                worker.agent_id,
+                f"[Delegation] {leader_plan.output[:1000]}",
+                message_type="delegation"
+            )
+        
+        # Phase 2: Workers execute their assigned work
         worker_tasks = []
         for i, worker in enumerate(workers):
             worker_task = Task(
-                task_id=f"{task.task_id}_worker{i}",
-                description=f"Execute your part of the task. Leader's guidance: {leader_plan.output[:self.context_truncation_limit]}\n\nOriginal task: {task.description}",
+                task_id=f"{task.task_id}_worker_{worker.agent_id}",
+                description=(
+                    f"HIERARCHICAL COORDINATION - Phase 2: Worker Execution\n\n"
+                    f"You are a TEAM MEMBER working under {leader_id}'s direction.\n\n"
+                    f"=== Leader's Plan & Your Assignment ===\n"
+                    f"{leader_plan.output[:self.context_truncation_limit]}\n\n"
+                    f"=== Original Task ===\n"
+                    f"{task.description}\n\n"
+                    f"Execute YOUR assigned part of the work. Be thorough and specific.\n"
+                    f"If your assignment is unclear, use your best judgment based on the overall task."
+                ),
                 complexity=task.complexity,
                 context={
                     **task.context,
                     "role": "worker",
                     "phase": "execution",
+                    "leader_id": leader_id,
                     "leader_plan": leader_plan.output[:self.output_truncation_limit],
                 }
             )
             worker_tasks.append((worker, worker_task))
         
-        worker_results = await asyncio.gather(*[
+        worker_results_raw = await asyncio.gather(*[
             w.execute(t) for w, t in worker_tasks
         ], return_exceptions=True)
         
-        for i, result in enumerate(worker_results):
+        worker_results = []
+        for i, (worker, _) in enumerate(worker_tasks):
+            result = worker_results_raw[i]
             if isinstance(result, Exception):
                 result = AgentResult(
-                    task_id=f"{task.task_id}_worker{i}",
-                    agent_id=workers[i].agent_id,
-                    agent_role=workers[i].role.value,
+                    task_id=f"{task.task_id}_worker_{worker.agent_id}",
+                    agent_id=worker.agent_id,
+                    agent_role=worker.role.value,
                     output="",
                     quality_score=0.0,
                     latency_ms=0.0,
                     success=False,
                     error=str(result)
                 )
+            else:
+                # Workers report back to leader
+                self.send_message(
+                    worker.agent_id,
+                    leader_id,
+                    f"[Work Complete] {result.output[:1000]}",
+                    message_type="report"
+                )
+            worker_results.append(result)
             results.append(result)
         
-        # Phase 3: Leader synthesizes
+        # Phase 3 (optional): Feedback round
+        if include_feedback_round:
+            # Leader provides feedback to each worker
+            worker_outputs_for_feedback = "\n\n".join([
+                f"=== {workers[i].agent_id}'s Work ===\n{r.output[:self.context_truncation_limit]}"
+                for i, r in enumerate(worker_results) if r.success
+            ])
+            
+            feedback_task = Task(
+                task_id=f"{task.task_id}_feedback",
+                description=(
+                    f"HIERARCHICAL COORDINATION - Phase 3: Leader Feedback\n\n"
+                    f"Review your team members' work and provide feedback.\n\n"
+                    f"=== Original Task ===\n{task.description}\n\n"
+                    f"=== Team Outputs ===\n{worker_outputs_for_feedback}\n\n"
+                    f"Provide SPECIFIC FEEDBACK for each team member:\n"
+                    f"1. What they did well\n"
+                    f"2. What could be improved\n"
+                    f"3. Any corrections or additions needed"
+                ),
+                complexity=task.complexity,
+                context={
+                    **task.context,
+                    "role": "leader",
+                    "phase": "feedback",
+                }
+            )
+            
+            feedback_result = await leader.execute(feedback_task)
+            results.append(feedback_result)
+            
+            # Send feedback to workers
+            for worker in workers:
+                self.send_message(
+                    leader_id,
+                    worker.agent_id,
+                    f"[Feedback] {feedback_result.output[:1000]}",
+                    message_type="feedback"
+                )
+        
+        # Phase 4: Leader synthesizes final output
         worker_outputs = "\n---\n".join([
-            f"Worker {r.agent_id}: {r.output[:self.context_truncation_limit]}"
-            for r in results[1:] if r.success
+            f"=== {workers[i].agent_id} ({workers[i].role.value}) ===\n{r.output[:self.context_truncation_limit]}"
+            for i, r in enumerate(worker_results) if r.success
         ])
         
         synthesis_task = Task(
             task_id=f"{task.task_id}_synthesize",
-            description=f"Synthesize worker outputs into a final cohesive result.\n\nWorker outputs:\n{worker_outputs}\n\nOriginal task: {task.description}",
+            description=(
+                f"HIERARCHICAL COORDINATION - Phase 4: Final Synthesis\n\n"
+                f"As team leader, synthesize all team outputs into a cohesive final result.\n\n"
+                f"=== Original Task ===\n{task.description}\n\n"
+                f"=== Team Outputs ===\n{worker_outputs}\n\n"
+                f"Create a UNIFIED FINAL OUTPUT that:\n"
+                f"1. Integrates the best elements from each team member's work\n"
+                f"2. Resolves any contradictions or inconsistencies\n"
+                f"3. Fills any gaps in the collective output\n"
+                f"4. Provides a complete, polished response to the original task"
+            ),
             complexity=task.complexity,
             context={
                 **task.context,
@@ -367,23 +513,25 @@ class Coordinator:
     async def run_consensus(
         self,
         task: Task,
-        max_rounds: int = 3,
+        max_rounds: int = 4,
         agreement_threshold: float = 0.8,
-        agent_ids: Optional[list[str]] = None
+        agent_ids: Optional[list[str]] = None,
+        require_explicit_engagement: bool = True
     ) -> list[AgentResult]:
         """
-        Run agents until they reach consensus on the output.
+        Run agents until they reach consensus on the output with explicit agent-to-agent engagement.
         
-        Agents iterate, viewing each other's responses, until sufficient
+        Agents iterate, explicitly responding to each other's viewpoints, until sufficient
         agreement is reached or max rounds exceeded.
         
-        Best for: Critical decisions, validation tasks.
+        Best for: Critical decisions, validation tasks, conflict resolution.
         
         Args:
             task: The task to process
-            max_rounds: Maximum number of consensus rounds
+            max_rounds: Maximum number of consensus rounds (default: 4 for thorough discussion)
             agreement_threshold: Required ratio of agreeing agents (0-1)
             agent_ids: Specific agents to include (default: all)
+            require_explicit_engagement: If True, agents must explicitly respond to others
         """
         start_time = time.time()
         all_results = []
@@ -404,26 +552,69 @@ class Coordinator:
             round_context["max_rounds"] = max_rounds
             round_context["goal"] = "reach agreement with other agents"
             
-            # Add previous round's responses
-            if all_results:
-                prev_round_start = -len(participating_agents)
-                prev_responses = {
-                    r.agent_id: r.output[:self.context_truncation_limit]
-                    for r in all_results[prev_round_start:]
-                }
-                round_context["other_agent_responses"] = prev_responses
+            # Build round-specific instructions
+            if round_num == 0:
                 round_context["instruction"] = (
-                    "Review other agents' responses and adjust your answer to find common ground. "
-                    "If you agree with the consensus, clearly state 'I AGREE' at the start. "
-                    "If you disagree, clearly state 'I DISAGREE' at the start and explain your reasoning."
+                    "CONSENSUS BUILDING: Present your initial analysis and position on this task. "
+                    "Be clear about your reasoning. In subsequent rounds, you will need to find "
+                    "common ground with other agents."
+                )
+            else:
+                # Add previous round's responses with explicit formatting
+                prev_round_start = -len(participating_agents)
+                prev_responses = {}
+                formatted_positions = []
+                
+                for r in all_results[prev_round_start:]:
+                    prev_responses[r.agent_id] = r.output[:self.context_truncation_limit]
+                    # Detect agreement/disagreement stance
+                    stance = "unclear"
+                    if r.output.lower().startswith("i agree"):
+                        stance = "AGREES"
+                    elif r.output.lower().startswith("i disagree"):
+                        stance = "DISAGREES"
+                    formatted_positions.append(
+                        f"=== {r.agent_id} ({r.agent_role}) [{stance}] ===\n{r.output[:self.context_truncation_limit]}\n"
+                    )
+                    
+                    # Log messages for tracking
+                    for other_agent in participating_agents:
+                        if other_agent.agent_id != r.agent_id:
+                            self.send_message(
+                                r.agent_id,
+                                other_agent.agent_id,
+                                f"[Consensus Round {round_num}] {r.output[:500]}",
+                                message_type="consensus"
+                            )
+                
+                round_context["other_agent_responses"] = prev_responses
+                round_context["formatted_positions"] = "\n".join(formatted_positions)
+                
+                round_context["instruction"] = (
+                    f"CONSENSUS BUILDING - Round {round_num + 1}/{max_rounds}\n\n"
+                    "You MUST engage with other agents' positions:\n"
+                    "1. If you AGREE with the emerging consensus, start with 'I AGREE' and explain why\n"
+                    "2. If you DISAGREE, start with 'I DISAGREE' and cite specific points from other agents\n"
+                    "3. Look for COMMON GROUND - what do most agents agree on?\n"
+                    "4. Propose COMPROMISES where there are differences\n"
+                    "5. Ask clarifying questions if needed\n\n"
+                    f"Other agents' positions:\n{round_context['formatted_positions']}"
                 )
             
-            # Prepare all consensus tasks for this round
+            # Prepare consensus tasks
             consensus_tasks = []
             for agent in participating_agents:
+                if round_num == 0:
+                    task_desc = f"CONSENSUS Round {round_num + 1}/{max_rounds}: {task.description}"
+                else:
+                    task_desc = (
+                        f"CONSENSUS Round {round_num + 1}/{max_rounds}: {task.description}\n\n"
+                        f"{round_context['instruction']}"
+                    )
+                
                 consensus_task = Task(
                     task_id=f"{task.task_id}_consensus_r{round_num}_{agent.agent_id}",
-                    description=task.description,
+                    description=task_desc,
                     complexity=task.complexity,
                     context=round_context
                 )
@@ -434,7 +625,7 @@ class Coordinator:
                 agent.execute(consensus_task) for agent, consensus_task in consensus_tasks
             ], return_exceptions=True)
             
-            # Process results, converting exceptions to failed results
+            # Process results
             round_results = []
             for (agent, _), result in zip(consensus_tasks, round_results_raw):
                 if isinstance(result, Exception):
@@ -452,7 +643,7 @@ class Coordinator:
             
             all_results.extend(round_results)
             
-            # Improved consensus detection with semantic analysis
+            # Check consensus with improved detection
             consensus_reached = self._check_consensus(round_results, agreement_threshold)
             
             if consensus_reached:
@@ -616,20 +807,23 @@ class Coordinator:
     async def run_peer_review(
         self,
         task: Task,
-        agent_ids: Optional[list[str]] = None
+        agent_ids: Optional[list[str]] = None,
+        include_meta_review: bool = True
     ) -> list[AgentResult]:
         """
-        Run agents where each reviews others' work.
+        Run agents where each reviews others' work with explicit feedback exchange.
         
         Phase 1: All agents produce initial output (parallel)
-        Phase 2: Each agent reviews one other agent's work (parallel)
-        Phase 3: Original authors respond to feedback (parallel)
+        Phase 2: Each agent reviews one other agent's work with specific feedback (parallel)
+        Phase 3: Original authors respond to feedback and revise (parallel)
+        Phase 4 (optional): Meta-review synthesizing all perspectives
         
         Best for: Code review, document review, quality assurance.
         
         Args:
             task: The task to process
             agent_ids: Specific agents to include (default: all)
+            include_meta_review: If True, adds a final synthesis phase
         """
         start_time = time.time()
         results = []
@@ -648,9 +842,14 @@ class Coordinator:
         initial_tasks = [
             (agent, Task(
                 task_id=f"{task.task_id}_initial_{agent.agent_id}",
-                description=task.description,
+                description=(
+                    f"PEER REVIEW - Phase 1: Initial Work\n\n"
+                    f"Task: {task.description}\n\n"
+                    f"Produce your best work on this task. Your output will be reviewed "
+                    f"by another agent, and you will have a chance to revise based on feedback."
+                ),
                 complexity=task.complexity,
-                context={**task.context, "phase": "initial_work"}
+                context={**task.context, "phase": "initial_work", "review_phase": 1}
             ))
             for agent in participating_agents
         ]
@@ -676,31 +875,53 @@ class Coordinator:
         
         results.extend(initial_results)
         
-        # Phase 2: Peer review (circular: agent i reviews agent (i+1) % n) (PARALLEL)
+        # Phase 2: Peer review with explicit feedback structure (circular assignment)
         review_tasks = []
         for i, reviewer in enumerate(participating_agents):
             reviewee_idx = (i + 1) % n_agents
             reviewee_work = initial_results[reviewee_idx]
-            reviewee_name = participating_agents[reviewee_idx].agent_id
+            reviewee_agent = participating_agents[reviewee_idx]
+            reviewee_name = reviewee_agent.agent_id
+            
+            # Log the review assignment
+            self.send_message(
+                "coordinator",
+                reviewer.agent_id,
+                f"You are assigned to review {reviewee_name}'s work",
+                message_type="assignment"
+            )
             
             review_task = Task(
                 task_id=f"{task.task_id}_review_{reviewer.agent_id}",
-                description=f"Review {reviewee_name}'s work and provide constructive feedback.\n\nOriginal task: {task.description}\n\n{reviewee_name}'s work:\n{reviewee_work.output[:self.output_truncation_limit]}",
+                description=(
+                    f"PEER REVIEW - Phase 2: Review {reviewee_name}'s Work\n\n"
+                    f"Original task: {task.description}\n\n"
+                    f"=== {reviewee_name}'s Work ===\n"
+                    f"{reviewee_work.output[:self.output_truncation_limit]}\n\n"
+                    f"Provide a STRUCTURED REVIEW with:\n"
+                    f"1. STRENGTHS: What did {reviewee_name} do well? (be specific)\n"
+                    f"2. WEAKNESSES: What needs improvement? (be specific)\n"
+                    f"3. SUGGESTIONS: Concrete recommendations for improvement\n"
+                    f"4. QUESTIONS: Any clarifications needed?\n"
+                    f"5. OVERALL ASSESSMENT: Summary evaluation"
+                ),
                 complexity=task.complexity,
                 context={
                     **task.context,
                     "phase": "peer_review",
+                    "review_phase": 2,
                     "reviewing": reviewee_name,
+                    "reviewee_role": reviewee_agent.role.value,
                 }
             )
-            review_tasks.append((reviewer, review_task))
+            review_tasks.append((reviewer, review_task, reviewee_name))
         
         review_results_raw = await asyncio.gather(*[
-            agent.execute(t) for agent, t in review_tasks
+            agent.execute(t) for agent, t, _ in review_tasks
         ], return_exceptions=True)
         
         review_results = []
-        for (agent, t), result in zip(review_tasks, review_results_raw):
+        for (agent, t, reviewee_name), result in zip(review_tasks, review_results_raw):
             if isinstance(result, Exception):
                 result = AgentResult(
                     task_id=t.task_id,
@@ -712,27 +933,48 @@ class Coordinator:
                     success=False,
                     error=str(result)
                 )
+            else:
+                # Log the review feedback as a message
+                self.send_message(
+                    agent.agent_id,
+                    reviewee_name,
+                    f"[Review Feedback] {result.output[:1000]}",
+                    message_type="review"
+                )
             review_results.append(result)
         
         results.extend(review_results)
         
-        # Phase 3: Authors respond to feedback (PARALLEL)
-        # Agent (i-1) % n reviewed agent i, so review_results[(i-1) % n] is the feedback for agent i
+        # Phase 3: Authors respond to feedback and revise (PARALLEL)
         response_tasks = []
         for i, author in enumerate(participating_agents):
             # Find who reviewed this author: agent (i-1) % n reviewed agent i
             reviewer_idx = (i - 1) % n_agents
             feedback = review_results[reviewer_idx]
-            reviewer_name = participating_agents[reviewer_idx].agent_id
+            reviewer_agent = participating_agents[reviewer_idx]
+            reviewer_name = reviewer_agent.agent_id
             
             response_task = Task(
                 task_id=f"{task.task_id}_response_{author.agent_id}",
-                description=f"Consider {reviewer_name}'s feedback and provide your revised/final response.\n\nOriginal task: {task.description}\n\nYour original work:\n{initial_results[i].output[:self.context_truncation_limit]}\n\nFeedback from {reviewer_name}:\n{feedback.output[:self.output_truncation_limit]}",
+                description=(
+                    f"PEER REVIEW - Phase 3: Respond to Feedback and Revise\n\n"
+                    f"Original task: {task.description}\n\n"
+                    f"=== Your Original Work ===\n"
+                    f"{initial_results[i].output[:self.context_truncation_limit]}\n\n"
+                    f"=== Feedback from {reviewer_name} ===\n"
+                    f"{feedback.output[:self.output_truncation_limit]}\n\n"
+                    f"Provide:\n"
+                    f"1. RESPONSE TO FEEDBACK: Address {reviewer_name}'s points (agree/disagree with reasons)\n"
+                    f"2. REVISED WORK: Your improved output incorporating valid feedback\n"
+                    f"3. CHANGES MADE: List specific changes you made based on the review"
+                ),
                 complexity=task.complexity,
                 context={
                     **task.context,
                     "phase": "revision",
+                    "review_phase": 3,
                     "feedback_from": reviewer_name,
+                    "original_work": initial_results[i].output[:self.context_truncation_limit],
                 }
             )
             response_tasks.append((author, response_task))
@@ -758,6 +1000,36 @@ class Coordinator:
         
         results.extend(response_results)
         
+        # Phase 4 (optional): Meta-review synthesis
+        if include_meta_review and participating_agents:
+            # Use the first agent (or a designated synthesizer) for meta-review
+            synthesizer = participating_agents[0]
+            
+            all_revisions = "\n\n".join([
+                f"=== {participating_agents[i].agent_id}'s Revised Work ===\n{r.output[:self.context_truncation_limit]}"
+                for i, r in enumerate(response_results) if r.success
+            ])
+            
+            meta_task = Task(
+                task_id=f"{task.task_id}_meta_review",
+                description=(
+                    f"PEER REVIEW - Phase 4: Meta-Review Synthesis\n\n"
+                    f"Original task: {task.description}\n\n"
+                    f"All revised works after peer review:\n{all_revisions}\n\n"
+                    f"Synthesize the best elements from all revisions into a final, cohesive output. "
+                    f"Identify common themes, resolve contradictions, and produce the best possible result."
+                ),
+                complexity=task.complexity,
+                context={
+                    **task.context,
+                    "phase": "meta_review",
+                    "review_phase": 4,
+                }
+            )
+            
+            meta_result = await synthesizer.execute(meta_task)
+            results.append(meta_result)
+        
         self.results.extend(results)
         self._log_execution("peer_review", task, results, time.time() - start_time)
         
@@ -770,8 +1042,9 @@ class Coordinator:
         content: str,
         message_type: str = "info"
     ) -> Optional[Message]:
-        """Send a message from one agent to another."""
-        if receiver_id not in self.agents:
+        """Send a message from one agent (or coordinator) to another."""
+        # Allow messages from coordinator even if not an agent
+        if receiver_id not in self.agents and receiver_id != "coordinator":
             return None
         
         message = Message(
@@ -783,7 +1056,10 @@ class Coordinator:
         )
         
         self.message_log.append(message)
-        self.agents[receiver_id].receive_message(message)
+        
+        # Only deliver to actual agents
+        if receiver_id in self.agents:
+            self.agents[receiver_id].receive_message(message)
         
         if sender_id in self.agents:
             self.agents[sender_id].metrics.messages_sent += 1
