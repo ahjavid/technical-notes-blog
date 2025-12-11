@@ -351,6 +351,19 @@ class Coordinator:
             all_results.extend(round_results)
             self.results.extend(round_results)
         
+        # Log final round messages (loop only logs previous round's messages)
+        if all_results:
+            final_round_start = -len(participating_agents)
+            for r in all_results[final_round_start:]:
+                for other_agent in participating_agents:
+                    if other_agent.agent_id != r.agent_id:
+                        self.send_message(
+                            r.agent_id, 
+                            other_agent.agent_id, 
+                            f"[Final Round {rounds}] {r.output[:500]}",
+                            message_type="debate"
+                        )
+        
         self._log_execution("debate", task, all_results, time.time() - start_time)
         return all_results
     
@@ -726,6 +739,19 @@ class Coordinator:
             
             if consensus_reached:
                 break
+        
+        # Log final round messages (loop only logs previous round's messages)
+        if all_results:
+            final_round_start = -len(participating_agents)
+            for r in all_results[final_round_start:]:
+                for other_agent in participating_agents:
+                    if other_agent.agent_id != r.agent_id:
+                        self.send_message(
+                            r.agent_id, 
+                            other_agent.agent_id, 
+                            f"[Final Consensus Round] {r.output[:500]}",
+                            message_type="consensus"
+                        )
         
         self.results.extend(all_results)
         self._log_execution(

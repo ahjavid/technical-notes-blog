@@ -248,6 +248,18 @@ async def run_and_evaluate_scenario(
     end_time = datetime.now()
     duration = (end_time - start_time).total_seconds()
     
+    # Extract coordination messages from coordinator's message log
+    coordination_messages = [
+        {
+            "from": msg.sender_id,
+            "to": msg.receiver_id,
+            "type": msg.message_type,
+            "content": msg.content[:500],  # Truncate for evaluation
+            "timestamp": str(msg.timestamp),
+        }
+        for msg in coordinator.message_log
+    ]
+    
     # Build collaborative trace for evaluation
     collaborative_trace = CollaborativeTrace(
         scenario_id=scenario.id,
@@ -255,6 +267,7 @@ async def run_and_evaluate_scenario(
         collaboration_pattern=pattern.value,
         participating_agents=[t.agent_role for t in agent_traces],
         agent_traces=agent_traces,
+        coordination_messages=coordination_messages,  # NOW PASSING MESSAGES!
         final_synthesized_output=final_output,
         total_duration_seconds=duration,
     )
@@ -499,6 +512,9 @@ async def main(evaluation_mode: str = EvaluationMode.BASIC):
     
     for scenario in scenarios:
         console.print(f"  [cyan]{scenario.name}[/cyan] ({scenario.pattern.value})")
+        
+        # Clear previous scenario's message log before running
+        coordinator.clear_history()
         
         result = await run_and_evaluate_scenario(
             scenario, coordinator, agents, evaluator,
