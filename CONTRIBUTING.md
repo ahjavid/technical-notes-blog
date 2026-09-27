@@ -1,202 +1,80 @@
-# Contributing to Technical Notes & Research Blog
+# Writing and Contributing
 
-Thank you for your interest in contributing to this technical research blog! This document outlines how you can contribute to the project.
+This guide covers how posts are structured, how to preview the site, and the standards every post has to meet. It applies to my own posts and to guest contributions alike.
 
-## Types of Contributions
+## Quick start
 
-### 📝 Guest Posts
-- In-depth technical analysis and research
-- Performance studies and benchmarking
-- System optimization case studies
-- Architecture analysis and comparisons
-
-### 🐛 Bug Reports & Improvements
-- Website functionality issues
-- Content corrections and updates
-- Performance improvements
-- Accessibility enhancements
-
-### 💡 Content Suggestions
-- Research topic suggestions
-- Technical questions that warrant investigation
-- Tool and framework analysis requests
-
-## Guest Post Guidelines
-
-### Content Requirements
-- **Technical Depth**: Posts should provide substantial technical insights
-- **Original Research**: Include original analysis, benchmarks, or case studies
-- **Reproducible**: Provide methodology and code when applicable
-- **Practical Value**: Include actionable recommendations
-- **Professional Quality**: Well-written, edited, and structured
-
-### Post Structure
-```markdown
-# Title: Clear and Descriptive
-
-## Introduction
-- Problem statement and motivation
-- What will be covered
-- Key questions being investigated
-
-## Methodology
-- Approach and tools used
-- Testing setup and configuration
-- Data collection methods
-
-## Results
-- Findings with supporting data
-- Charts, graphs, and visualizations
-- Statistical analysis where appropriate
-
-## Analysis & Insights
-- What do the results mean?
-- Why do these patterns emerge?
-- Implications for practitioners
-
-## Recommendations
-- Actionable next steps
-- Best practices derived from research
-- When to apply these findings
-
-## Conclusion
-- Summary of key takeaways
-- Future research directions
-- Links to code/data if applicable
+```bash
+pip install -r site/requirements.txt
+cp -r posts/_template posts/my-new-study       # the folder name becomes the URL
+python site/build.py --serve --drafts          # http://localhost:8000/technical-notes-blog/
 ```
 
-### Technical Standards
-- **Code Quality**: Clean, documented, production-ready examples
-- **Data Integrity**: Proper statistical analysis and honest reporting
-- **Methodology**: Clear, reproducible experimental design
-- **Citations**: Proper attribution of sources and related work
+Edit `posts/my-new-study/index.md`. The server rebuilds on every save, so reload the browser to see changes. Delete `draft: true` from the front matter when the post is ready.
 
-## Submission Process
+## What goes in a post folder
 
-### 1. Proposal Stage
-Create an issue with:
-- **Title**: Proposed post title
-- **Abstract**: 200-word summary of the research
-- **Scope**: What will and won't be covered
-- **Timeline**: Expected completion date
-- **Author Bio**: Brief background and expertise
+```text
+posts/my-new-study/
+├── index.md       the article
+├── images/        figures referenced from the article
+├── data/          raw results (CSV/JSON): every number in the article must come from here
+├── appendix.md    optional; any other .md file is published as a page next to the post
+└── code/ ...      optional; Python files and packages stay on GitHub and aren't copied to the site
+```
 
-### 2. Draft Review
-- Submit draft as a pull request
-- Include all supporting materials (code, data, charts)
-- Follow the established post structure
-- Ensure technical accuracy and clarity
+## Front matter
 
-### 3. Editorial Process
-- Technical review by maintainers
-- Content editing for clarity and flow
-- Code review and testing
-- Final approval and publication
+Every `index.md` starts with YAML front matter:
 
-## Style Guidelines
+| Field | Required | What it's for |
+|---|---|---|
+| `title` | yes | Page title and heading. State the finding or the question plainly |
+| `description` | yes | One or two sentences, shown on the home page, in search results and in the feed |
+| `date` | yes | First publication date, `YYYY-MM-DD` |
+| `tags` | yes | A list of topics. The first is shown in the breadcrumb, and each tag gets a topic page |
+| `updated` | no | Date of the last substantive revision. Pair it with a revision note at the end of the post |
+| `metrics` | no | Up to three `{value, label}` headline numbers for the home page and post header |
+| `key_findings` | no | 3–5 Markdown bullets, shown in a box at the top of the post |
+| `resources` | no | `{title, url, note}` links for the "Data, code & appendices" box. Appendix pages in the folder are listed automatically |
+| `reading_time` | no | Minutes. Calculated automatically if left out |
+| `draft` | no | `true` keeps the post out of the build unless you pass `--drafts` |
 
-### Writing Style
-- **Clear and Accessible**: Technical but understandable
-- **Evidence-Based**: Support claims with data
-- **Balanced**: Discuss limitations and trade-offs
-- **Professional**: Maintain objectivity and professionalism
+## Markdown features
 
-### Technical Content
-- **Code Examples**: Include relevant, working code snippets
-- **Performance Data**: Use proper benchmarking methodologies
-- **Visualizations**: Create clear, informative charts and graphs
-- **References**: Link to relevant research and documentation
+- **Headings.** Start sections at `##`. Every `##` and `###` heading appears in the table of contents, and heading IDs match GitHub's, so `other.md#some-section` links work in both places.
+- **Links.** Write them relative to the file, as you would on GitHub. Links to `.md` files become links to the published pages. Links to code, or to anything else that isn't published, are rewritten to point at the file on GitHub.
+- **Figures.** An image on its own line becomes a figure, and its title becomes the caption:
+  `![Alt text for screen readers](images/chart.png "**Figure 1.** What the reader should notice.")`
+- **Tables.** Standard Markdown tables. Right-align numeric columns with `---:`. Wide tables scroll on small screens.
+- **Callouts.** Use GitHub's alert syntax: `> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]` or `> [!CAUTION]`.
+- **Code.** Fenced blocks with a language (`python`, `bash`, `yaml`, `json`, `text`, …) are syntax-highlighted and get a copy button.
+- **Footnotes and task lists** work as they do on GitHub.
 
-### Formatting
-- Use markdown for all content
-- Include metadata in JSON format
-- Optimize images for web delivery
-- Structure content with clear headings
+## Standards for every post
 
-## Review Criteria
+1. **Every number comes from committed data.** If a table can't be regenerated from `data/`, it doesn't belong in the post. Never estimate a number and present it as a measurement.
+2. **The setup comes first:** hardware, software versions, workload and measurement protocol, including how many runs and how variance is reported.
+3. **Report what happened, including regressions and failures.** A slower "optimization" is a result.
+4. **Keep measurements, extrapolations and opinions apart.** Label extrapolated thresholds and untested suggestions as such.
+5. **Include a Limitations section**: sample size, what wasn't measured, and where the results stop applying.
+6. **Make corrections visible.** When a published post changes in substance, set `updated` and add a revision note at the end.
 
-Posts will be evaluated on:
+## Before you push
 
-### Technical Merit (40%)
-- Original insights and analysis
-- Methodological rigor
-- Practical applicability
-- Code quality and reproducibility
+```bash
+python site/build.py
+```
 
-### Content Quality (30%)
-- Writing clarity and structure
-- Depth of coverage
-- Accuracy and correctness
-- Professional presentation
+The build fails on any broken internal link or missing `#anchor`, and CI runs the same check on pull requests. Pushes to `main` deploy to GitHub Pages automatically.
 
-### Community Value (30%)
-- Relevance to target audience
-- Educational value
-- Potential for discussion and follow-up
-- Contribution to the field
+If you change the APEE package in `posts/apee-evaluation-ecosystem/`, also run its tests:
 
-## Recognition
+```bash
+cd posts/apee-evaluation-ecosystem && pip install -e ".[dev]" && pytest tests/
+```
 
-Contributors will receive:
-- **Author Credit**: Full attribution on published posts
-- **Profile Link**: Link to your GitHub/LinkedIn/website
-- **Community Recognition**: Featured in contributor highlights
-- **Professional Network**: Connection with other technical researchers
+## Guest posts and corrections
 
-## Code of Conduct
-
-### Professional Standards
-- Maintain high technical and ethical standards
-- Respect intellectual property and proper attribution
-- Provide constructive feedback and collaboration
-- Foster an inclusive and welcoming environment
-
-### Technical Integrity
-- Report results honestly, including negative findings
-- Acknowledge limitations and potential biases
-- Provide sufficient detail for reproducibility
-- Correct errors promptly when identified
-
-## Getting Started
-
-### For First-Time Contributors
-1. **Read existing posts** to understand the style and depth expected
-2. **Check open issues** for requested topics or improvements
-3. **Start with a proposal** before writing a full post
-4. **Engage with the community** through discussions and comments
-
-### For Experienced Contributors
-1. **Propose advanced topics** that push technical boundaries
-2. **Mentor new contributors** and review submissions
-3. **Suggest infrastructure improvements** for the blog platform
-4. **Lead collaborative research projects**
-
-## Resources
-
-### Technical Tools
-- **Benchmarking**: Guidelines for performance testing
-- **Visualization**: Recommended charting libraries and tools
-- **Code Standards**: Linting and formatting requirements
-- **Data Analysis**: Statistical analysis best practices
-
-### Content Templates
-- **Post templates** with standard structure
-- **Metadata schemas** for consistent tagging
-- **Code example formats** with documentation standards
-- **Citation styles** for academic and industry references
-
-## Questions?
-
-For questions about contributing:
-- **General Questions**: Open a discussion issue
-- **Technical Issues**: Create a bug report
-- **Content Ideas**: Use the content suggestion template
-- **Collaboration**: Reach out through GitHub or email
-
-## Recognition Wall
-
-Special thanks to all contributors who help make this technical blog a valuable resource for the community!
-
----
-
-**Remember**: This blog aims to bridge the gap between academic research and practical implementation. Every contribution should provide real value to practitioners working on similar challenges.
+- **Found a mistake?** [Open an issue](https://github.com/ahjavid/technical-notes-blog/issues) with the post, the claim, and the data that contradicts it. Corrections are always welcome.
+- **Want to contribute a study?** Open an issue first with a short abstract, the setup, and what data you'll publish. Then send the post as a pull request that includes its `data/` folder and code.
