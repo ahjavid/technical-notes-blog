@@ -57,8 +57,8 @@ class TestCoordinatorInit:
     def test_coordinator_default_truncation_limits(self, mock_agents):
         """Test coordinator has default truncation limits."""
         coordinator = Coordinator(mock_agents)
-        assert coordinator.context_truncation_limit == 500
-        assert coordinator.output_truncation_limit == 1000
+        assert coordinator.context_truncation_limit == 2048
+        assert coordinator.output_truncation_limit == 3072
 
 
 class TestRunParallel:
@@ -154,9 +154,18 @@ class TestRunHierarchical:
     """Tests for run_hierarchical pattern."""
     
     @pytest.mark.asyncio
-    async def test_hierarchical_runs_three_phases(self, coordinator, task):
-        """Test hierarchical runs plan, execute, synthesize."""
+    async def test_hierarchical_runs_four_phases(self, coordinator, task):
+        """Test hierarchical runs plan, execute, feedback, synthesize by default."""
         results = await coordinator.run_hierarchical(task, leader_id="agent_a")
+        # 1 plan + 2 workers + 1 feedback + 1 synthesis = 5 results
+        assert len(results) == 5
+
+    @pytest.mark.asyncio
+    async def test_hierarchical_without_feedback_round(self, coordinator, task):
+        """Test hierarchical skips the feedback phase when disabled."""
+        results = await coordinator.run_hierarchical(
+            task, leader_id="agent_a", include_feedback_round=False
+        )
         # 1 plan + 2 workers + 1 synthesis = 4 results
         assert len(results) == 4
     
@@ -180,8 +189,8 @@ class TestRunHierarchical:
         results = await coordinator.run_hierarchical(
             task, leader_id="agent_a", worker_ids=["agent_b"]
         )
-        # 1 plan + 1 worker + 1 synthesis = 3 results
-        assert len(results) == 3
+        # 1 plan + 1 worker + 1 feedback + 1 synthesis = 4 results
+        assert len(results) == 4
     
     @pytest.mark.asyncio
     async def test_hierarchical_raises_for_missing_leader(self, coordinator, task):
@@ -244,9 +253,16 @@ class TestRunPeerReview:
     """Tests for run_peer_review pattern."""
     
     @pytest.mark.asyncio
-    async def test_peer_review_runs_three_phases(self, coordinator, task):
-        """Test peer review runs initial, review, and revision phases."""
+    async def test_peer_review_runs_all_phases(self, coordinator, task):
+        """Test peer review runs initial, review, revision, and meta-review phases."""
         results = await coordinator.run_peer_review(task)
+        # 3 agents × 3 phases + 1 meta-review = 10 results
+        assert len(results) == 10
+
+    @pytest.mark.asyncio
+    async def test_peer_review_without_meta_review(self, coordinator, task):
+        """Test peer review skips the meta-review phase when disabled."""
+        results = await coordinator.run_peer_review(task, include_meta_review=False)
         # 3 agents × 3 phases = 9 results
         assert len(results) == 9
     
@@ -256,8 +272,8 @@ class TestRunPeerReview:
         results = await coordinator.run_peer_review(
             task, agent_ids=["agent_a", "agent_b"]
         )
-        # 2 agents × 3 phases = 6 results
-        assert len(results) == 6
+        # 2 agents × 3 phases + 1 meta-review = 7 results
+        assert len(results) == 7
     
     @pytest.mark.asyncio
     async def test_peer_review_requires_two_agents(self, mock_agents, task):
