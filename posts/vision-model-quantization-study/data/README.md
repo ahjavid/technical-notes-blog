@@ -1,127 +1,49 @@
-# Vision Model Quantization Study - Data Manifest
+# Data: Vision Transformer Quantization Study
 
-## 📊 Complete Dataset Overview
+Raw results behind [Vision Transformer Quantization: What FP16 and INT8 Actually Buy You](../index.md). They were recorded on June 20, 2025 on one NVIDIA GeForce RTX 4070 Ti SUPER (16 GB) with PyTorch 2.1, CUDA 12.1 and bitsandbytes 0.42.0.
 
-This folder contains all raw data, analysis results, and visualizations from our comprehensive quantization study of 16 vision models.
+## Files
 
-### Raw Data Files
+| File | Contents |
+|---|---|
+| [`quantization_results.csv`](quantization_results.csv) | One row per model and precision: 16 models × 4 precisions = 64 rows. |
+| [`comprehensive_quantization_study_1750457193.json`](comprehensive_quantization_study_1750457193.json) | The same 64 runs with extra metadata: Hugging Face model ID, input size, layer counts and processing time. The number in the file name is the run's Unix timestamp. |
 
-**`quantization_results.csv`** (66 rows × 14 columns)
-- Complete results from all 64 experiments
-- Columns: model_name, precision, architecture, size_category, parameters, latency_ms, throughput_sps, peak_memory_mb, model_size_mb, actual_quantization_method, simulated_accuracy, stability_score, speedup, memory_reduction_pct
-- Source: Automated benchmarking pipeline with 1000 iterations per test
+## Columns in `quantization_results.csv`
 
-**`comprehensive_quantization_study_1750457193.json`** (3,202 lines)
-- Detailed experimental metadata and results
-- Nested structure with model info, precision results, and performance metrics
-- Includes quantization method details and processing times
-- Timestamp: 1750457132.5533278
+| Column | Meaning |
+|---|---|
+| `model_name` | Short model name used throughout the study |
+| `precision` | `fp32` (baseline), `fp16`, `int8_bitsandbytes` or `int4_nf4` |
+| `architecture` | Model family label |
+| `size_category` | Grouping used in the study: `foundation_transformer`, `self_supervised_2023`, `masked_autoencoder_2021`, `production_ready`, `edge_optimized` or `specialized_efficient` |
+| `parameters` | Parameter count |
+| `latency_ms` | Mean time per forward pass at batch size 1, averaged over 1,000 iterations |
+| `throughput_sps` | Images per second. Because the batch size is 1, this is 1000 ÷ `latency_ms` |
+| `peak_memory_mb` | Peak GPU memory during inference |
+| `model_size_mb` | Size of the weights at this precision (MiB) |
+| `actual_quantization_method` | The method that actually ran. Every `int4_nf4` row says `bitsandbytes_int8_success` (see known issues) |
+| `simulated_accuracy` | Placeholder, 0.85 in every row. Accuracy was **not** measured |
+| `stability_score` | Placeholder, 0.95 in every row. Not a measurement |
+| `speedup` | FP32 latency ÷ this row's latency (above 1 is faster) |
+| `memory_reduction_pct` | Peak-memory reduction relative to FP32, in percent |
 
-**`quantization_evolution_study_1750434610.json`** 
-- Evolutionary analysis of quantization performance
-- Additional experimental data and validation results
+## Known issues
 
-### Analysis Reports
+- **INT4 fell back to INT8.** Every `int4_nf4` configuration records `bitsandbytes_int8_success` as the method used, and has the same memory as the INT8 run. Treat those rows as a repeat of INT8, not as 4-bit results.
+- **Accuracy and stability are placeholders.** Both are constants, so don't use them in any analysis.
+- **Layer counts.** In the JSON, `quantization_info.quantized_layers` is 0 for the INT8 and INT4 runs even though their memory fell by up to 75%. The counter didn't recognize bitsandbytes layers.
 
-**`comprehensive_analysis_report.md`** (176 lines)
-- Statistical analysis of all experimental results
-- Performance distribution analysis
-- Model category comparisons
-- Top performing models by category
-- Success rate analysis (100% success across 64 experiments)
+## Loading the data
 
-### Visual Analysis
-
-**Performance Visualizations** (in `../images/`)
-- `comprehensive_performance_analysis.png` - Speedup vs memory reduction scatter plots
-- `memory_efficiency_analysis.png` - Memory reduction analysis across quantization methods
-- `model_speedup_heatmap.png` - Heatmap of speedup performance across models and precisions
-
-## 🔍 Key Dataset Statistics
-
-### Experiment Overview
-- **Total Models**: 16 (spanning 2020-2023 architectures)
-- **Precision Levels**: 4 (FP32, FP16, INT8, INT4)
-- **Total Experiments**: 64
-- **Success Rate**: 100%
-- **Parameter Range**: 1.3M to 632M parameters
-- **Hardware**: NVIDIA RTX 4070 Ti SUPER (16GB VRAM)
-
-### Performance Ranges
-- **FP16 Speedup**: 0.88x to 2.50x (mean: 1.33x)
-- **FP16 Memory Reduction**: 15% to 50% (mean: 44.5%)
-- **INT8 Memory Reduction**: 19% to 75% (mean: 65.8%)
-- **Latency Range**: 3.69ms to 56.73ms
-
-### Model Categories
-- **Foundation Models**: 4 models (300M+ parameters)
-- **Production Models**: 6 models (~86M parameters)
-- **Edge Models**: 6 models (<25M parameters)
-
-## 📈 Top Performing Results
-
-### Best FP16 Speedups
-1. ViT-Huge (632M): 2.50x speedup, 50% memory reduction
-2. ViT-Base-384 (86M): 2.12x speedup, 48% memory reduction
-3. DeiT-Base-Distilled (87M): 2.12x speedup, 48% memory reduction
-4. DINOv2-Large (300M): 1.96x speedup, 50% memory reduction
-
-### Best Memory Efficiency (INT8)
-1. ViT-Huge: 75% memory reduction
-2. ViT-Large: 74% memory reduction
-3. DINOv2-Large: 74% memory reduction
-4. BEiT-Large: 74% memory reduction
-
-### Production Champions (Balance of Speed + Memory)
-1. ViT-Base-384: 2.12x speedup, 72% INT8 memory reduction
-2. DeiT-Base-Distilled: 2.12x speedup, 72% INT8 memory reduction
-
-## 🔬 Data Quality & Validation
-
-### Measurement Protocol
-- **Warmup**: 100 iterations before measurement
-- **Measurement**: 1000 iterations averaged
-- **Environment**: Controlled temperature, consistent GPU load
-- **Validation**: Multiple runs for consistency verification
-
-### Data Reliability
-- **Reproducibility**: All experiments repeatable with provided code
-- **Hardware Consistency**: Single GPU platform for fair comparison
-- **Software Versions**: Fixed PyTorch 2.1.0, CUDA 12.1, BitsAndBytes 0.42.0
-- **Precision**: Sub-millisecond latency measurements
-
-## 📋 Usage Instructions
-
-### Loading the Data
 ```python
 import pandas as pd
-import json
 
-# Load CSV results
-df = pd.read_csv('quantization_results.csv')
+df = pd.read_csv("quantization_results.csv")
 
-# Load detailed JSON metadata
-with open('comprehensive_quantization_study_1750457193.json', 'r') as f:
-    detailed_results = json.load(f)
+fp16 = df[df.precision == "fp16"].sort_values("speedup", ascending=False)
+print(fp16[["model_name", "latency_ms", "speedup", "memory_reduction_pct"]])
 
-# Filter for specific analysis
-fp16_results = df[df['precision'] == 'fp16']
-production_models = df[df['size_category'] == 'production_ready']
+# Compare precisions side by side
+print(df.pivot(index="model_name", columns="precision", values="latency_ms").round(2))
 ```
-
-### Key Columns Explained
-- **latency_ms**: Inference time in milliseconds (lower is better)
-- **speedup**: Performance vs FP32 baseline (higher is better)
-- **memory_reduction_pct**: Memory savings vs FP32 (higher is better)
-- **throughput_sps**: Samples per second (higher is better)
-- **stability_score**: Quantization stability (0.95 = excellent)
-
-## 🔗 Related Files
-- **Blog Posts**: `../vision_model_quantization_legacy_study.md`, `../quantization_production_deployment.md`
-- **Technical Supplement**: `../technical_supplement_quantization.md`
-- **Study Documentation**: `../README.md`
-
----
-
-*Dataset generated by NeuralPulse Research quantization benchmarking pipeline*
-*Last updated: June 2024*

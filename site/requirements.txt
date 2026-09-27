@@ -1,0 +1,6 @@
+# Dependencies for site/build.py (pip install -r site/requirements.txt)
+jinja2>=3.1
+markdown-it-py>=4.1
+mdit-py-plugins>=0.5
+pygments>=2.17
+pyyaml>=6.0

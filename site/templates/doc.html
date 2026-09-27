@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% set title = page.title %}
+{% set description = page.description %}
+{% set path = page.url %}
+{% set section = "about" if page.url == "about/" else "doc" %}
+{% set show_toc = page.toc | length > 2 %}
+
+{% block main %}
+<article class="post doc">
+  <header class="post-header">
+    <div class="wrap wrap-narrow">
+      {% if page.post %}
+      <nav class="crumbs" aria-label="Breadcrumb">
+        <a href="{{ url() }}">Research</a><span aria-hidden="true">/</span><a href="{{ url(page.post.url) }}">{{ page.post.title }}</a>
+      </nav>
+      {% endif %}
+      <h1 class="post-title">{{ page.title }}</h1>
+      {% if page.meta.get('description') %}<p class="post-dek">{{ page.meta.description }}</p>{% endif %}
+      {% if page.post %}
+      <p class="post-meta">Supporting material for <a href="{{ url(page.post.url) }}">{{ page.post.title }}</a></p>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="wrap post-grid{% if not show_toc %} post-grid-single{% endif %}">
+    {% if show_toc %}{{ ui.toc(page.toc) }}{% endif %}
+    <div class="post-body">
+      <div class="prose">
+{{ page.content }}
+      </div>
+      <footer class="post-footer">
+        {% if page.post %}
+        <p class="back-link"><a href="{{ url(page.post.url) }}">← Back to “{{ page.post.title }}”</a></p>
+        {% endif %}
+        <p class="post-actions">
+          <a href="{{ github(page.rel) }}">View source</a>
+          <a href="https://github.com/{{ site.repo }}/edit/{{ site.branch }}/{{ page.rel }}">Suggest an edit</a>
+        </p>
+      </footer>
+    </div>
+  </div>
+</article>
+{% endblock %}

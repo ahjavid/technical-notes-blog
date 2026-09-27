@@ -1,0 +1,23 @@
+# Site settings used by site/build.py and the templates in site/templates/.
+
+title: Technical Notes
+tagline: Applied research on ML systems performance
+description: >-
+  Hands-on studies of GPU training, inference optimization and LLM evaluation,
+  each published with the data and code behind every number.
+author:
+  name: A.H. Javid
+  github: ahjavid
+language: en
+
+# Public address. base_path must match the GitHub Pages project path.
+url: https://ahjavid.github.io/technical-notes-blog
+base_path: /technical-notes-blog/
+
+# Used for "view source" and "suggest an edit" links.
+repo: ahjavid/technical-notes-blog
+branch: main
+
+# Extra glob patterns (file names or repository paths) that are never published.
+# Python packages (folders with __init__.py) and *.py files are always skipped.
+exclude: []

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>{{ absolute() }}</loc></url>
+{% for page in pages %}
+  <url><loc>{{ absolute(page.url) }}</loc>{% if page.kind == 'post' %}<lastmod>{{ (page.updated or page.date) | iso }}</lastmod>{% endif %}</url>
+{% endfor %}
+  <url><loc>{{ absolute('topics/') }}</loc></url>
+{% for topic in topics %}
+  <url><loc>{{ absolute('topics/' ~ topic.slug ~ '/') }}</loc></url>
+{% endfor %}
+</urlset>

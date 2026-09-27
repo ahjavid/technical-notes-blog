@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% set title = "" %}
+{% set description = site.description %}
+{% set path = "" %}
+{% set section = "home" %}
+
+{% block main %}
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">{{ site.tagline }}</p>
+    <h1 class="hero-title">Measured notes on making ML systems faster and easier to evaluate</h1>
+    <p class="hero-lede">{{ site.description }}</p>
+    <ul class="principles">
+      <li><strong>Data first.</strong> Raw results are published next to every post, and the tables are built from them.</li>
+      <li><strong>Honest limits.</strong> Each post says what was measured, what wasn't, and where the numbers stop applying.</li>
+      <li><strong>Reproducible.</strong> Hardware, software versions, code and commands are part of the write-up.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="wrap section" aria-labelledby="posts-heading">
+  <div class="section-head">
+    <h2 id="posts-heading">Research notes</h2>
+    <span class="section-note">{{ posts | length }} studies, newest first</span>
+  </div>
+  <div class="card-list">
+  {% for post in posts %}
+    {{ ui.post_card(post, reading, topic_url, latest=loop.first) }}
+  {% endfor %}
+  </div>
+</section>
+
+<section class="wrap section" aria-labelledby="topics-heading">
+  <div class="section-head">
+    <h2 id="topics-heading">Browse by topic</h2>
+    <a class="section-note" href="{{ url('topics/') }}">All topics →</a>
+  </div>
+  <ul class="topic-cloud">
+  {% for topic in topics %}
+    <li><a class="tag tag-large" href="{{ topic.url }}">{{ topic.name }} <span class="tag-count">{{ topic.posts | length }}</span></a></li>
+  {% endfor %}
+  </ul>
+</section>
+{% endblock %}

@@ -1,6 +1,6 @@
-# Multi-GPU Performance Analysis: Benchmarking Code
+# Benchmark Code: Multi-GPU Training Study
 
-This directory contains the code used to conduct the comprehensive multi-GPU performance analysis.
+These are the TensorFlow scripts behind [Multi-GPU Training: When Hardware Topology Matters](../index.md). They're published as listings: copy each block into the file named in its heading to run the benchmark.
 
 ## Overview
 
@@ -57,14 +57,13 @@ def create_large_model(input_dim=50, output_dim=3):
 
 def count_parameters(model):
     """Count trainable parameters in model"""
-    return sum(p.numel() for p in model.trainable_variables)
+    return sum(int(tf.size(v)) for v in model.trainable_variables)
 ```
 
 ### 2. Performance Profiler (`profiler.py`)
 ```python
 import time
-import psutil
-import nvidia_ml_py3 as nvml
+import pynvml as nvml  # pip install nvidia-ml-py
 import tensorflow as tf
 from dataclasses import dataclass
 from typing import List, Dict
@@ -159,18 +158,20 @@ def setup_multi_gpu_strategy():
         'NCCL_MIN_NCHANNELS': '4'          # Minimum channels
     })
     
-    # Configure GPU memory growth
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-        try:
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-                # Set memory limit to 12GB for safety
-                tf.config.experimental.set_memory_limit(gpu, 12288)
-        except RuntimeError as e:
-            print(f"GPU configuration error: {e}")
+    # Cap each GPU at 12GB for safety. TensorFlow does not allow a memory
+    # limit and set_memory_growth on the same device, so only the limit is set.
+    gpus = tf.config.list_physical_devices('GPU')
+    try:
+        for gpu in gpus:
+            tf.config.set_logical_device_configuration(
+                gpu, [tf.config.LogicalDeviceConfiguration(memory_limit=12288)]
+            )
+    except RuntimeError as e:  # must run before TensorFlow initializes the GPUs
+        print(f"GPU configuration error: {e}")
     
-    # Create MirroredStrategy with HierarchicalCopyAllReduce
+    # Create MirroredStrategy with HierarchicalCopyAllReduce.
+    # Note: the NCCL_* variables above only apply to tf.distribute.NcclAllReduce
+    # (MirroredStrategy's default), not to HierarchicalCopyAllReduce.
     strategy = tf.distribute.MirroredStrategy(
         cross_device_ops=tf.distribute.HierarchicalCopyAllReduce()
     )
@@ -192,7 +193,7 @@ class IntelligentStrategySelector:
     
     def should_use_multi_gpu(self, model, batch_size):
         """Intelligent decision based on model characteristics"""
-        param_count = sum(p.numel() for p in model.trainable_variables)
+        param_count = sum(int(tf.size(v)) for v in model.trainable_variables)
         
         if param_count < self.thresholds['small_model_max_params']:
             return False, f"Model too small ({param_count:,} params)"
@@ -212,12 +213,15 @@ class IntelligentStrategySelector:
 
 ### 4. Benchmark Runner (`benchmark.py`)
 ```python
+import json
+from datetime import datetime
+
 import numpy as np
 import tensorflow as tf
-from sklearn.metrics import mean_squared_error
-import json
-import time
-from datetime import datetime
+
+from models import create_large_model, create_medium_model
+from profiler import PerformanceProfiler
+from strategy import setup_multi_gpu_strategy
 
 class ComprehensiveBenchmark:
     def __init__(self, model_type='medium', multi_gpu=False):
@@ -325,7 +329,7 @@ class ComprehensiveBenchmark:
                         'memory_usage_mb': avg_memory_mb,
                         'gpu_utilization': avg_gpu_util,
                         'communication_time_ms': avg_comm_time,
-                        'model_parameters': sum(p.numel() for p in model.trainable_variables)
+                        'model_parameters': sum(int(tf.size(v)) for v in model.trainable_variables)
                     })
                 
                 print(f"✓ {avg_samples_per_sec:.0f} samples/sec")
@@ -391,9 +395,13 @@ Comprehensive analysis of single vs multi-GPU training performance
 """
 
 import argparse
-import sys
 import os
+import sys
+from datetime import datetime
+
+import numpy as np
 import tensorflow as tf
+
 from benchmark import ComprehensiveBenchmark
 from strategy import IntelligentStrategySelector
 
@@ -598,15 +606,11 @@ NumPy: 2.1.3
 CUDA: 12.5.1
 cuDNN: 9
 NCCL: 2.18.5
-nvidia-ml-py3
-psutil
-scikit-learn
-pandas
 ```
 
-Install with:
+Install the Python packages with:
 ```bash
-pip install -r requirements.txt
+pip install "tensorflow[and-cuda]==2.19.0" numpy nvidia-ml-py
 ```
 
 ---

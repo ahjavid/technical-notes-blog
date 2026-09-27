@@ -1,861 +1,166 @@
-# Adaptive Poly-Agentic Evaluation Ecosystem (APEE)
+# APEE: Adaptive Poly-Agentic Evaluation Ecosystem
 
-*A comprehensive framework for evaluating and benchmarking multi-agent AI systems using LLM-as-a-Judge methodology*
+A Python framework for evaluating teams of LLM agents with LLM judges. It runs small local models through collaborative scenarios in one of six coordination patterns, then has larger models from other families score the individual work, the collaboration and the overall run.
 
----
+**Results and analysis:** [the blog post](index.md) walks through the December 2025 evaluation runs and what they show about LLM-as-a-judge scoring. This README covers using the package.
 
-## 📖 Overview
+## Features
 
-The Adaptive Poly-Agentic Evaluation Ecosystem (APEE) is a framework for systematically evaluating multi-agent AI systems. It uses **LLM-as-a-Judge** evaluation (inspired by CrewAI) where large language models evaluate agent outputs rather than simple heuristics, providing meaningful, nuanced scores.
+- **Six coordination patterns**: parallel, sequential (pipeline), debate, hierarchical, consensus and peer review ([details](apee/coordination/PATTERNS.md))
+- **Twelve collaborative scenarios**, each exercising one pattern, from code review to incident response
+- **Three levels of metrics**: individual (L1) and collaborative (L2) quality scored by LLM judges, and ecosystem health (L3) computed from the run
+- **Four judging protocols**: a basic two-judge ensemble, progressive deepening, a four-persona jury, and a calibrated jury that negotiates a rubric first ([details](apee/evaluation/EVALUATION_PATTERNS.md))
+- **Heuristic scorers** for fast checks without an LLM, plus a single-model benchmark suite (19 tasks in 11 categories)
+- **Visualization, anomaly detection and a web dashboard** for inspecting results
+- **Runs locally** on [Ollama](https://ollama.com); no API keys needed
 
-### 🎯 Key Features
-- **LLM-as-a-Judge Evaluation**: Large models (20-24B) evaluate smaller agent outputs
-- **Ensemble Judges**: Multiple judge models from different families reduce bias
-- **Poly-Agentic Collaboration**: Multiple agents working together with 6 patterns
-- **Three-Tier Metrics**: Individual → Collaborative → Ecosystem evaluation
-- **Role-Optimized Agents**: Agent selection based on benchmark strengths
-- **6 Collaboration Patterns** (see [PATTERNS.md](apee/coordination/PATTERNS.md)):
-  - `run_parallel()` - All agents work independently (best result selected)
-  - `run_pipeline()` - Sequential: analyze → code → review
-  - `run_debate()` - Multi-round parallel discussion
-  - `run_hierarchical()` - Analyst leads, workers execute, leader synthesizes
-  - `run_consensus()` - Iterate with semantic agreement detection
-  - `run_peer_review()` - Work → review → revise (3 parallel phases)
+## Quick start
 
----
-
-## 🏆 Latest Results (LLM-as-a-Judge) - December 11, 2025
-
-### Configuration
-
-**Agents** (small, diverse families - ordered for optimal pattern execution):
-| Role | Model | Family | Position | Benchmark Strength |
-|------|-------|--------|----------|-------------------|
-| Analyst (Analyzer) | qwen2.5-coder:3b | Qwen | 1st (Leader) | analysis: 0.939, qa_reasoning: 0.957 |
-| Coder (Executor) | llama3.2:3b | Llama | 2nd (Worker) | code_generation: 0.983 |
-| Reviewer | phi4-mini:3.8b | Phi | 3rd (Final) | code_review: 0.991 |
-
-> **Note**: Agent order matters! Analyst is first for hierarchical (planning/synthesis), then coder, then reviewer for logical pipeline flow: analyze → code → review.
-
-**Judges** (large, different families - no overlap with agents):
-| Judge | Model | Size | Family |
-|-------|-------|------|--------|
-| Judge 1 | gpt-oss:20b | 20B | GPT-OSS |
-| Judge 2 | mistral-small3.2:24b | 24B | Mistral |
-
----
-
-### 📊 Evaluation Mode Summary
-
-| Mode | Avg | Min | Max | L1 Avg | L2 Avg | L3 Avg | Characteristics |
-|------|-----|-----|-----|--------|--------|--------|-----------------|
-| **Basic** | 7.03 | 6.6 | 8.0 | 7.0 | 7.3 | 8.1 | Baseline reference |
-| **Progressive** | 7.50 | 6.5 | 8.2 | 7.0 | 7.5 | 8.3 | Fail-fast efficiency |
-| **Jury** | 7.10 | 6.3 | 7.7 | 6.9 | 7.0 | 7.9 | Multi-perspective |
-| **Calibrated** | 7.04 | 5.9 | 7.7 | 6.8 | 7.0 | 7.9 | Conservative, consistent |
-
----
-
-### 🔵 Basic Mode Results
-
-Standard LLM-as-a-Judge evaluation with ensemble median aggregation.
-
-| Scenario | Pattern | L1 | L2 | L3 | Overall |
-|----------|---------|-----|-----|-----|---------|
-| Adversarial Review | Debate | 7.8 | 8.2 | 8.0 | **8.0** |
-| Constrained Problem | Debate | 6.8 | 7.8 | 8.0 | **7.5** |
-| Research Synthesis | Sequential | 7.8 | 6.4 | 8.4 | **7.3** |
-| Creative Collab | Debate | 6.0 | 7.8 | 8.1 | **7.3** |
-| Knowledge Transfer | Sequential | 7.2 | 6.8 | 8.0 | **7.3** |
-| Conflict Resolution | Consensus | 7.3 | 7.5 | 7.2 | **7.3** |
-| Realtime Collab | Parallel | 7.3 | 6.8 | 8.4 | **7.2** |
-| Scalability Test | Hierarchical | 7.5 | 7.2 | 7.6 | **7.1** |
-| Doc Sprint | Peer Review | 6.2 | 7.5 | 7.6 | **7.1** |
-| Error Recovery | Hierarchical | 6.4 | 7.4 | 7.8 | **7.1** |
-| Collab Code Review | Peer Review | 6.8 | 7.0 | 7.8 | **7.0** |
-| Emergent Behavior | Parallel | 7.4 | 5.0 | 8.7 | **6.6** |
-
-**Basic Mode Insights:**
-- Adversarial review leads at 8.0 (debate pattern L2=8.2)
-- Debate pattern strong: adversarial 8.0, constrained 7.5, creative 7.3
-- L2 improved significantly with message logging fix (avg 7.3 vs prior 6.5)
-
----
-
-### 🟢 Progressive Mode Results
-
-Sequential evaluation with 4 depth levels (SURFACE → TECHNICAL → COLLABORATIVE → COMPREHENSIVE) and fail-fast.
-
-| Scenario | Pattern | L1 | L2 | L3 | Overall |
-|----------|---------|-----|-----|-----|---------|
-| Collab Code Review | Peer Review | 7.5 | 8.5 | 8.5 | **8.2** |
-| Adversarial Review | Debate | 8.0 | 8.0 | 7.6 | **7.8** |
-| Constrained Problem | Debate | 7.0 | 8.0 | 8.0 | **7.7** |
-| Doc Sprint | Peer Review | 6.8 | 8.0 | 7.8 | **7.5** |
-| Research Synthesis | Sequential | 7.8 | 6.8 | 8.5 | **7.5** |
-| Creative Collab | Debate | 6.0 | 8.0 | 8.2 | **7.4** |
-| Knowledge Transfer | Sequential | 7.5 | 7.0 | 8.2 | **7.4** |
-| Conflict Resolution | Consensus | 7.3 | 7.8 | 7.4 | **7.4** |
-| Error Recovery | Hierarchical | 6.5 | 7.8 | 7.8 | **7.3** |
-| Realtime Collab | Parallel | 6.8 | 7.0 | 8.8 | **7.3** |
-| Scalability Test | Hierarchical | 7.0 | 7.0 | 8.0 | **7.2** |
-| Emergent Behavior | Parallel | 6.8 | 5.8 | 8.4 | **6.5** |
-
-**Progressive Mode Insights:**
-- Collab code review leads at 8.2 - peer review + progressive depth excels
-- Strong L2 scores (5.8-8.5) - depth levels reveal collaboration quality
-- All debate scenarios 7.4+ with improved message coordination
-
----
-
-### 🟡 Jury Mode Results
-
-4 persona judges (SKEPTIC, LITERALIST, OPTIMIST, PRAGMATIST) with weighted voting.
-
-| Scenario | Pattern | L1 | L2 | L3 | Overall |
-|----------|---------|-----|-----|-----|---------|
-| Scalability Test | Hierarchical | 7.8 | 7.5 | 8.0 | **7.7** |
-| Adversarial Review | Debate | 7.5 | 8.0 | 7.8 | **7.7** |
-| Error Recovery | Hierarchical | 7.0 | 7.8 | 7.5 | **7.4** |
-| Constrained Problem | Debate | 6.8 | 7.5 | 8.0 | **7.4** |
-| Doc Sprint | Peer Review | 6.2 | 7.8 | 7.6 | **7.2** |
-| Creative Collab | Debate | 6.0 | 7.5 | 8.0 | **7.2** |
-| Research Synthesis | Sequential | 7.0 | 6.2 | 8.5 | **7.0** |
-| Knowledge Transfer | Sequential | 6.5 | 6.8 | 7.8 | **7.0** |
-| Conflict Resolution | Consensus | 7.0 | 7.0 | 7.0 | **7.0** |
-| Collab Code Review | Peer Review | 6.5 | 7.0 | 7.8 | **7.0** |
-| Realtime Collab | Parallel | 7.0 | 6.0 | 8.5 | **6.9** |
-| Emergent Behavior | Parallel | 7.0 | 5.2 | 8.4 | **6.3** |
-
-**Jury Mode Insights:**
-- Scalability test and adversarial review lead at 7.7 - personas detect quality
-- Strong L2 scores (5.2-8.0) - multi-perspective reveals collaboration
-- Hierarchical pattern strong (7.7, 7.4) - personas appreciate structure
-
----
-
-### 🔴 Calibrated Mode Results
-
-Calibration loop + jury combined - judges negotiate rubric before scoring.
-
-| Scenario | Pattern | L1 | L2 | L3 | Overall |
-|----------|---------|-----|-----|-----|---------|
-| Adversarial Review | Debate | 7.2 | 8.0 | 7.6 | **7.7** |
-| Doc Sprint | Peer Review | 6.2 | 8.2 | 7.9 | **7.5** |
-| Research Synthesis | Sequential | 8.2 | 6.5 | 8.5 | **7.5** |
-| Collab Code Review | Peer Review | 6.5 | 7.8 | 7.5 | **7.3** |
-| Constrained Problem | Debate | 6.4 | 7.5 | 7.6 | **7.2** |
-| Realtime Collab | Parallel | 7.0 | 6.2 | 8.9 | **7.2** |
-| Scalability Test | Hierarchical | 7.0 | 6.3 | 8.7 | **7.1** |
-| Conflict Resolution | Consensus | 6.6 | 7.4 | 7.2 | **7.1** |
-| Knowledge Transfer | Sequential | 6.9 | 6.0 | 8.3 | **6.9** |
-| Creative Collab | Debate | 5.8 | 6.9 | 7.4 | **6.7** |
-| Emergent Behavior | Parallel | 6.8 | 4.8 | 8.7 | **6.3** |
-| Error Recovery | Hierarchical | 4.9 | 5.3 | 8.0 | **5.9** |
-
-**Calibrated Mode Insights:**
-- Adversarial review leads at 7.7 - debate pattern excels with calibration
-- Doc sprint L2=8.2 - peer review benefits from rubric negotiation
-- Debate pattern strong across calibrated mode (avg L2: 7.5)
-
----
-
-### 📈 Cross-Mode Comparison by Scenario
-
-| Scenario | Basic | Progressive | Jury | Calibrated | Variance |
-|----------|-------|-------------|------|------------|----------|
-| adversarial_review | **8.0** | 7.8 | 7.7 | 7.7 | Low |
-| collab_code_review | 7.0 | **8.2** | 7.0 | 7.3 | High |
-| research_synthesis | 7.3 | **7.5** | 7.0 | 7.5 | Low |
-| constrained_problem | **7.5** | 7.7 | 7.4 | 7.2 | Low |
-| conflict_resolution | **7.3** | 7.4 | 7.0 | 7.1 | Low |
-| scalability_test | 7.1 | 7.2 | **7.7** | 7.1 | Low |
-| doc_sprint | 7.1 | **7.5** | 7.2 | 7.5 | Low |
-| error_recovery | 7.1 | **7.3** | 7.4 | 5.9 | High |
-| creative_collab | **7.3** | 7.4 | 7.2 | 6.7 | Low |
-| knowledge_transfer | **7.3** | 7.4 | 7.0 | 6.9 | Low |
-| realtime_collab | 7.2 | **7.3** | 6.9 | 7.2 | Low |
-| emergent_behavior | **6.6** | 6.5 | 6.3 | 6.3 | Low |
-
-**Cross-Mode Insights:**
-- Most scenarios show LOW variance (modes agree)
-- collab_code_review highest variance: 7.0-8.2 - progressive depth excels
-- error_recovery high variance: 5.9-7.4 - calibrated struggles
-- adversarial_review consistently high (7.7-8.0) across all modes
-
----
-
-### Key Insights
-
-1. **Progressive mode highest average**: 7.50 - fail-fast with depth levels most effective
-2. **L2 Collaborative significantly improved**: 7.0-7.5 avg (was 3.8-6.5 before message fix)
-3. **Adversarial review consistently strong**: 7.7-8.0 across all modes
-4. **L3 Ecosystem most stable**: 7.4-8.7 avg across modes
-5. **Debate pattern excels with proper coordination**: avg 7.5+ with message logging
-6. **Progressive good for quality**: collab_code_review reaches 8.2
-7. **Low variance across modes**: Most scenarios agree (6.3-7.7 range)
-8. **Peer review benefits from progressive depth**: 8.2 (progressive) vs 7.0 (basic)
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Python 3.10+
-- Ollama running locally (`ollama serve`)
-- Models pulled:
-  ```bash
-  # Agents (small, diverse)
-  ollama pull llama3.2:3b
-  ollama pull qwen2.5-coder:3b
-  ollama pull phi4-mini:3.8b
-  
-  # Judges (large, different families)
-  ollama pull gpt-oss:20b
-  ollama pull mistral-small3.2:24b
-  ```
-
-### Installation
+Requires Python 3.10+ and a running Ollama server (`ollama serve`). The judges need a GPU that can hold a 20–24B model.
 
 ```bash
-# Clone the repository
 git clone https://github.com/ahjavid/technical-notes-blog.git
 cd technical-notes-blog/posts/apee-evaluation-ecosystem
+pip install -e ".[dev]"          # add ,viz for Plotly charts
 
-# Install the package
-pip install -e .
+# Agents: small models from different families
+ollama pull qwen2.5-coder:3b
+ollama pull llama3.2:3b
+ollama pull phi4-mini:3.8b
 
-# Or install with dev dependencies
-pip install -e ".[dev]"
+# Judges: larger models from other families
+ollama pull gpt-oss:20b
+ollama pull mistral-small3.2:24b
 ```
 
-### Run the LLM-as-a-Judge Evaluation
+### Run the evaluation
 
 ```bash
-# Run basic evaluation (default)
-python examples/proper_apee_evaluation.py
-
-# Run with advanced evaluation patterns
-python examples/proper_apee_evaluation.py --mode progressive  # Fail-fast with 4 depth levels
-python examples/proper_apee_evaluation.py --mode jury         # 4 persona judges (Skeptic, Literalist, Optimist, Pragmatist)
-python examples/proper_apee_evaluation.py --mode calibrated   # Calibration + jury combined
-python examples/proper_apee_evaluation.py --mode all          # Run all modes sequentially
+python examples/proper_apee_evaluation.py                      # basic two-judge ensemble
+python examples/proper_apee_evaluation.py --mode progressive   # + progressive deepening
+python examples/proper_apee_evaluation.py --mode jury          # + four-persona jury
+python examples/proper_apee_evaluation.py --mode calibrated    # + calibrated jury
+python examples/proper_apee_evaluation.py --mode all           # all four, one after another
 ```
 
-### Advanced Evaluation Modes
+Results are written to `data/`. Every run records the basic ensemble score as `overall_apee_score`. The extra protocol's own scores are stored under `advanced_evaluation`, as described in the [data guide](data/README.md).
 
-| Mode | Pattern | Description | Best For |
-|------|---------|-------------|----------|
-| `basic` | Standard | Direct LLM-as-a-Judge evaluation | Quick assessment |
-| `progressive` | Sequential | 4 depth levels with fail-fast | Large-scale screening |
-| `jury` | Independent | 4 personas with distinct lenses | Subjective evaluations |
-| `calibrated` | Combined | Calibration loop + jury | Novel tasks, ambiguous requirements |
+### Other examples
 
-### Evaluation Mode Comparison (December 2025)
+| Script | What it does |
+|---|---|
+| [`examples/comprehensive_benchmark.py`](examples/comprehensive_benchmark.py) | Single-model benchmark across 19 tasks in 11 categories |
+| [`examples/multi_model_evaluation.py`](examples/multi_model_evaluation.py) | Compare several Ollama models on the same tasks |
+| [`examples/phase6_demo.py`](examples/phase6_demo.py) | Charts, anomaly detection and an HTML report from saved results |
 
-| Mode | Avg Score | Min | Max | Characteristics |
-|------|-----------|-----|-----|-----------------|
-| Basic | 7.03 | 6.6 | 8.0 | Baseline reference |
-| Progressive | 7.50 | 6.5 | 8.2 | Best avg, fail-fast efficiency |
-| Jury | 7.10 | 6.3 | 7.7 | Multi-perspective, persona diversity |
-| Calibrated | 7.04 | 5.9 | 7.7 | Conservative, rubric negotiation |
-
-### Basic Usage
+## Using the API
 
 ```python
 import asyncio
-from apee import OllamaAgent, Coordinator, Task, AgentRole
+
+from apee import AgentRole, Coordinator, OllamaAgent, Task
 from apee.evaluation.llm_evaluator import EnsembleEvaluator
 
+
 async def main():
-    # Create role-optimized agents (order matters for patterns!)
-    # Analyst first (leader for hierarchical), then coder, then reviewer
+    # Order matters: the first agent leads hierarchical runs.
     agents = [
-        OllamaAgent("analyst", AgentRole.ANALYZER, model="qwen2.5-coder:3b"),  # Leader
-        OllamaAgent("coder", AgentRole.EXECUTOR, model="llama3.2:3b"),          # Worker
-        OllamaAgent("reviewer", AgentRole.REVIEWER, model="phi4-mini:3.8b"),    # Final
+        OllamaAgent("analyst", AgentRole.ANALYZER, model="qwen2.5-coder:3b"),
+        OllamaAgent("coder", AgentRole.EXECUTOR, model="llama3.2:3b"),
+        OllamaAgent("reviewer", AgentRole.REVIEWER, model="phi4-mini:3.8b"),
     ]
-    
-    # Create ensemble evaluator (large judges, different families)
+    coordinator = Coordinator(agents=agents)
+    task = Task(task_id="t1", description="Review this code for bugs: ...")
+
+    # Pipeline: analyze → code → review
+    results = await coordinator.run_pipeline(task, ["analyst", "coder", "reviewer"])
+
+    # Other patterns
+    # await coordinator.run_parallel(task)
+    # await coordinator.run_debate(task, rounds=2)
+    # await coordinator.run_hierarchical(task, leader_id="analyst")
+    # await coordinator.run_consensus(task, max_rounds=3)
+    # await coordinator.run_peer_review(task)
+
     evaluator = EnsembleEvaluator(
         judge_models=["gpt-oss:20b", "mistral-small3.2:24b"],
         aggregation="median",
     )
-    
-    # Coordinate and evaluate
-    coordinator = Coordinator(agents=agents)
-    task = Task(task_id="t1", description="Review this code for bugs")
-    
-    # Pipeline flows: analyst → coder → reviewer (analyze → code → review)
-    results = await coordinator.run_pipeline(task, ["analyst", "coder", "reviewer"])
-    
-    # Or use hierarchical: analyst leads, coder+reviewer work, analyst synthesizes
-    # results = await coordinator.run_hierarchical(task, leader_id="analyst")
-    
-    # Evaluate with LLM-as-a-Judge
-    # ... build CollaborativeTrace from results
+    # Build a CollaborativeTrace from the results, then:
     # evaluation = evaluator.evaluate_full(trace)
+    # print(evaluation["overall_apee_score"])
+
 
 asyncio.run(main())
 ```
 
----
+[`examples/proper_apee_evaluation.py`](examples/proper_apee_evaluation.py) shows the complete flow, including how to build the `CollaborativeTrace`.
 
-## 📦 Package Structure
+### Heuristic scoring (no LLM needed)
 
-```
-apee/
-├── __init__.py              # Package exports
-├── models.py                # Pydantic data models
-├── cli.py                   # Command-line interface
-├── agents/
-│   ├── __init__.py
-│   ├── base.py              # Abstract Agent class
-│   └── ollama.py            # Ollama LLM implementation
-├── coordination/
-│   ├── __init__.py
-│   ├── coordinator.py       # Task distribution & 6 execution patterns
-│   └── PATTERNS.md          # 📚 Detailed pattern documentation
-├── evaluation/
-│   ├── __init__.py
-│   ├── evaluator.py         # Heuristic evaluation engine
-│   ├── llm_evaluator.py     # LLM-as-a-Judge evaluators (EnsembleEvaluator)
-│   ├── advanced_patterns.py # 🆕 Progressive, Jury, Calibrated modes
-│   ├── quality.py           # Quality scoring strategies
-│   ├── adaptive.py          # Adaptive pattern detection
-│   └── report.py            # Report data models
-├── benchmarks/
-│   ├── __init__.py
-│   ├── datasets.py          # 19 scenarios, 11 categories
-│   ├── runner.py            # Statistical benchmark runner
-│   ├── analyzer.py          # Analysis with confidence intervals
-│   └── collaborative.py     # 12 multi-agent scenarios
-├── visualization/
-│   ├── __init__.py
-│   ├── charts.py            # Plotly/text chart generation
-│   └── export.py            # HTML/PNG export utilities
-├── anomaly/
-│   ├── __init__.py
-│   ├── detector.py          # Statistical anomaly detection
-│   ├── patterns.py          # Pattern analyzers
-│   └── alerts.py            # Alert handling system
-├── dashboard/
-│   ├── __init__.py
-│   ├── server.py            # Web dashboard server
-│   └── api.py               # Dashboard API client
-└── utils/
-    ├── __init__.py
-    ├── logging.py           # Logging utilities
-    └── helpers.py           # Helper functions
-
-examples/
-├── __init__.py
-├── proper_apee_evaluation.py    # 🔥 Main evaluation (--mode basic|progressive|jury|calibrated|all)
-├── advanced_evaluation_demo.py  # 🆕 Advanced patterns demo
-├── full_evaluation.py           # Basic evaluation demo
-├── comprehensive_benchmark.py   # Single-model benchmarks
-├── multi_agent_evaluation.py    # Multi-agent with heuristics
-├── multi_model_evaluation.py    # Multi-model comparison
-└── phase6_demo.py               # Visualization & anomaly demo
-
-tests/
-├── __init__.py
-├── test_advanced_patterns.py    # 🆕 Advanced patterns tests (38 tests)
-├── test_coordinator.py          # Coordinator pattern tests (35 tests)
-├── test_benchmarks.py           # Benchmark tests
-├── test_models.py               # Model tests
-└── test_quality.py              # Quality scoring tests
-
-data/
-├── apee_evaluation_results.json           # Basic mode results
-├── apee_evaluation_results_progressive.json # Progressive mode results
-├── apee_evaluation_results_jury.json      # Jury mode results
-├── apee_evaluation_results_calibrated.json # Calibrated mode results
-└── evaluation_report.html                 # HTML report
-```
-
----
-
-## 🏗️ Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     APEE Framework                                  │
-├─────────────────────────────────────────────────────────────────────┤
-│  AGENTS (Small 3B models - ordered for optimal pattern execution)   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │   Analyst    │  │    Coder     │  │   Reviewer   │               │
-│  │  (Analyzer)  │  │  (Executor)  │  │  (Reviewer)  │               │
-│  │qwen2.5-coder │  │ llama3.2:3b  │  │phi4-mini:3.8b│               │
-│  │  [LEADER]    │  │  [WORKER]    │  │   [FINAL]    │               │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
-│         │                 │                 │                       │
-│         └────────────┬────┴─────────────────┘                       │
-│                      │                                              │
-│         ┌────────────▼─────────────┐                                │
-│         │      Coordinator         │                                │
-│         │  • run_parallel()        │ ← Best quality result          │
-│         │  • run_pipeline()        │ ← analyze → code → review      │
-│         │  • run_debate()          │ ← Multi-round parallel         │
-│         │  • run_hierarchical()    │ ← Analyst leads workers        │
-│         │  • run_consensus()       │ ← Semantic agreement detect    │
-│         │  • run_peer_review()     │ ← 3 parallel phases            │
-│         └────────────┬─────────────┘                                │
-│                      │                                              │
-│  JUDGES (Large 20-24B models - different families)                  │
-│  ┌───────────────────────────────────────────────┐                  │
-│  │  ┌──────────┐          ┌──────────┐           │                  │
-│  │  │ GPT-OSS  │    +     │ Mistral  │           │                  │
-│  │  │   20B    │          │   24B    │           │                  │
-│  │  └──────────┘          └──────────┘           │                  │
-│  │         │ Ensemble Evaluation │               │                  │
-│  │         └──────────┬──────────┘               │                  │
-│  └───────────────────────────────────────────────┘                  │
-│                      │                                              │
-│  ┌───────────────────┼───────────────────┐                          │
-│  │                   │                   │                          │
-│  ▼                   ▼                   ▼                          │
-│ ┌─────────┐    ┌─────────────┐    ┌────────────┐                    │
-│ │ Level 1 │    │   Level 2   │    │  Level 3   │                    │
-│ │Individual│   │Collaborative│    │ Ecosystem  │                    │
-│ │ Metrics │    │   Metrics   │    │  Metrics   │                    │
-│ │Goal,Sem.│    │Collab,Synth │    │Eff,Stab,Thr│                    │
-│ └────┬────┘    └──────┬──────┘    └─────┬──────┘                    │
-│      │               │                  │                           │
-│      └───────────────┼──────────────────┘                           │
-│                      │                                              │
-│         ┌────────────▼─────────────┐                                │
-│         │   Overall APEE Score     │                                │
-│         │  (L1×0.30 + L2×0.45 +    │                                │
-│         │   L3×0.25)               │                                │
-│         └──────────────────────────┘                                │
-└─────────────────────────────────────────────────────────────────────┘
-```
-
-### Three-Tier Evaluation Metrics
-
-| Level | Focus | Metrics |
-|-------|-------|---------|
-| **L1: Individual** | Single agent performance | Goal alignment, semantic quality |
-| **L2: Collaborative** | Multi-agent interaction | Collaboration effectiveness, synthesis quality |
-| **L3: Ecosystem** | System-level health | Efficiency, stability, throughput, adaptability |
-
----
-
-## 📊 Evaluation Dimensions
-
-### Level 1: Individual Agent Performance (LLM-Evaluated)
-| Metric | Description | Scale |
-|--------|-------------|-------|
-| Goal Alignment | Did agent achieve the task? | 0-10 |
-| Semantic Quality | Is reasoning clear and logical? | 0-10 |
-
-### Level 2: Multi-Agent Collaboration (LLM-Evaluated)
-| Metric | Description | Scale |
-|--------|-------------|-------|
-| Collaboration Effectiveness | Did agents work well together? | 0-10 |
-| Synthesis Quality | Is combined output coherent? | 0-10 |
-
-### Level 3: Ecosystem Health (Computed)
-| Metric | Description | Scale |
-|--------|-------------|-------|
-| Efficiency | Output quality per unit time | 0-10 |
-| Stability | Inverse of conflicts | 0-10 |
-| Throughput | Agents utilized effectively | 0-10 |
-| Adaptability | Pattern appropriateness | 0-10 |
-
----
-
-## 🔬 Evaluation Methods
-
-APEE supports two evaluation approaches:
-
-### 1. LLM-as-a-Judge (Recommended)
-```python
-from apee.evaluation.llm_evaluator import EnsembleEvaluator
-
-# Ensemble of large judges from different families
-evaluator = EnsembleEvaluator(
-    judge_models=["gpt-oss:20b", "mistral-small3.2:24b"],
-    aggregation="median",
-)
-
-# Evaluates: goal alignment, semantic quality, collaboration, synthesis
-result = evaluator.evaluate_full(collaborative_trace)
-print(f"Overall: {result['overall_apee_score']}/10")
-```
-
-### 2. Heuristic Scoring (Fast, no LLM needed)
 ```python
 from apee.evaluation.quality import CompositeScorer, HeuristicScorer
 
-scorer = CompositeScorer([
-    (HeuristicScorer(), 1.0),
-])
-score = scorer.score(result, task)
+# `result` is an AgentResult from any coordinator run, `task` the Task it answered
+quality = HeuristicScorer().score_sync(result, task)
+print(quality.overall, quality.relevance, quality.completeness)
+
+# Blend heuristics with a small LLM scorer (async)
+blended = await CompositeScorer(heuristic_weight=0.4, llm_weight=0.6).score(result, task)
 ```
 
----
+## Metrics
 
-## 🛠️ Tech Stack
+| Level | Scored by | Metrics |
+|---|---|---|
+| **L1: individual** | LLM judges | Goal alignment, semantic quality |
+| **L2: collaborative** | LLM judges | Collaboration effectiveness, synthesis quality |
+| **L3: ecosystem** | Computed | Efficiency, stability, throughput, adaptability |
 
-```yaml
-Runtime:
-  - Python 3.10+
-  - asyncio for concurrent agents
-  - httpx for HTTP client
-  - Pydantic for data validation
-  
-LLM Backend:
-  - Ollama (local, free, private)
-  - 7 models tested (see benchmark below)
-  
-Testing:
-  - pytest
-  - pytest-asyncio
+```text
+Overall APEE score = 0.30 × L1 + 0.45 × L2 + 0.25 × L3      (every score is 0–10)
 ```
 
----
+## Package layout
 
-## 📊 Benchmark Results
+```text
+apee/
+├── agents/          Agent base class and the Ollama implementation
+├── coordination/    Coordinator with the six patterns (PATTERNS.md explains them)
+├── evaluation/      LLM judges, heuristic scorers, advanced protocols (EVALUATION_PATTERNS.md)
+├── benchmarks/      Single-model tasks (datasets.py) and the 12 collaborative scenarios (collaborative.py)
+├── visualization/   Plotly and text charts, HTML export
+├── anomaly/         Statistical anomaly detection and alerts
+├── dashboard/       Web dashboard server and API client
+├── utils/           Logging and helpers
+├── models.py        Pydantic data models
+└── cli.py           Command-line interface
+examples/            The scripts listed above
+tests/               Unit tests
+data/                Results of the evaluation runs (see data/README.md)
+```
 
-Comprehensive evaluation across multiple Ollama models using the APEE framework.
-Following LLM evaluation best practices from lm-evaluation-harness and DeepEval.
-
-### Benchmark Methodology
-
-- **19 evaluation scenarios** across 11 task categories
-- **5 complexity levels**: trivial, easy, medium, hard, expert
-- **Multiple runs per scenario** for statistical significance
-- **Ground truth comparison** where available
-- **Keyword/constraint validation**
-- **Structured output checking**
-
-### Model Pool
-
-Following LLM-as-a-Judge best practices, models are designated as either **agents** (being evaluated) or **judges** (doing evaluation).
-
-#### Agent Models (Small, 3-4B)
-
-| Model            | Family  | Params | Role Optimization | Benchmark Score |
-|------------------|---------|--------|-------------------|-----------------|
-| llama3.2:3b      | Llama   | 3B     | CODER             | code_gen=0.983  |
-| qwen2.5-coder:3b | Qwen    | 3B     | ANALYZER          | analysis=0.939  |
-| phi4-mini:3.8b   | Phi     | 3.8B   | REVIEWER          | code_review=0.991 |
-
-#### Judge Models (Large, 20-24B+)
-
-| Model              | Family     | Params | Purpose                        |
-|--------------------|------------|--------|--------------------------------|
-| gpt-oss:20b        | GPT-OSS    | 20B    | Primary judge, deep reasoning  |
-| mistral-small3.2:24b | Mistral  | 24B    | Secondary judge, clear analysis |
-
-#### Legacy Models (Available for Benchmarking)
-
-| Model            | Family | Params | Notes                          |
-|------------------|--------|--------|--------------------------------|
-| phi4-mini:3.8b   | Phi    | 3.8B   | Top performer, code review     |
-| qwen2.5-coder:7b | Qwen   | 7B     | Medium coding model            |
-| qwen3:4b         | Qwen   | 4B     | Small reasoning model          |
-| qwen3:8b         | Qwen   | 8B     | Medium reasoning model         |
-| gemma3:4b        | Gemma  | 4B     | Small analysis model           |
-
-### Comprehensive Benchmark Results
-
-**Configuration**: 6 models × 19 scenarios × 1 run = 114 total evaluations (December 10, 2025)
-
-| Model             | Quality    | ±Std  | Success | Latency |
-|-------------------|------------|-------|---------|----------|
-| **phi4-mini:3.8b**| **0.892**  | 0.092 | 100%    | 3853ms  |
-| llama3.2:3b       | 0.889      | 0.130 | 100%    | 3000ms  |
-| gemma3:4b         | 0.876      | 0.121 | 100%    | 3681ms  |
-| qwen3:4b          | 0.866      | 0.077 | 100%    | 7457ms  |
-| granite4:3b       | 0.837      | 0.101 | 100%    | **1904ms** |
-| qwen2.5-coder:3b  | 0.829      | 0.138 | 100%    | 2386ms  |
-
-### Performance by Task Category
-
-| Category              | qwen3:4b  | llama3.2:3b | gemma3:4b | granite4:3b | qwen2.5-coder:3b | phi4-mini:3.8b |
-|-----------------------|-----------|-------------|-----------|-------------|------------------|----------------|
-| analysis              | 0.861     | 0.934       | 0.837     | 0.812       | **0.939**        | 0.927          |
-| code_debug            | 0.776     | 0.933       | 0.960     | 0.901       | **0.965**        | 0.934          |
-| code_explanation      | **0.893** | 0.837       | 0.871     | 0.836       | 0.855            | 0.876          |
-| code_generation       | 0.927     | **0.983**   | 0.922     | 0.853       | 0.888            | 0.927          |
-| code_review           | 0.912     | 0.983       | 0.969     | 0.928       | 0.790            | **0.991**      |
-| instruction_following | **0.840** | 0.571       | 0.607     | 0.599       | 0.635            | 0.713          |
-| math                  | 0.719     | 0.800       | 0.838     | **0.889**   | 0.538            | 0.855          |
-| qa_factual            | 0.821     | 0.881       | 0.914     | 0.848       | 0.811            | **0.919**      |
-| qa_reasoning          | 0.900     | 0.936       | 0.928     | 0.895       | **0.957**        | 0.903          |
-| reasoning             | 0.800     | **0.909**   | 0.890     | 0.894       | 0.897            | 0.899          |
-| summarization         | **0.912** | 0.842       | 0.839     | 0.765       | 0.792            | 0.766          |
-
-### 🏆 Winners
-
-| Metric | Winner | Value |
-|--------|--------|-------|
-| **Best Quality** | phi4-mini:3.8b | 0.892 |
-| **Lowest Variance** | qwen3:4b | ±0.077 |
-| **Fastest** | granite4:3b | 1904ms |
-| **Most Efficient** | granite4:3b | quality/latency |
-
-### Key Insights
-
-1. **phi4-mini:3.8b is the top performer** (0.892) - excels at code_review (0.991)
-2. **llama3.2:3b close second** (0.889) - best at code_generation (0.983) and reasoning (0.909)
-3. **qwen3:4b dominates instruction_following** (0.84 vs 0.57-0.71) - significantly better than others
-4. **qwen2.5-coder:3b excels at code_debug** (0.965) and qa_reasoning (0.957)
-5. **granite4:3b leads math** (0.889) and is fastest (1904ms) - best efficiency
-6. **gemma3:4b strong at code_debug** (0.960) and code_review (0.969)
-7. **All models achieved 100% success rate** - all capable of completing tasks
-8. **Each model has unique category strengths** - no single model dominates all
-
-### Running Your Own Benchmark
+## Tests
 
 ```bash
-# Run the comprehensive single-model benchmark
-python examples/comprehensive_benchmark.py
-
-# Run the full APEE multi-agent evaluation
-python examples/multi_agent_evaluation.py
-
-# Or quick test with subset
-python -c "
-from apee.benchmarks import BenchmarkRunner, BenchmarkConfig, TaskCategory
-import asyncio
-
-config = BenchmarkConfig(
-    models=['qwen2.5-coder:3b'],
-    runs_per_scenario=1,
-    categories=[TaskCategory.CODE_GENERATION],
-)
-result = asyncio.run(BenchmarkRunner().run(config))
-print(result.quality_ranking)
-"
+pytest tests/                       # 113 tests; 4 are skipped unless Ollama is running
+pytest tests/test_coordinator.py    # the six coordination patterns
+pytest tests/ --cov=apee            # with coverage (needs pytest-cov)
 ```
 
-### Multi-Agent Collaboration Patterns
+## Roadmap
 
-| Pattern | Method | Description | Use Case |
-|---------|--------|-------------|----------|
-| `parallel` | `run_parallel()` | All agents work independently | Diverse perspectives |
-| `sequential` | `run_pipeline()` | Output flows to next agent | Multi-stage analysis |
-| `debate` | `run_debate()` | Multi-round argument/critique | Decision making |
-| `hierarchical` | `run_hierarchical()` | Leader → workers → synthesis | Complex task breakdown |
-| `consensus` | `run_consensus()` | Iterate until agreement | Critical decisions |
-| `peer_review` | `run_peer_review()` | Work → review → revise | Code review workflows |
+- [x] Package structure, Ollama agents, six coordination patterns
+- [x] Heuristic scoring and the single-model benchmark (19 tasks, 11 categories)
+- [x] Twelve collaborative scenarios with three-level metrics
+- [x] LLM-as-a-judge ensemble with judges from other model families
+- [x] Visualization, anomaly detection and dashboard
+- [x] Advanced protocols: progressive deepening, persona jury, calibrated jury
+- [ ] Report each protocol's own score as the headline score for its mode
+- [ ] Repeated runs with confidence intervals
+- [ ] A human-labelled reference set for calibrating judges
+- [ ] Publish to PyPI
 
----
+## License
 
-## 📈 Roadmap
-
-### Phase 1: Foundation ✅
-- [x] Define APEE framework architecture
-- [x] Create evaluation metric taxonomy
-- [x] Build proper Python package structure
-- [x] Implement Ollama agent integration
-- [x] Create coordinator with multiple execution modes
-- [x] Build evaluator with comprehensive metrics
-
-### Phase 2: Quality Scoring ✅
-- [x] Implement heuristic-based scoring
-- [x] Add comparative scoring
-- [x] Create composite scorer framework
-- [x] Add LLM-as-judge scorer
-- [x] Write unit tests for scoring (18 tests)
-
-### Phase 3: Comprehensive Benchmarks ✅
-- [x] Create benchmark dataset (19 scenarios, 11 categories)
-- [x] Implement statistical analysis (mean, std, CI)
-- [x] Test with 5+ different Ollama models
-- [x] Document performance across categories
-- [x] Run multiple iterations for significance
-- [x] Generate comprehensive reports
-
-### Phase 4: Full APEE Compliance ✅
-- [x] Multi-agent collaborative scenarios
-- [x] Three-tier metrics (Individual → Collaborative → Ecosystem)
-- [x] Adaptive engine with pattern detection
-- [x] 6 collaboration patterns implemented
-- [x] Multi-agent evaluation demo
-
-### Phase 5: LLM-as-a-Judge Evaluation ✅
-- [x] Research CrewAI evaluation patterns
-- [x] Implement LLM-based evaluators (Goal, Semantic, Collaboration, Synthesis)
-- [x] Create EnsembleEvaluator with multiple judge models
-- [x] Role-optimized agent selection based on benchmarks
-- [x] Proper judge/agent family separation (no bias)
-- [x] Judge size hierarchy (12-14B judges for 3B agents)
-
-### Phase 6: Visualization & Dashboard ✅
-- [x] Create visualization utilities (charts, reports, exports)
-- [x] Add more collaboration scenarios (12 scenarios total)
-- [x] Implement advanced anomaly detection
-- [x] Web dashboard for results
-
-### Phase 7: Advanced Evaluation Patterns ✅
-- [x] Implement Progressive Deepening (4 depth levels with fail-fast)
-- [x] Implement Jury with Personas (SKEPTIC, LITERALIST, OPTIMIST, PRAGMATIST)
-- [x] Implement Calibration Loop (judges negotiate rubric)
-- [x] Implement Calibrated Jury (combined pattern)
-- [x] Add `--mode` CLI argument (basic, progressive, jury, calibrated, all)
-- [x] Generate JSON results for all 4 evaluation modes
-- [x] Write unit tests for advanced patterns (38 tests)
-- [ ] Publish to PyPI (optional)
-
----
-
-## 🖥️ Phase 6 Features
-
-### Visualization Utilities
-
-Create interactive charts and comprehensive reports:
-
-```python
-from apee.visualization import (
-    MetricsVisualizer,
-    create_evaluation_chart,
-    create_comparison_chart,
-    create_anomaly_heatmap,
-    generate_report_html,
-)
-
-# Create visualizer
-visualizer = MetricsVisualizer()
-
-# Three-tier comparison chart
-chart = visualizer.create_level_comparison(
-    l1_scores={"goal": 8.5, "semantic": 7.0},
-    l2_scores={"collaboration": 6.5, "synthesis": 7.5},
-    l3_scores={"efficiency": 8.0, "stability": 9.0},
-)
-
-# Generate HTML report
-generate_report_html(
-    evaluation_result,
-    title="My Evaluation Report",
-    output_path="report.html"
-)
-```
-
-### Advanced Anomaly Detection
-
-Detect unusual patterns in evaluations:
-
-```python
-from apee.anomaly import (
-    AnomalyDetector,
-    AlertManager,
-    ConsoleAlertHandler,
-)
-
-# Create detector and alert manager
-detector = AnomalyDetector(window_size=50, z_threshold=3.0)
-alerts = AlertManager()
-alerts.add_handler(ConsoleAlertHandler())
-
-# Check evaluation for anomalies
-anomalies = detector.check_evaluation({
-    "overall_apee_score": 3.0,  # Very low
-    "l2_average": 1.0,  # Poor collaboration
-})
-
-# Process and display alerts
-for anomaly in anomalies:
-    alerts.process_anomaly(anomaly)
-```
-
-### Web Dashboard
-
-Real-time monitoring of evaluations:
-
-```python
-from apee import create_dashboard, DashboardAPI
-
-# Start dashboard server
-dashboard = create_dashboard(port=8765)
-# Opens browser to http://localhost:8765
-
-# Push results programmatically
-dashboard.add_evaluation({
-    "overall_apee_score": 7.5,
-    "scenario_id": "code_review",
-    # ...
-})
-
-# Or use CLI
-# $ apee-dashboard --port 8765
-```
-
-### New Collaboration Scenarios
-
-12 scenarios covering diverse collaboration patterns:
-
-| ID | Name | Pattern | Focus |
-|----|------|---------|-------|
-| 1 | Code Review | peer_review | Quality, coordination |
-| 2 | Research Synthesis | sequential | Information flow |
-| 3 | Constrained Problem | debate | Conflict resolution |
-| 4 | Emergent Behavior | parallel | Diversity, consensus |
-| 5 | Scalability Test | hierarchical | Coordination overhead |
-| 6 | Conflict Resolution | consensus | Agreement time |
-| 7 | Knowledge Transfer | sequential | Domain translation |
-| 8 | Error Recovery | hierarchical | Fault tolerance |
-| 9 | Creative Collaboration | debate | Idea synthesis |
-| 10 | Real-Time Incident | parallel | Response time |
-| 11 | Adversarial Review | debate | Security analysis |
-| 12 | Documentation Sprint | peer_review | Consistency |
-
----
-
-## 🧪 Running Tests
-
-```bash
-# Install dev dependencies
-pip install -e ".[dev]"
-
-# Run all tests (107 total)
-pytest tests/ -v
-
-# Run specific test modules
-pytest tests/test_advanced_patterns.py -v  # 38 tests - advanced evaluation patterns
-pytest tests/test_coordinator.py -v        # 35 tests - coordination patterns
-pytest tests/test_quality.py -v            # Quality scoring tests
-pytest tests/test_benchmarks.py -v         # Benchmark tests
-pytest tests/test_models.py -v             # Model tests
-
-# Run with coverage
-pytest tests/ --cov=apee
-```
-
----
-
-## 🤝 Contributing
-
-Contributions welcome in:
-- Evaluation metric proposals
-- Agent scenario design
-- Additional scorer implementations
-- Documentation improvements
-
----
-
-## 📚 References
-
-- Multi-Agent Systems: A Modern Approach
-- LLM-as-a-Judge Evaluation Patterns
-- Emergent Behavior in Complex Systems
-
----
-
-## 📄 License
-
-MIT License. See [LICENSE](../../LICENSE) for details.
-
----
-
-**Status**: ✅ APEE Framework Complete (Phases 1-5)  
-**Tests**: 69 passing  
-**Agents**: qwen2.5-coder:3b, llama3.2:3b, phi4-mini:3.8b (3B diverse families)  
-**Judges**: gpt-oss:20b, mistral-small3.2:24b (20-24B evaluation models)  
-**Patterns**: 6 (parallel, sequential, debate, hierarchical, consensus, peer_review)  
-**Author**: [ahjavid](https://github.com/ahjavid)
+MIT. See [LICENSE](../../LICENSE).

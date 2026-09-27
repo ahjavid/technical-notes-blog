@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% import "macros.html" as ui %}
+{% if topic %}
+{% set title = topic.name %}
+{% set description = "Research notes about " ~ topic.name ~ "." %}
+{% set path = "topics/" ~ topic.slug ~ "/" %}
+{% else %}
+{% set title = "Topics" %}
+{% set description = "All research notes, grouped by topic." %}
+{% set path = "topics/" %}
+{% endif %}
+{% set section = "topics" %}
+
+{% block main %}
+<section class="page-intro">
+  <div class="wrap">
+    {% if topic %}
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="{{ url('topics/') }}">Topics</a></nav>
+    <h1 class="page-title">{{ topic.name }}</h1>
+    <p class="page-lede">{{ topic.posts | length }} {{ "post" if topic.posts | length == 1 else "posts" }} on this topic.</p>
+    {% else %}
+    <h1 class="page-title">Topics</h1>
+    <p class="page-lede">Every post, grouped by what it's about. Posts can appear under more than one topic.</p>
+    <ul class="topic-cloud">
+    {% for t in topics %}
+      <li><a class="tag tag-large" href="#{{ t.slug }}">{{ t.name }} <span class="tag-count">{{ t.posts | length }}</span></a></li>
+    {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</section>
+
+<div class="wrap section">
+{% if topic %}
+  <div class="card-list">
+  {% for post in topic.posts %}
+    {{ ui.post_card(post, reading, topic_url, heading='h2') }}
+  {% endfor %}
+  </div>
+{% else %}
+  {% for t in topics %}
+  <section class="topic-group" id="{{ t.slug }}" aria-labelledby="{{ t.slug }}-heading">
+    <div class="section-head">
+      <h2 id="{{ t.slug }}-heading"><a href="{{ t.url }}">{{ t.name }}</a></h2>
+      <span class="section-note">{{ t.posts | length }} {{ "post" if t.posts | length == 1 else "posts" }}</span>
+    </div>
+    <ul class="topic-posts">
+    {% for post in t.posts %}
+      <li><a href="{{ url(post.url) }}">{{ post.title }}</a> <time datetime="{{ post.date | iso }}">{{ post.date | human_date }}</time></li>
+    {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+{% endif %}
+</div>
+{% endblock %}

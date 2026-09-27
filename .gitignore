@@ -59,3 +59,7 @@ logs/
 # Generated files (keep some examples but ignore bulk)
 # data/*.json  # Uncomment to ignore all JSON data files
 # data/*.csv   # Uncomment to ignore all CSV data files
+
+# Built site (python site/build.py)
+_site/
+_site.tmp/

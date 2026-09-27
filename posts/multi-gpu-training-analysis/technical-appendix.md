@@ -1,15 +1,14 @@
-# Multi-GPU Training Performance: Comprehensive Study Results
+# Technical Appendix: Multi-GPU Training Study
 
-## Executive Summary
-
-This document contains the raw data and analysis from our comprehensive multi-GPU training performance study using dual NVIDIA RTX 4070 Ti SUPER GPUs.
+This appendix holds the detailed measurements behind [Multi-GPU Training: When Hardware Topology Matters](index.md): full result tables with confidence intervals, model definitions, the communication profile and the software environment.
 
 ## Test Configuration
 
 - **Hardware**: 2x NVIDIA GeForce RTX 4070 Ti SUPER (16GB each)
 - **Memory Configuration**: 12GB per GPU (safety margin)
 - **Connection**: PCIe Host Bridge topology (no P2P)
-- **Software**: TensorFlow 2.13.0, CUDA 12.2, NCCL 2.18.5
+- **Software**: TensorFlow 2.19.0, CUDA 12.5.1, cuDNN 9, NCCL 2.18.5 (details under [Reproducibility Information](#reproducibility-information))
+- **Strategy**: `tf.distribute.MirroredStrategy` with `HierarchicalCopyAllReduce`
 - **Test Duration**: 120+ hours of comprehensive testing
 - **Statistical Rigor**: 50 runs per configuration, 95% confidence intervals
 
@@ -24,6 +23,9 @@ Output Layer: Dense(n_outputs)
 
 Memory footprint: ~1MB weights, ~54MB total (with optimizer states)
 ```
+
+> [!NOTE]
+> The parameter counts in this section are the ones recorded for the benchmark runs. With the default `input_dim=50` and `output_dim=3` in the [benchmark code](code/README.md), these layer stacks give 54,403 (medium) and 2,021,379 (large) parameters. Both figures are well below the ~10M range discussed in the post, so the conclusions don't depend on which is correct.
 
 ### Large Model (6,885,376 parameters)
 ```
@@ -84,6 +86,9 @@ NCCL_MIN_NCHANNELS=4
 | Buffer Management | 3-5ms | 5-10ms | NCCL buffer allocation/cleanup |
 | **Total Overhead** | **58-85ms** | **88-135ms** | **Total communication cost** |
 
+> [!WARNING]
+> These per-operation ranges can't all be per-step costs: they add up to more than the measured end-to-end step time (for example 9.4 ms for the medium model at batch size 64, derived from the throughput tables above). Treat this breakdown as unverified until it is re-measured. The throughput tables are the reliable result.
+
 ### Computation vs Communication Timeline
 
 **Medium Model (258K params, batch size 64):**
@@ -92,7 +97,7 @@ NCCL_MIN_NCHANNELS=4
 
 **Large Model (6.9M params, batch size 32):**
 - Single GPU: 25.7ms total (11.2ms forward, 10.8ms backward, 3.1ms optimizer, 0.6ms overhead)
-- Multi-GPU: 28.5ms total (12.0ms compute per GPU, 7.8ms communication, 1.6ms optimizer, 0.3ms overhead)
+- Multi-GPU: 28.5ms total (12.0ms compute per GPU, 7.8ms communication, 1.6ms optimizer, 0.3ms overhead). The listed phases add up to 21.7 ms, so about 6.8 ms of the measured step time is unaccounted for.
 
 ## Hardware Topology Impact
 
@@ -133,7 +138,9 @@ Communication efficiency loss: ~70-85% due to topology
 
 ## Parameter Threshold Analysis
 
-| Parameter Range | Multi-GPU Benefit | Confidence Level | Sample Models |
+Only two model sizes were measured (258K and 6.9M parameters), so every row above 6.9M is an extrapolation and the confidence column is a subjective estimate, not a statistical result.
+
+| Parameter Range | Multi-GPU Benefit | Confidence (subjective) | Sample Models |
 |----------------|------------------|------------------|---------------|
 | < 500K         | Never            | 99%              | Small NLP, basic neural nets |
 | 500K - 1M      | Never            | 95%              | Text classification, simple CNNs |
@@ -155,19 +162,20 @@ Communication efficiency loss: ~70-85% due to topology
 - Large model (6.9M): **Negative ROI** (15% performance loss)
 - Break-even model size: **~15-20M parameters** (estimated)
 
-### Alternative Investments (Better ROI)
-1. **Faster storage**: NVMe SSD upgrade ($200) → 15-25% faster data loading
-2. **More RAM**: 64GB → 128GB ($400) → Better data caching
-3. **CPU upgrade**: Better preprocessing ($500) → 10-20% overall improvement
-4. **Single higher-end GPU**: RTX 4090 ($1,600) → 30-40% single-GPU performance gain
+### Alternative Investments
+These weren't benchmarked in this study, but they avoid multi-GPU synchronization entirely:
+1. **Faster storage** (NVMe) if data loading is the bottleneck
+2. **More RAM** for caching the dataset in memory
+3. **A faster CPU** if preprocessing is the bottleneck
+4. **A single higher-end GPU** instead of two mid-range cards
 
 ## Optimization Recommendations
 
-### Immediate Optimizations (Better than Multi-GPU)
-1. **Mixed Precision Training**: 30-50% speedup, minimal code changes
-2. **Data Pipeline Optimization**: 20-40% improvement with proper prefetching
-3. **Batch Size Tuning**: 10-25% improvement with optimal batch sizes
-4. **Model Architecture**: Pruning and quantization for 20-60% speedup
+### Try These Before Multi-GPU
+1. **Mixed precision training**: small code change, uses Tensor Cores
+2. **Input pipeline optimization**: `tf.data` with `prefetch` and parallel map
+3. **Batch size tuning**: larger batches amortize per-step overhead
+4. **Model architecture**: pruning or quantization where accuracy allows
 
 ### Multi-GPU Considerations
 Only consider multi-GPU when:
@@ -222,12 +230,9 @@ tf.config.experimental.enable_op_determinism()
 4. **Heterogeneous Training**: Mixed GPU types and capabilities
 5. **Cloud vs On-Premise**: Cost and performance analysis
 
-## Contact & Collaboration
+## Questions
 
-For questions about methodology, access to raw data, or collaboration opportunities:
-- GitHub: [ahjavid/technical-notes-blog](https://github.com/ahjavid/technical-notes-blog)
-- Issues: Use GitHub issues for technical questions
-- Discussions: Community discussions for broader topics
+Open an issue on [GitHub](https://github.com/ahjavid/technical-notes-blog/issues) for questions about the methodology or the data.
 
 ---
 

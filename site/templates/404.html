@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% set title = "Page not found" %}
+{% set description = "This page does not exist." %}
+{% set path = "404.html" %}
+{% set section = "404" %}
+
+{% block main %}
+<section class="page-intro not-found">
+  <div class="wrap">
+    <p class="eyebrow">404</p>
+    <h1 class="page-title">This page doesn’t exist</h1>
+    <p class="page-lede">It may have moved when the site was reorganized. These are the current posts:</p>
+    <ul class="topic-posts">
+    {% for post in posts %}
+      <li><a href="{{ url(post.url) }}">{{ post.title }}</a> <time datetime="{{ post.date | iso }}">{{ post.date | human_date }}</time></li>
+    {% endfor %}
+    </ul>
+    <p><a href="{{ url() }}">← Back to all research notes</a></p>
+  </div>
+</section>
+{% endblock %}
