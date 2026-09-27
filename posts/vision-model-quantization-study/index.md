@@ -41,10 +41,10 @@ The short version: FP16 is worth turning on, but for its memory savings more tha
 | | |
 |---|---|
 | **GPU** | 1 × NVIDIA GeForce RTX 4070 Ti SUPER, 16 GB |
-| **Software** | PyTorch 2.1, CUDA 12.1, bitsandbytes 0.42.0, Hugging Face Transformers and timm |
+| **Software** | PyTorch with CUDA, Hugging Face Transformers, timm and bitsandbytes. The library versions weren't saved with the results |
 | **Models** | 16 vision transformers from 2020–2023 (ViT, DeiT, BEiT, DINO, DINOv2, MobileViT), 1.3M–632M parameters. Checkpoints are listed in the [full results](#full-results) |
 | **Precisions** | FP32 (baseline); FP16 via `model.half()`; INT8 via bitsandbytes; INT4 NF4 via bitsandbytes |
-| **Measurement** | Batch size 1. Latency is the mean over 1,000 iterations; peak GPU memory and weight size were recorded per configuration. 64 configurations in total |
+| **Measurement** | Batch size 1. Latency is the mean time per forward pass over a short timing run of roughly two dozen passes. Peak GPU memory and weight size were recorded for each of the 64 configurations |
 
 Every measurement is at **batch size 1**: throughput equals 1000 ÷ latency in every row of the results. That's the regime of an online service that answers one image per request, and it matters a lot for how to read the numbers below.
 
@@ -80,7 +80,7 @@ The bottom six rows are the most telling. DeiT-Tiny (5.7M parameters) and ViT-Ba
 That explains the pattern in the table:
 
 - **Models well above the floor got real speedups.** The heaviest forward passes (ViT-Huge, DINOv2-Large and the two 384-pixel models) ran 1.96–2.50× faster, because FP16 matrix multiplications run on the GPU's Tensor Cores and move half as much data. The 384-pixel models process about three times as many image patches as their 224-pixel versions, which is enough work for FP16 to matter.
-- **Models at the floor gained nothing.** With no arithmetic bottleneck to relieve, several came out 2–5% slower, and the MobileViT models, which mix convolutions with attention, were 8–12% slower.
+- **Models at the floor gained nothing.** Their FP16 results (0.95–1.01×) are within the noise of these short timing runs. The two MobileViT models, which mix convolutions with attention, were 8–12% slower.
 - **Architecture matters too.** BEiT-Large and ViT-Large are the same size as DINOv2-Large and have comparable FP32 latencies, but gained only 1.15× and 1.35×. Parameter count alone won't predict the speedup, so benchmark your own model.
 
 Batching several images per call would raise every model's work per call and probably extend the FP16 speedups to smaller models. I didn't test that here.
@@ -183,8 +183,8 @@ After loading a quantized model, check what you actually got. Compare `model.get
 - **Batch size 1 only.** Batched inference would raise the work per call and change the FP16 picture.
 - **No accuracy measurements.** The `simulated_accuracy` (0.85) and `stability_score` (0.95) columns in the data are constant placeholders.
 - **No INT4 results**, because of the fallback described above.
-- **One GPU and one software stack** (PyTorch 2.1, bitsandbytes 0.42.0). Newer versions of both have changed their 8-bit and 4-bit kernels.
-- **One measured configuration per model and precision.** The latency is an average over 1,000 iterations, but run-to-run variance wasn't recorded.
+- **One GPU, and library versions weren't recorded.** bitsandbytes' 8-bit and 4-bit code paths change a lot between releases, so re-measure with your own versions before relying on the INT8 numbers.
+- **Short timing runs.** Each configuration was timed once, over roughly two dozen forward passes (its recorded run time is about 25× its latency), and variance wasn't recorded. Treat differences of a few percent as noise.
 
 ## Full results
 
@@ -213,4 +213,4 @@ Throughput, weight sizes and the method each configuration actually used are in 
 
 ---
 
-*Revision, September 2026:* rewritten around the committed data. Earlier versions of this page listed models that weren't part of the study (ConvNeXt, EfficientNet, ResNet, MobileNetV3), per-model accuracy drops, an RTX 4090 test platform, and ROI and payback figures. None of those were measured, so they've been removed. The INT8 slowdown and the INT4 fallback, which the earlier versions left out, are now reported. The previous long-form write-up (`comprehensive_quantization_study.md` and `technical_supplement_quantization.md`) was merged into this page.
+*Revision, September 2026:* rewritten around the committed data. Earlier versions of this page listed models that weren't part of the study (ConvNeXt, EfficientNet, ResNet, MobileNetV3), per-model accuracy drops, an RTX 4090 test platform, and ROI and payback figures. None of those were measured, so they've been removed. The INT8 slowdown and the INT4 fallback, which the earlier versions left out, are now reported. Library versions that weren't recorded with the results (PyTorch 2.1, CUDA 12.1, bitsandbytes 0.42.0) were removed, since they also conflicted with the rest of the study notes, and so was a claim of 1,000 timing iterations per configuration, which the recorded run times rule out. The previous long-form write-up (`comprehensive_quantization_study.md` and `technical_supplement_quantization.md`) was merged into this page.

@@ -15,9 +15,9 @@ metrics:
   - value: "No P2P"
     label: "the GPUs can only talk through host memory"
 key_findings:
-  - "**A second GPU made training slower in every configuration I tested.** Two GPUs delivered 0.73–0.90× the throughput of one, for both a 258K- and a 6.9M-parameter model, at every batch size from 4 to 128."
+  - "**A second GPU made training slower in every configuration I tested.** Two GPUs delivered 0.73–0.90× the throughput of one, for both a 54K- and a 2.0M-parameter model, at every batch size from 4 to 128."
   - "**The work being split was too small to be worth splitting.** Each training step spent far more time on fixed costs — framework overhead and synchronizing gradients through host memory — than on arithmetic, so halving the arithmetic couldn't pay for the extra synchronization."
-  - "**Larger models narrow the gap.** The 6.9M model peaked at 0.90× (batch 32) versus 0.86× for the smaller one. Extrapolating, break-even on this hardware is somewhere around 10–20M parameters — an estimate, not a measurement."
+  - "**The larger model narrowed the gap.** The 2.0M-parameter model peaked at 0.90× (batch 32) versus 0.86× for the 54K one. Break-even on this hardware lies well beyond the largest model tested; my rough estimate is 10M parameters or more, which is an extrapolation, not a measurement."
   - "**Check the topology before buying a second card.** Run `nvidia-smi topo -m` and `nvidia-smi topo -p2p r`. If the GPUs can't talk to each other directly, try mixed precision, a faster input pipeline, or a single faster GPU first."
 resources:
   - title: Technical appendix
@@ -44,9 +44,9 @@ With data parallelism, each GPU runs the forward and backward pass on its share 
 |---|---|
 | **GPUs** | 2 × NVIDIA GeForce RTX 4070 Ti SUPER, 16 GB each (capped at 12 GB per GPU) |
 | **Interconnect** | PCIe 4.0 ×16 slots behind the CPU's PCIe host bridge. No NVLink and no peer-to-peer access |
-| **Software** | TensorFlow 2.19, CUDA 12.5, cuDNN 9, Python 3.12 ([full environment](technical-appendix.md#reproducibility-information)) |
+| **Software** | Python 3.12.4, TensorFlow 2.19.0, NumPy 2.1.3, CUDA 12.5.1, cuDNN 9 |
 | **Strategy** | `tf.distribute.MirroredStrategy` with `HierarchicalCopyAllReduce` |
-| **Models** | Two fully connected networks: a *medium* one (Dense 256→128→64, 258K parameters) and a *large* one (Dense 1024→1024→512→512→256, 6.9M parameters) |
+| **Models** | Two fully connected networks with 50 inputs and 3 outputs: a smaller one (Dense 256→128→64, **54,403 parameters**) and a larger one (Dense 1024→1024→512→512→256, **2,021,379 parameters**) |
 | **Data** | Synthetic tabular data: 10,000 samples, 50 features, 3 regression targets |
 | **Protocol** | 50 runs per configuration; 10 warm-up steps excluded, 100 steps measured; outliers with a modified z-score above 3.5 removed |
 
@@ -62,7 +62,7 @@ GPU0 ──PCIe──▶ host bridge / system memory ──PCIe──▶ GPU1
 
 Throughput is in training samples per second, as the mean ± 95% confidence interval over 50 runs. *Speedup* is two-GPU throughput divided by one-GPU throughput, and *efficiency* is speedup divided by two, so 100% would mean perfect scaling.
 
-### Medium model (258K parameters)
+### Smaller model (54K parameters)
 
 | Batch size | 1 GPU | 2 GPUs | Speedup | Efficiency | GPU utilization, 1 → 2 GPUs |
 |---:|---:|---:|---:|---:|---:|
@@ -72,7 +72,7 @@ Throughput is in training samples per second, as the mean ± 95% confidence inte
 | 64 | 8,234 ± 145 | 6,789 ± 123 | 0.82× | 41% | 92% → 78% |
 | 128 | 16,883 ± 234 | 12,345 ± 198 | 0.73× | 37% | 95% → 82% |
 
-### Large model (6.9M parameters)
+### Larger model (2.0M parameters)
 
 | Batch size | 1 GPU | 2 GPUs | Speedup | Efficiency | Step time, 1 → 2 GPUs |
 |---:|---:|---:|---:|---:|---:|
@@ -84,21 +84,21 @@ Throughput is in training samples per second, as the mean ± 95% confidence inte
 
 Three things stand out:
 
-1. **No configuration came close to break-even.** The best case, the large model at batch 32, still lost 10% of its throughput.
+1. **No configuration came close to break-even.** The best case, the larger model at batch 32, still lost 10% of its throughput.
 2. **GPU utilization dropped by 13–15 points on two GPUs.** The cards spent that time waiting on each other rather than computing.
-3. **The larger model scaled less badly.** Its efficiency rose from 39–40% at batch sizes 4–8 to 44–45% at 32–64, while the medium model's fell to 37% at batch 128. More compute per step means the synchronization cost is spread over more useful work.
+3. **The larger model scaled less badly.** Its efficiency rose from 39–40% at batch sizes 4–8 to 44–45% at 32–64, while the smaller model's fell to 37% at batch 128. More compute per step means the synchronization cost is spread over more useful work.
 
 ## Why the second GPU hurt
 
 ### The arithmetic was never the bottleneck
 
-A forward plus backward pass costs roughly six floating-point operations per parameter per sample. For the large model at batch 64 that's about 6 × 6.9M × 64 ≈ 2.6 GFLOP per step, which an RTX 4070 Ti SUPER can do in well under a millisecond. The measured step took **30.5 ms**.
+A forward plus backward pass costs roughly six floating-point operations per parameter per sample. For the larger model at batch 64 that's about 6 × 2.0M × 64 ≈ 0.8 GFLOP per step, which an RTX 4070 Ti SUPER can do in well under a millisecond. The measured step took **30.5 ms**.
 
 Nearly all of the step time was fixed cost: launching kernels, running the framework, synchronizing host and device (including the per-step profiling in the benchmark harness). Splitting the batch across two GPUs halves only the part that was already negligible, and it adds a gradient all-reduce through host memory on every step. That trade can't pay off.
 
 ### Where the time goes
 
-For the medium model at batch 64, per-step timing shows the trade directly:
+For the smaller model at batch 64, per-step timing shows the trade directly:
 
 ```text
 One GPU — 7.8 ms per step
@@ -115,7 +115,7 @@ Two GPUs — 9.4 ms per step
   other              0.1 ms  █
 ```
 
-Splitting the batch saved 2.8 ms of forward and backward time. Exchanging gradients through the host bridge cost 5.2 ms. The effective host-bridge bandwidth measured during the study was about 12–15 GB/s, well below what NVLink offers. At this model size, though, the fixed per-exchange latency hurts more than the bandwidth does: 258K float32 gradients are only about 1 MB.
+Splitting the batch saved 2.8 ms of forward and backward time. Exchanging gradients through the host bridge cost 5.2 ms. The effective host-bridge bandwidth measured during the study was about 12–15 GB/s, well below what NVLink offers. At this model size, though, the fixed per-exchange latency hurts more than the bandwidth does: 54K float32 gradients are only about 0.2 MB.
 
 ## When a second GPU does make sense
 
@@ -124,13 +124,13 @@ Parameter count is only a rough proxy for what matters: **how much compute each 
 | Model size | Recommendation on a host-bridge topology |
 |---|---|
 | Under 1M parameters | Stay on one GPU. Communication dominates. |
-| 1M – 5M | Prefer one GPU. Expect a 15–25% loss on two. |
+| 1M – 5M | Prefer one GPU. The 2.0M model lost 10–22% on two. |
 | 5M – 10M | Benchmark both. It depends on the architecture and batch size. |
 | 10M – 50M | Multi-GPU becomes worth testing at batch size 64 or more. |
 | Over 50M | Multi-GPU is likely to help, and NVLink helps much more. |
 
 > [!IMPORTANT]
-> Only the first and third rows are backed by measurements (258K and 6.9M parameters). The larger size bands are extrapolated from the trend, so treat them as a starting point for your own benchmark, not a result.
+> Only the first two rows are backed by measurements (the 54K and 2.0M models). The larger size bands are extrapolated from the trend, so treat them as a starting point for your own benchmark, not a result.
 
 ### A checklist before you add a GPU
 
@@ -178,13 +178,12 @@ with strategy.scope():
 ```
 
 > [!NOTE]
-> The benchmark environment also set NCCL variables (`NCCL_ALGO=Tree`, `NCCL_PROTO=Simple`, `NCCL_P2P_DISABLE=1`, and others listed in the [appendix](technical-appendix.md#nccl-configuration)). Those only take effect when the strategy uses NCCL for all-reduce. That's `tf.distribute.NcclAllReduce`, MirroredStrategy's default, not the `HierarchicalCopyAllReduce` used here. Comparing the two on this hardware is the first follow-up experiment I'd run.
+> `HierarchicalCopyAllReduce` doesn't use NCCL, so NCCL settings have no effect on these results. MirroredStrategy's default, `tf.distribute.NcclAllReduce`, does use NCCL. Comparing the two on this hardware is the first follow-up experiment I'd run.
 
 ## Limitations
 
 - **Two models, one architecture family.** Both are small MLPs on synthetic data. The results describe small, overhead-bound training steps, and the model-size thresholds above are extrapolations.
 - **Fixed costs dominate the measured step time**, and they include the benchmark's own per-step profiling (NVML queries and host synchronization). A leaner training loop would shift the absolute numbers, though not the direction of the result.
-- **Parameter counts.** With their default 50 input features, the model definitions in [`code/README.md`](code/README.md) produce 54K and 2.0M parameters rather than the 258K and 6.9M recorded for the benchmark runs. I haven't been able to reconcile the two. Either way both models are far below the ~10M range where two GPUs might start to pay off, so the conclusion holds.
 - **One machine, one topology.** An NVLink system, or a board where the two slots share a PCIe switch, could behave very differently.
 
 ## What I'd test next
@@ -200,4 +199,4 @@ More GPUs don't automatically mean faster training. On consumer hardware where t
 
 ---
 
-*Revision, September 2026:* rewritten for clarity. Confidence intervals and a limitations section were added. A model-size table (small CNN through ViT-Large), a cost/ROI table and a per-operation communication breakdown that appeared on the earlier version of this page were removed, because the recorded measurements don't support them.
+*Revision, September 2026:* corrected the model sizes (54,403 and 2,021,379 parameters; earlier versions said 258K and 6.9M) and the software environment (TensorFlow 2.19.0 on Python 3.12.4; earlier versions also listed TensorFlow 2.13, which doesn't support Python 3.12). Also added confidence intervals and a limitations section, and removed a model-size table (small CNN through ViT-Large), a cost/ROI table and a per-operation communication breakdown that the recorded measurements don't support.

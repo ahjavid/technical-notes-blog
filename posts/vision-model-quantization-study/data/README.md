@@ -1,6 +1,6 @@
 # Data: Vision Transformer Quantization Study
 
-Raw results behind [Vision Transformer Quantization: What FP16 and INT8 Actually Buy You](../index.md). They were recorded on June 20, 2025 on one NVIDIA GeForce RTX 4070 Ti SUPER (16 GB) with PyTorch 2.1, CUDA 12.1 and bitsandbytes 0.42.0.
+Raw results behind [Vision Transformer Quantization: What FP16 and INT8 Actually Buy You](../index.md). They were recorded on June 20, 2025 on one NVIDIA GeForce RTX 4070 Ti SUPER (16 GB), using PyTorch with CUDA, Hugging Face Transformers, timm and bitsandbytes. The library versions weren't saved with the results.
 
 ## Files
 
@@ -18,7 +18,7 @@ Raw results behind [Vision Transformer Quantization: What FP16 and INT8 Actually
 | `architecture` | Model family label |
 | `size_category` | Grouping used in the study: `foundation_transformer`, `self_supervised_2023`, `masked_autoencoder_2021`, `production_ready`, `edge_optimized` or `specialized_efficient` |
 | `parameters` | Parameter count |
-| `latency_ms` | Mean time per forward pass at batch size 1, averaged over 1,000 iterations |
+| `latency_ms` | Mean time per forward pass at batch size 1. Each configuration was timed over a short run of roughly two dozen passes; the JSON's `processing_time_sec` is about 25× the latency |
 | `throughput_sps` | Images per second. Because the batch size is 1, this is 1000 ÷ `latency_ms` |
 | `peak_memory_mb` | Peak GPU memory during inference |
 | `model_size_mb` | Size of the weights at this precision (MiB) |

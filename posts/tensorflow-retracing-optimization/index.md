@@ -61,7 +61,7 @@ Each test runs the same short sequence of calls through an unoptimized and an op
 |---|---|
 | **Framework** | TensorFlow 2.19.0, Python 3.12.4, CUDA 12.5.1 |
 | **Hardware** | Workstation with 2 × NVIDIA RTX 4070 Ti SUPER |
-| **Models** | Two small Keras models: 54,403 and 2,021,379 parameters, 50 input features |
+| **Models** | Two small Keras models with 50 inputs and 3 outputs: 54,403 and 2,021,379 parameters (the same two architectures as in the [multi-GPU study](../multi-gpu-training-analysis/)) |
 | **Runs** | One measured run per test (recorded 2025-06-17) |
 
 ## Results
@@ -256,9 +256,9 @@ These are observations from my trading system rather than benchmark measurements
 ## Limitations
 
 - **Small models, short call sequences, one run per test.** The timings include tracing and are specific to this machine. Treat the speedups as the size of the effect, not as numbers to expect on your workload.
-- **An earlier version of this post reported different figures** (6.18×, 2.97× and 3.85× for the first three tests), along with a 72.6% overall improvement and 45% lower peak memory. Those came from runs whose data isn't in this repository. This version uses the results in [`data/`](data/complete_results.json), which match the published charts. Peak memory was essentially unchanged in that data (1.55–1.58 GB in every test).
-- **The benchmark scripts** live in a separate repository, [ahjavid/aistock-analysis](https://github.com/ahjavid/aistock-analysis). This folder contains the results and figures.
+- **Peak memory didn't change.** Only the per-test memory growth differed. Peak process memory was 1.55–1.58 GB in every test, with or without the fixes.
+- **The benchmark scripts aren't published.** They're part of a private trading codebase. This folder has the raw results and the charts, and the post includes the code for each pattern that was tested.
 
 ---
 
-*Revision, September 2026:* all figures now come from the committed results, the Monte Carlo regression is reported rather than footnoted, the misleading advice about tensor control flow was corrected, and a limitations section was added.
+*Revision, September 2026:* all figures now come from the committed results in `data/`, which match the charts. Earlier versions quoted 6.18×, 2.97× and 3.85×, a 72.6% overall improvement and 45% lower peak memory, none of which the recorded data supports. The Monte Carlo regression is now reported rather than footnoted, the advice about tensor control flow was corrected, a limitations section was added, and a link to a repository that doesn't exist was removed.

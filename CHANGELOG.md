@@ -2,6 +2,14 @@
 
 Notable changes to the site and its posts. Each post also carries its own revision note when its content changes.
 
+## 2026-09-27: Corrected model sizes, software versions and timing details
+
+Several details in the original study notes were wrong. These values are now taken from the recorded results, the model code and package compatibility:
+
+- **Multi-GPU training.** The benchmarked models have **54,403 and 2,021,379 parameters**, not 258K and 6.9M. This follows from the layer definitions (50 inputs, 3 outputs), and the TensorFlow study's results record the same counts for the same architectures. The environment is **Python 3.12.4, TensorFlow 2.19.0, NumPy 2.1.3, CUDA 12.5.1 and cuDNN 9**. Removed: TensorFlow 2.13 and pandas 2.0.3 (neither supports Python 3.12), NCCL 2.18.5 (not used by `HierarchicalCopyAllReduce`, and not the version TensorFlow 2.19 ships with), and two conflicting driver versions. The appendix no longer includes the communication breakdown, the memory-bandwidth figures, the confidence percentages or the "120+ hours" claim, none of which the measurements support.
+- **TensorFlow retracing.** Removed the link to `ahjavid/aistock-analysis`, which doesn't exist. The benchmark scripts are in a private codebase.
+- **Vision quantization.** Removed library versions that weren't recorded with the results (PyTorch 2.1 has no Python 3.12 build) and the claim of 1,000 timing iterations. The recorded run times show each configuration was timed over roughly two dozen passes, so differences of a few percent are treated as noise.
+
 ## 2026-09-27: Reorganization and accuracy pass
 
 ### Site

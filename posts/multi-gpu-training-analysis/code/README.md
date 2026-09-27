@@ -19,8 +19,7 @@ from tensorflow import keras
 
 def create_medium_model(input_dim=50, output_dim=3):
     """
-    Medium model with 258K parameters
-    Representative of common production AI models
+    Smaller benchmark model: 54,403 parameters with input_dim=50, output_dim=3
     """
     model = keras.Sequential([
         keras.layers.Dense(256, activation='relu', input_shape=(input_dim,)),
@@ -36,8 +35,7 @@ def create_medium_model(input_dim=50, output_dim=3):
 
 def create_large_model(input_dim=50, output_dim=3):
     """
-    Large model with 6.9M parameters
-    Representative of medium-scale deep learning models
+    Larger benchmark model: 2,021,379 parameters with input_dim=50, output_dim=3
     """
     model = keras.Sequential([
         keras.layers.Dense(1024, activation='relu', input_shape=(input_dim,)),
@@ -144,18 +142,20 @@ def setup_multi_gpu_strategy():
     """
     Setup optimized multi-GPU strategy for PCIe topology
     """
-    # NCCL optimization for PCIe Host Bridge topology
+    # NCCL settings that were set in the benchmark environment. They only take
+    # effect with tf.distribute.NcclAllReduce, not with the
+    # HierarchicalCopyAllReduce used below, so they didn't affect the results.
     os.environ.update({
         'NCCL_DEBUG': 'INFO',
-        'NCCL_ALGO': 'Tree',                # Optimal for PCIe topology
-        'NCCL_PROTO': 'Simple',             # Reduced complexity
-        'NCCL_P2P_DISABLE': '1',           # Force through host memory
-        'NCCL_SHM_DISABLE': '0',           # Enable shared memory
-        'NCCL_NET_GDR_LEVEL': '0',         # Disable GPU Direct RDMA
+        'NCCL_ALGO': 'Tree',
+        'NCCL_PROTO': 'Simple',
+        'NCCL_P2P_DISABLE': '1',
+        'NCCL_SHM_DISABLE': '0',
+        'NCCL_NET_GDR_LEVEL': '0',
         'NCCL_BUFFSIZE': '33554432',       # 32MB buffer
-        'NCCL_NTHREADS': '16',             # Optimal thread count
-        'NCCL_MAX_NCHANNELS': '8',         # Limit channels
-        'NCCL_MIN_NCHANNELS': '4'          # Minimum channels
+        'NCCL_NTHREADS': '16',
+        'NCCL_MAX_NCHANNELS': '8',
+        'NCCL_MIN_NCHANNELS': '4'
     })
     
     # Cap each GPU at 12GB for safety. TensorFlow does not allow a memory
@@ -169,9 +169,7 @@ def setup_multi_gpu_strategy():
     except RuntimeError as e:  # must run before TensorFlow initializes the GPUs
         print(f"GPU configuration error: {e}")
     
-    # Create MirroredStrategy with HierarchicalCopyAllReduce.
-    # Note: the NCCL_* variables above only apply to tf.distribute.NcclAllReduce
-    # (MirroredStrategy's default), not to HierarchicalCopyAllReduce.
+    # Create MirroredStrategy with HierarchicalCopyAllReduce
     strategy = tf.distribute.MirroredStrategy(
         cross_device_ops=tf.distribute.HierarchicalCopyAllReduce()
     )
@@ -605,7 +603,6 @@ TensorFlow: 2.19.0
 NumPy: 2.1.3
 CUDA: 12.5.1
 cuDNN: 9
-NCCL: 2.18.5
 ```
 
 Install the Python packages with:
